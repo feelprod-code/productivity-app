@@ -1,0 +1,142 @@
+{
+  "cookies": [
+    {
+      "name": "_cfuvid",
+      "value": "TryNR4k8UG03GlGRbOqXzeq3uyTsSkQ2uL1JOUyRpBw-1774513344576-0.0.1.1-604800000",
+      "domain": ".canva.com",
+      "path": "/",
+      "expires": -1,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "CDI",
+      "value": "b381712f-47f9-41ec-bd3d-dc350f13423b",
+      "domain": "www.canva.com",
+      "path": "/",
+      "expires": 1806049344.995594,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "CL",
+      "value": "fr-FR",
+      "domain": "www.canva.com",
+      "path": "/",
+      "expires": 1777105344.99563,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "CPA",
+      "value": "cnvanrNRkkOsIp8GPTHF3N7xKHZTF6H73pkRXalWZI6Fx4whOpK57TELMmOxrK8dualiNnZZgqFUKJmkkQNpSbMWw-2DYDZWFZ44b1QCwmQuhEFow8T8uWTX1wXYGeUH9jUmlGL_92rUA8Z-VVoVk__imNufw1mc54yIj2VqNWSpkLd-YckpEtAFM8xiuEDfMIHn5mNf3BZs9-eB0Etvjy5iOkcxWoH76Qe_p10YjKNA3h_g4kscbztxDJVNkh9VNrjcx53wZsXwoc7of9KTVGdhk8Ye99ISRg2WraIdjd4hGM4k8sGvElFf0HGY1_HOvgN0Pev4GtoDVtxhuPTObuZ2itbCpnq0uDhyN5stNC_jmWR_i4M3-cjW0EnpmWaTuqf3_WLNL-PG35CiiyBbCPQEEnuc2dXrgN6wOXkOA8-7HM7LLEd2COMbGn_rpvh-_FXnLhtZWZW79spvg_JouV9WcwNOJjwibXW2RNa1f1fqm5Yw20kJ4F5KJht8Rkg7_1gDruJNA6-fgJne-LEHSIcq-4_d2i8aW9eXNc4YoA0TKDNArfeILQCxj8YvynZ4tugpz-nEqfzztCrX1FxFdVVk70J6aeCFvlLbbiasCTOJLXGvhqo_8HvyPrDiKsOBjWXdiKFSaj7OrQ8PXIPj-yfdZBkAeQcfN7mjErQsMbu5drot6QhcIVYQN1IX3qawDVGXXrlO123Ylry2YykFXXKLPUGAR7pYzN0pBYtDccOFUE8Q8T6j0cdaa9311",
+      "domain": "www.canva.com",
+      "path": "/",
+      "expires": 1774524144.995641,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "ASI",
+      "value": "01KMMKSMT9CBCF1M5306GPRW46",
+      "domain": "www.canva.com",
+      "path": "/",
+      "expires": 1774515325.704211,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "cf_clearance",
+      "value": "R3K1De8NQh6awi27UwackCeen6wQR_83GMJcpUx8BRM-1774513346-1.2.1.1-OR6ktJDIlkJ2mWV.oJy0ycpqoSSREKdPkY4zi78KEnoVErL1n3KGg.LMDrk5WZSwCuWvJejQZgT_buNCEMSE0ZHupEiEAedC_wgR9.Ylvh2EAygTFeaqWn2b1wQK.SaCZq0.IAZ1nM1Zs8V3NR427b436UvFKrVT8UQlTnJCv4MT37DbP1tEhiXwwTV9hwWzdAtVytigwZVdpvH1m3hMu7uYmCH7EXJx2_JFfqvl7GM",
+      "domain": ".canva.com",
+      "path": "/",
+      "expires": 1806049346.830394,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None",
+      "partitionKey": "https://canva.com",
+      "_crHasCrossSiteAncestor": false
+    },
+    {
+      "name": "g_state",
+      "value": "{\"i_l\":0,\"i_ll\":1774513347112,\"i_b\":\"FXBXqWQ14U/RKI0MStWaEW/rjVr6cWWTMBPaPOzenks\",\"i_e\":{\"enable_itp_optimization\":0}}",
+      "domain": "www.canva.com",
+      "path": "/",
+      "expires": 1790065347,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "__cuid",
+      "value": "39c88077cd8242c9bf619b09b2ffe357",
+      "domain": ".canva.com",
+      "path": "/",
+      "expires": 1809069804,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "__cuid",
+      "value": "39c88077cd8242c9bf619b09b2ffe357",
+      "domain": ".www.canva.com",
+      "path": "/",
+      "expires": 1809069804,
+      "httpOnly": false,
+      "secure": false,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "cf_chl_rc_ni",
+      "value": "5",
+      "domain": "www.canva.com",
+      "path": "/",
+      "expires": 1774517039,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "None",
+      "partitionKey": "https://canva.com",
+      "_crHasCrossSiteAncestor": false
+    },
+    {
+      "name": "__cf_bm",
+      "value": "EgntN4cHagICUVlbW7tmGlvE2tdxikYu7J_ZEf4uS2c-1774513508-1.0.1.1-GsAweVIQ3aWikUt3tnZix0I8S_eojJja6ZZ3xyEkiwweXTnGXK9Nckgc5a_Fj90RqLKD77w8bMftcUtrlvR336_ccS1QIrAGCYiUZn0CoslYXA0f0xJfzAoxMh3kT6_r",
+      "domain": ".canva.com",
+      "path": "/",
+      "expires": 1774515308.753964,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None"
+    }
+  ],
+  "origins": [
+    {
+      "origin": "https://www.canva.com",
+      "localStorage": [
+        {
+          "name": "rrsid",
+          "value": "bbf95864-9667-4550-abe3-f5195d0922eb"
+        },
+        {
+          "name": "__cuid",
+          "value": "39c88077cd8242c9bf619b09b2ffe357"
+        }
+      ]
+    },
+    {
+      "origin": "https://challenges.cloudflare.com",
+      "localStorage": [
+        {
+          "name": "cf.turnstile.u",
+          "value": "us5eKHTQnzIwXgmkVofLnFVE9gPVv5Sv79eux6Ma2i4-1774513402-1.3.1.1-j5S_Wr3nV1t0_cD2psB0R5L0s45vCe6BI5qSF.eJbpGNPzAHjCajqQBwbMXAqPmU8SqjhDEP0FSBd2gwQr__uA"
+        }
+      ]
+    }
+  ]
+}

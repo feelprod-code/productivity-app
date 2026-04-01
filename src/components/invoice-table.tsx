@@ -75,9 +75,8 @@ export default function InvoiceTable({ invoices }: { invoices: any[] }) {
 
         // Auto-open logic (only on first render)
         if (!initialized && sorted.length > 0) {
-            // Open the most recent month or the 2 most recent
-            const initialExpanded = new Set<string>();
-            if (sorted[0]) initialExpanded.add(sorted[0]);
+            // Open ALL months
+            const initialExpanded = new Set<string>(sorted);
 
             setExpandedMonths(initialExpanded);
             setInitialized(true);
@@ -253,10 +252,15 @@ export default function InvoiceTable({ invoices }: { invoices: any[] }) {
                                                                     <ExternalLink className="w-4 h-4 sm:mr-2" />
                                                                     <span className="hidden sm:inline">Espace Client</span>
                                                                 </>
+                                                            ) : invoice.fileUrl?.toLowerCase().includes('.html') ? (
+                                                                <>
+                                                                    <FileText className="w-4 h-4 sm:mr-2" />
+                                                                    <span className="hidden sm:inline">Voir le Reçu</span>
+                                                                </>
                                                             ) : (
                                                                 <>
                                                                     <FileText className="w-4 h-4 sm:mr-2" />
-                                                                    <span className="hidden sm:inline">Ouvrir</span>
+                                                                    <span className="hidden sm:inline">Ouvrir PDF</span>
                                                                 </>
                                                             )}
                                                         </Button>

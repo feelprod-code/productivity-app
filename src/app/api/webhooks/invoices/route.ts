@@ -16,8 +16,12 @@ function extractInvoiceDataFromText(htmlText: string, currentProvider: string, c
 
     const textStr = typeof htmlText === 'string' ? htmlText.replace(/<[^>]*>?/gm, ' ') : JSON.stringify(htmlText);
 
-    // Detect Amazon
-    if (textStr.toLowerCase().includes('amazon') || provider.toLowerCase().includes('amazon')) {
+    // Ne pas écraser si le provider actuel est déjà bien identifié (ex: Vercel, Google, etc.)
+    const protectedProviders = ['vercel', 'google', 'cloudflare', 'stripe', 'github', 'openai', 'anthropic'];
+    const isProtected = protectedProviders.some(p => currentProvider.toLowerCase().includes(p));
+
+    // Detect Amazon only if not protected
+    if (!isProtected && (textStr.toLowerCase().includes('amazon') || provider.toLowerCase().includes('amazon'))) {
         provider = 'Amazon Business';
 
         // Match standard Amazon EU amounts like "Montant total : 45,00 €" or "EUR 45.00"
@@ -91,6 +95,9 @@ export async function POST(req: Request) {
             else if (fromStr.includes('ausha')) provider = 'Ausha';
             else if (fromStr.includes('indigo')) provider = 'Indigo Neo';
             else if (fromStr.includes('chargemap')) provider = 'Chargemap';
+            else if (fromStr.includes('vercel')) provider = 'Vercel';
+            else if (fromStr.includes('google')) provider = 'Google';
+            else if (fromStr.includes('cloudflare')) provider = 'Cloudflare';
         }
 
         let invoiceAmountRaw = body.amount ?? body.aa_3;
@@ -154,7 +161,75 @@ export async function POST(req: Request) {
                 const safeProvider = provider.replace(/[^a-zA-Z0-9]/g, '_');
                 const fileName = `${safeProvider}_${randomUUID()}.html`;
 
-                const blob = new Blob([body.body_html], { type: 'text/html' });
+                const displayDate = invoiceDateRaw || new Date().toLocaleDateString('fr-FR');
+                const displayAmount = invoiceAmount !== null && invoiceAmount !== undefined ? invoiceAmount.toFixed(2) + ' €' : 'À vérifier';
+                const safeHtmlBody = body.body_html.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\\n/g, "<br>");
+
+                const htmlContent = `<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <title>Reçu - ${provider}</title>
+    <style>
+        body { font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; background-color: #FDFBEF; color: #1E2A33; padding: 40px; margin: 0; }
+        .receipt-container { max-width: 600px; margin: 0 auto; background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.05); border: 1px solid rgba(30, 42, 51, 0.1); }
+        .header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 2px solid rgba(174, 125, 92, 0.3); padding-bottom: 20px; margin-bottom: 30px; }
+        .title { margin: 0; font-size: 28px; color: #AE7D5C; text-transform: uppercase; letter-spacing: 2px; }
+        .subtitle { font-size: 12px; color: #777; margin-top: 5px; }
+        .details { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px; }
+        .detail-group { display: flex; flex-direction: column; gap: 5px; }
+        .label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: #888; }
+        .value { font-size: 16px; font-weight: 500; }
+        .amount-box { background: rgba(174, 125, 92, 0.1); padding: 20px; border-radius: 8px; text-align: center; margin-bottom: 30px; }
+        .amount-label { font-size: 14px; color: #1E2A33; margin-bottom: 5px; }
+        .amount-value { font-size: 36px; font-weight: bold; color: #AE7D5C; }
+        .footer { font-size: 12px; color: #999; text-align: center; border-top: 1px solid #eee; padding-top: 20px; margin-top: 40px; }
+        .source-email { margin-top: 40px; padding: 20px; background: #fafafa; border: 1px dashed #ddd; border-radius: 8px; font-size: 11px; color: #666; overflow: auto; max-height: 400px; word-break: break-all; }
+    </style>
+</head>
+<body>
+    <div class="receipt-container">
+        <div class="header">
+            <div>
+                <h1 class="title">REÇU DE PAIEMENT</h1>
+                <div class="subtitle">Généré automatiquement par TDT FinOps</div>
+            </div>
+            <div style="text-align: right;">
+                <div class="label">Date d'émission</div>
+                <div class="value">${displayDate}</div>
+            </div>
+        </div>
+        
+        <div class="details">
+            <div class="detail-group">
+                <span class="label">Fournisseur</span>
+                <span class="value">${provider}</span>
+            </div>
+            <div class="detail-group">
+                <span class="label">Sujet de l'e-mail</span>
+                <span class="value">${subject || 'Facture automatique'}</span>
+            </div>
+        </div>
+
+        <div class="amount-box">
+            <div class="amount-label">Montant Total Payé</div>
+            <div class="amount-value">${displayAmount}</div>
+        </div>
+
+        <div class="source-email">
+            <strong>Contenu original de l'e-mail :</strong><br><br>
+            ${safeHtmlBody}
+        </div>
+
+        <div class="footer">
+            Ceci est un reçu généré automatiquement à partir du contenu d'un e-mail reçu dans votre boîte de réception.<br>
+            Il peut servir de justificatif comptable pour les frais logiciels et abonnements.
+        </div>
+    </div>
+</body>
+</html>`;
+
+                const blob = new Blob([htmlContent], { type: 'text/html; charset=utf-8' });
 
                 const { data, error } = await supabase.storage
                     .from('invoices')

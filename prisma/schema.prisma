@@ -30,3 +30,15 @@ model Invoice {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+model Expense {
+  id        String   @id @default(uuid())
+  provider  String
+  amount    Float?
+  currency  String   @default("USD")
+  date      DateTime
+  fileUrl   String?
+  status    String   @default("PAID")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

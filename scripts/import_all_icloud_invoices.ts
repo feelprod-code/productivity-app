@@ -1,5 +1,5 @@
 import { PrismaClient } from '@prisma/client';
-import OpenAI from 'openai';
+import { GoogleGenAI, Type } from '@google/genai';
 import imaps from 'imap-simple';
 import { simpleParser } from 'mailparser';
 import * as crypto from 'crypto';
@@ -10,7 +10,7 @@ dotenv.config({ path: '.env.local' });
 dotenv.config({ path: '.env', override: false });
 
 const prisma = new PrismaClient();
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
 const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!);
 
 const IMAP_CONFIG = {
@@ -27,39 +27,32 @@ const IMAP_CONFIG = {
 
 async function getAiExtraction(text: string, subject: string, sender: string) {
     try {
-        const response = await openai.chat.completions.create({
-            model: "gpt-4o-mini",
-            messages: [
+        const response = await ai.models.generateContent({
+            model: 'gemini-2.5-flash',
+            contents: [
                 {
-                    role: "system",
-                    content: "Tu es un expert comptable spécialisé dans la lecture de reçus et factures. Tu dois extraire le montant total TTC final payé, ainsi que le nom du fournisseur exact (ex: Apple, PayPal, SumUp, Chargemap, Freebox, Doctolib, etc). Réponds uniquement en validant le schéma JSON demandé."
-                },
-                {
-                    role: "user",
-                    content: `Voici une facture.\nObjet: ${subject}\nExpéditeur: ${sender}\n\nTexte:\n---\n${text.substring(0, 4000)}\n---`
+                    role: 'user', parts: [
+                        { text: "Tu es un expert comptable spécialisé dans la lecture de reçus et factures. Tu dois extraire le montant total TTC final payé, ainsi que le nom du fournisseur exact (ex: Apple, PayPal, SumUp, Chargemap, Freebox, Doctolib, etc). Réponds uniquement en validant le schéma JSON demandé." },
+                        { text: `Voici une facture.\nObjet: ${subject}\nExpéditeur: ${sender}\n\nTexte:\n---\n${text.substring(0, 4000)}\n---` }
+                    ]
                 }
             ],
-            response_format: {
-                type: "json_schema",
-                json_schema: {
-                    name: "invoice_extraction",
-                    strict: true,
-                    schema: {
-                        type: "object",
-                        properties: {
-                            provider_name: { type: "string" },
-                            total_amount_ttc: { type: ["number", "null"] },
-                            is_invoice: { type: "boolean", description: "Indique si ce texte correspond bien à une facture ou reçu de paiement." }
-                        },
-                        required: ["provider_name", "total_amount_ttc", "is_invoice"],
-                        additionalProperties: false
-                    }
+            config: {
+                temperature: 0,
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: Type.OBJECT,
+                    properties: {
+                        provider_name: { type: Type.STRING },
+                        total_amount_ttc: { type: Type.NUMBER, nullable: true },
+                        is_invoice: { type: Type.BOOLEAN, description: "Indique si ce texte correspond bien à une facture ou reçu de paiement." }
+                    },
+                    required: ["provider_name", "total_amount_ttc", "is_invoice"]
                 }
-            },
-            temperature: 0,
+            }
         });
 
-        const raw = response.choices[0].message.content;
+        const raw = response.text;
         if (!raw) return null;
         const data = JSON.parse(raw);
         if (!data.is_invoice || typeof data.total_amount_ttc !== 'number' || data.total_amount_ttc === 0) {
@@ -183,9 +176,10 @@ async function main() {
 
     const boxes = ['INBOX', 'Archive'];
     const searchTerms = [
-        'facture', 'invoice', 'reçu', 'paiement', 'payment', 'apple', 'paypal',
-        'sumup', 'doctolib', 'chargemap', 'freebox', 'amazon', 'gandi', 'canva',
-        'soundcloud', 'cloudflare', 'viasana', 'pennylane'
+        'facture', 'invoice', 'reçu', 'receipt', 'paiement', 'payment', 'commande', 'order',
+        'abonnement', 'subscription', 'prélèvement',
+        'apple', 'paypal', 'sumup', 'doctolib', 'chargemap', 'freebox', 'amazon', 'gandi',
+        'canva', 'soundcloud', 'cloudflare', 'viasana', 'pennylane', 'spotify', 'blackmagic', 'google'
     ];
 
     const processedUids = new Set<string>();
@@ -194,13 +188,13 @@ async function main() {
         await connection.openBox(box);
 
         for (const term of searchTerms) {
-            console.log(`Scanning [${box}] for ${term} since 01-Jan-2026...`);
+            console.log(`Scanning [${box}] for ${term} since 01-Sep-2025...`);
 
             // Search in Subject
-            let messages = await connection.search([['SINCE', '01-Jan-2026'], ['SUBJECT', term]], { bodies: ['HEADER', 'TEXT', ''], struct: true });
+            let messages = await connection.search([['SINCE', '01-Sep-2025'], ['SUBJECT', term]], { bodies: ['HEADER', 'TEXT', ''], struct: true });
 
             // Search in From
-            let messagesFrom = await connection.search([['SINCE', '01-Jan-2026'], ['FROM', term]], { bodies: ['HEADER', 'TEXT', ''], struct: true });
+            let messagesFrom = await connection.search([['SINCE', '01-Sep-2025'], ['FROM', term]], { bodies: ['HEADER', 'TEXT', ''], struct: true });
 
             const allMessages = [...messages, ...messagesFrom];
 

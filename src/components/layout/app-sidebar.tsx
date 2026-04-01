@@ -1,4 +1,4 @@
-import { Calendar, Home, Inbox, Search, Settings, BrainCircuit, ReceiptEuro } from "lucide-react"
+import { Calendar, Home, Inbox, Search, Settings, BrainCircuit, ReceiptEuro, LineChart } from "lucide-react"
 
 import {
     Sidebar,
@@ -27,6 +27,11 @@ const items = [
         title: "Comptabilité",
         url: "/comptabilite",
         icon: ReceiptEuro,
+    },
+    {
+        title: "Coûts & FinOps",
+        url: "/cerveau/finops",
+        icon: LineChart,
     },
     {
         title: "Paramètres",

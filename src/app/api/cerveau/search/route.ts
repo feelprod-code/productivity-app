@@ -13,28 +13,17 @@ export async function POST(req: NextRequest) {
             return NextResponse.json({ error: "Missing 'query' field" }, { status: 400 });
         }
 
-        let embeddingVector: number[] = [];
         let indexName = PINECONE_MISSION_INDEX;
-
-        // 1. Generate Embedding based on selected Brain
         if (brain === "gravity") {
             indexName = PINECONE_GRAVITY_INDEX;
-            // Generate embedding using Pinecone Inference API (matches gravity-claw 1024 dims)
-            const embeddingResponse = await pinecone.inference.embed({
-                model: "llama-text-embed-v2",
-                inputs: [query],
-                parameters: { inputType: "query", truncate: "END" }
-            });
-            const embeddingData = embeddingResponse.data[0] as any;
-            embeddingVector = embeddingData.values;
-        } else {
-            // Default to Mission brain using OpenAI text-embedding-3-small (1536 dims)
-            const embeddingResponse = await openai.embeddings.create({
-                model: "text-embedding-3-small",
-                input: query,
-            });
-            embeddingVector = embeddingResponse.data[0].embedding;
         }
+
+        // 1. Generate Embedding using OpenAI text-embedding-3-small (1536 dims) for all brains
+        const embeddingResponse = await openai.embeddings.create({
+            model: "text-embedding-3-small",
+            input: query,
+        });
+        const embeddingVector = embeddingResponse.data[0].embedding;
 
         // 2. Query Pinecone using the generated vector
         const index = pinecone.index(indexName);

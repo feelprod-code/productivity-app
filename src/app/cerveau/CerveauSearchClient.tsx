@@ -20,12 +20,12 @@ interface SearchResult {
 type BrainType = 'mission' | 'gravity';
 
 const GRAVITY_AUTHORS = [
-    "Tous",
-    "Gérard Montet - Ostéopathie et symbolisme",
-    "Marc Damoiseaux - Embryologie biodynamique",
-    "Pascal Anselin - Ostéopathie biodynamique et non résolue",
-    "Michel Lidoreau - Biokinergie et harmonisation psycho-corporelle",
-    "Philippe Guillaume - Technique douce tissulaire",
+    { label: "Tous", value: "Tous" },
+    { label: "Gérard Montet - Ostéopathie et symbolisme", value: "Gérard Montet" },
+    { label: "Marc Damoiseaux - Embryologie biodynamique", value: "Marc Damoiseaux" },
+    { label: "Pascal Anselin - Ostéopathie biodynamique et non résolue", value: "Pascal Anselin" },
+    { label: "Michel Lidoreau - Biokinergie et harmonisation psycho-corporelle", value: "Michel Lidoreau" },
+    { label: "Philippe Guillaume - Technique douce tissulaire", value: "Philippe Guillaume" },
 ];
 
 export default function CerveauSearchClient() {
@@ -121,17 +121,17 @@ export default function CerveauSearchClient() {
                     <div className="flex flex-wrap items-center justify-center gap-2 mb-8 animate-in fade-in slide-in-from-top-2 duration-300">
                         {GRAVITY_AUTHORS.map((author) => (
                             <button
-                                key={author}
+                                key={author.value}
                                 type="button"
-                                onClick={() => setAuthorFilter(author)}
+                                onClick={() => setAuthorFilter(author.value)}
                                 className={`text-xs px-4 py-2 rounded-full border transition-all duration-200 flex items-center gap-2
-                                    ${authorFilter === author
+                                    ${authorFilter === author.value
                                         ? 'bg-[#AE7D5C] border-[#AE7D5C] text-white shadow-md'
                                         : 'bg-white/50 border-[#1E2A33]/10 text-[#1E2A33]/60 hover:border-[#AE7D5C]/40'}
                                 `}
                             >
-                                {authorFilter === author && <Check className="w-3 h-3" />}
-                                {author}
+                                {authorFilter === author.value && <Check className="w-3 h-3" />}
+                                {author.label}
                             </button>
                         ))}
                     </div>

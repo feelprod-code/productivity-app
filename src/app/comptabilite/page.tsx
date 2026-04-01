@@ -3,6 +3,7 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import InvoiceTable from '@/components/invoice-table';
 import DashboardStats from '@/components/dashboard-stats';
+import ExportButton from '@/components/ExportButton';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,12 +27,14 @@ export default async function Dashboard() {
 
       <div className="relative z-10 max-w-6xl mx-auto space-y-6">
 
-        <div className="flex flex-col md:flex-row justify-between items-center gap-6 mb-6 pb-4 border-b border-[#1E2A33]/10">
-          <div className="flex items-center gap-4 pt-4 md:pt-0">
+        <div className="flex flex-col lg:flex-row justify-between items-center gap-6 mb-6 pb-4 border-b border-[#1E2A33]/10">
+          <div className="flex items-center gap-4 pt-4 lg:pt-0 shrink-0">
             <div className="h-full w-2 bg-[#AE7D5C] rounded-full self-stretch shadow-[0_0_15px_rgba(174,125,92,0.4)]"></div>
             <h1 className="text-3xl sm:text-5xl font-bebas tracking-wide text-[#1E2A33] text-center md:text-left">TABLEAU DE BORD <span className="text-[#AE7D5C]">/ COMPTABILITE</span></h1>
           </div>
-          <Button variant="outline" className="w-full md:w-auto font-roboto tracking-wide border-[#1E2A33]/20 hover:bg-[#1E2A33]/5 text-[#1E2A33]">Gérer les automatisations (Zapier)</Button>
+          <div className="flex w-full lg:w-auto">
+            <ExportButton />
+          </div>
         </div>
 
         <DashboardStats invoices={invoices} />

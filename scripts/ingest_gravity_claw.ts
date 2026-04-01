@@ -1,4 +1,5 @@
 import { Pinecone } from '@pinecone-database/pinecone';
+import OpenAI from 'openai';
 import fs from 'fs/promises';
 import path from 'path';
 import crypto from 'crypto';
@@ -6,17 +7,19 @@ import dotenv from 'dotenv';
 import { fileURLToPath } from 'url';
 
 // Load env vars
-dotenv.config({ path: path.resolve(process.cwd(), '.env.local') });
+dotenv.config({ path: path.resolve(process.cwd(), '.env.production') });
 
-const PINECONE_API_KEY = process.env.PINECONE_API_KEY;
+const PINECONE_API_KEY = process.env.PINECONE_API_KEY?.replace(/\\n/g, '').trim();
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY?.replace(/\\n/g, '').trim();
 
-if (!PINECONE_API_KEY) {
-    console.error("Missing environment variables: PINECONE_API_KEY");
+if (!PINECONE_API_KEY || !OPENAI_API_KEY) {
+    console.error("Missing environment variables: PINECONE_API_KEY or OPENAI_API_KEY");
     process.exit(1);
 }
 
 const pc = new Pinecone({ apiKey: PINECONE_API_KEY });
 const index = pc.index('gravity-claw');
+const openai = new OpenAI({ apiKey: OPENAI_API_KEY });
 
 const ROOT_PATH = path.resolve(process.cwd(), '../Cerveau_GravityClaw');
 
@@ -87,19 +90,18 @@ async function processFile(filePath: string, docMetadata: any) {
             const chunk = chunks[i];
             if (!chunk) continue;
 
-            // Generate embedding using Pinecone Inference API (matches gravity-claw 1024 dims)
-            const embeddingResponse = await pc.inference.embed({
-                model: "llama-text-embed-v2",
-                inputs: [chunk],
-                parameters: { inputType: "passage", truncate: "END" }
+            // Generate embedding using OpenAI
+            const embeddingResponse = await openai.embeddings.create({
+                model: "text-embedding-3-small",
+                input: chunk,
             });
-            const embedding = embeddingResponse.data[0] as any;
+            const embedding = embeddingResponse.data[0].embedding;
 
             const id = crypto.randomUUID();
 
             const record = {
                 id,
-                values: embedding.values,
+                values: embedding,
                 metadata: {
                     text: chunk,
                     type: 'document',
