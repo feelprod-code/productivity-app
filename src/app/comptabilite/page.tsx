@@ -39,18 +39,19 @@ export default async function Dashboard() {
 
         <DashboardStats invoices={invoices} />
 
-        <Card className="bg-white border-[#1E2A33]/10 shadow-sm mt-4">
-          <CardHeader className="border-b border-[#1E2A33]/10 pb-4 mb-4">
-            <CardTitle className="text-2xl font-bebas tracking-wide text-[#1E2A33] flex items-center justify-between">
-              Factures récentes
-              <div className="w-2 h-2 rounded-full bg-[#1E2A33]/20"></div>
-            </CardTitle>
-            <CardDescription className="font-roboto font-light text-[#1E2A33]/60">Les factures récupérées automatiquement depuis vos boîtes mail.</CardDescription>
-          </CardHeader>
-          <CardContent>
+        <div className="mt-12">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h2 className="text-sm font-roboto font-bold text-[#1E2A33]/80 uppercase tracking-widest">
+                Factures récentes
+              </h2>
+              <p className="font-roboto font-light text-xs text-[#1E2A33]/40 mt-1">Synchronisation automatique depuis Gmail</p>
+            </div>
+          </div>
+          <div className="bg-white/40 ring-1 ring-[#1E2A33]/5 rounded-2xl p-4 backdrop-blur-sm">
             <InvoiceTable invoices={invoices} />
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
       </div>
     </main>

@@ -7,10 +7,23 @@ export const dynamic = "force-dynamic";
 export async function POST(req: NextRequest) {
     try {
         const body = await req.json();
-        const { query, topK = 5, brain = "mission", author, theme } = body;
+        const { query, messages, topK = 5, brain = "mission", author, theme } = body;
 
-        if (!query) {
-            return NextResponse.json({ error: "Missing 'query' field" }, { status: 400 });
+        let chatMessages = messages || [];
+        let currentQuery = query || "";
+
+        // Compatibility logic if called with a single query, or extracting last message
+        if (chatMessages.length === 0 && currentQuery) {
+            chatMessages = [{ role: "user", content: currentQuery }];
+        } else if (chatMessages.length > 0 && !currentQuery) {
+            // Find the last user message to use for semantic search
+            const userMessages = chatMessages.filter((m: any) => m.role === "user");
+            const lastUserMsg = userMessages[userMessages.length - 1];
+            currentQuery = lastUserMsg ? lastUserMsg.content : "";
+        }
+
+        if (!currentQuery && chatMessages.length === 0) {
+            return NextResponse.json({ error: "Missing query or messages" }, { status: 400 });
         }
 
         let indexName = PINECONE_MISSION_INDEX;
@@ -18,26 +31,21 @@ export async function POST(req: NextRequest) {
             indexName = PINECONE_GRAVITY_INDEX;
         }
 
-        // 1. Generate Embedding using OpenAI text-embedding-3-small (1536 dims) for all brains
+        // 1. Generate Embedding using the most recent user query to fetch context
         const embeddingResponse = await openai.embeddings.create({
             model: "text-embedding-3-small",
-            input: query,
+            input: currentQuery,
         });
         const embeddingVector = embeddingResponse.data[0].embedding;
 
-        // 2. Query Pinecone using the generated vector
+        // 2. Query Pinecone
         const index = pinecone.index(indexName);
 
-        // Build metadata filter
         let filter: Record<string, any> | undefined = undefined;
         if (author || theme) {
             filter = {};
-            if (author) {
-                filter.author = author;
-            }
-            if (theme) {
-                filter.theme = theme;
-            }
+            if (author) filter.author = author;
+            if (theme) filter.theme = theme;
         }
 
         const queryResponse = await index.query({
@@ -47,38 +55,43 @@ export async function POST(req: NextRequest) {
             filter: filter,
         });
 
-        // Generate AI Synthesis based on retrieved results
-        let synthesis = null;
-        if (queryResponse.matches && queryResponse.matches.length > 0) {
-            const contextText = queryResponse.matches
+        // 3. Generate AI Synthesis using history
+        const matches = queryResponse.matches || [];
+        let contextText = "";
+
+        if (matches.length > 0) {
+            contextText = matches
                 .map((match: any) => match.metadata?.text)
                 .filter(Boolean)
                 .join("\n\n---\n\n");
-
-            const prompt = `Tu es un assistant expert médical et d'analyse de données (Ostéopathie, Embryologie, Biokinergie, etc). 
-L'utilisateur te pose une question. Voici les résultats pertinents trouvés dans la base de connaissance :
-
-<contexte_base_de_donnees>
-${contextText}
-</contexte_base_de_donnees>
-
-<question_utilisateur>${query}</question_utilisateur>
-
-Tâche : Rédige une synthèse claire, précise et directe qui répond à la question de l'utilisateur EN UTILISANT EXCLUSIVEMENT les informations présentes dans le <contexte_base_de_donnees>.
-Structure bien ta réponse (utilise du Markdown, des listes à puces si besoin). Ne mentionne pas "D'après la base de données", réponds directement à la question. Si le contexte ne contient pas la réponse exacte, fais de ton mieux avec ce que tu as ou dis que la réponse directe n'est pas trouvée.`;
-
-            const aiResponse = await openai.chat.completions.create({
-                model: "gpt-4o",
-                messages: [{ role: "user", content: prompt }],
-                temperature: 0.2, // Faible température pour éviter les hallucinations
-            });
-            synthesis = aiResponse.choices[0]?.message?.content;
         }
 
-        // 3. Return formatting the Pinecone matching records
+        const systemPrompt = `Tu es un assistant expert médical et d'analyse de données (Ostéopathie, Embryologie, Biokinergie, etc). 
+L'utilisateur te pose une question ou discute avec toi. Tu dois répondre de manière claire, précise et directe.
+Si un contexte extrait de la base de données est fourni ci-dessous, utilise-le en priorité pour informer ta réponse à sa dernière question. 
+S'il te demande de préciser ou de développer, fais-le en t'appuyant sur l'historique de votre conversation et sur ce contexte.
+Structure bien ta réponse (utilise du Markdown, des listes à puces si besoin). Ne mentionne pas "D'après la base de données", réponds directement à la question courante.
+
+<contexte_base_de_donnees_lié_a_la_derniere_question>
+${contextText || "Aucun contexte spécifique récent trouvé."}
+</contexte_base_de_donnees_lié_a_la_derniere_question>`;
+
+        const openaiMessages = [
+            { role: "system", content: systemPrompt },
+            ...chatMessages
+        ];
+
+        const aiResponse = await openai.chat.completions.create({
+            model: "gpt-4o",
+            messages: openaiMessages,
+            temperature: 0.2, // Low temp to avoid hallucinations
+        });
+
+        const synthesis = aiResponse.choices[0]?.message?.content;
+
         return NextResponse.json({
             success: true,
-            matches: queryResponse.matches,
+            matches: matches,
             brain: brain,
             synthesis: synthesis,
             appliedFilters: { author, theme }

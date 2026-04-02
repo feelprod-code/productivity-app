@@ -6,11 +6,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 export default function InvoiceTable({ invoices }: { invoices: any[] }) {
     const [searchQuery, setSearchQuery] = useState('');
-    const [startDate, setStartDate] = useState('');
-    const [endDate, setEndDate] = useState('');
+    const [filterYear, setFilterYear] = useState<string>(new Date().getFullYear().toString());
+    const [filterMonth, setFilterMonth] = useState<string>('all');
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null);
 
     // Set auto-open behavior for the most recent month initially
     const [initialized, setInitialized] = useState(false);
@@ -34,18 +36,16 @@ export default function InvoiceTable({ invoices }: { invoices: any[] }) {
             const matchesSearch = invoice.provider.toLowerCase().includes(searchQuery.toLowerCase()) ||
                 (invoice.subject && invoice.subject.toLowerCase().includes(searchQuery.toLowerCase()));
 
-            let matchesDate = true;
             const invDate = new Date(invoice.date);
-            if (startDate) {
-                matchesDate = matchesDate && invDate >= new Date(startDate);
-            }
-            if (endDate) {
-                matchesDate = matchesDate && invDate <= new Date(endDate);
-            }
+            const invYearStr = invDate.getFullYear().toString();
+            const invMonthStr = String(invDate.getMonth() + 1).padStart(2, '0');
 
-            return matchesSearch && matchesDate;
+            let matchesYear = filterYear === 'all' || invYearStr === filterYear;
+            let matchesMonth = filterMonth === 'all' || invMonthStr === filterMonth;
+
+            return matchesSearch && matchesYear && matchesMonth;
         });
-    }, [invoices, searchQuery, startDate, endDate]);
+    }, [invoices, searchQuery, filterYear, filterMonth]);
 
     // Group the filtered invoices
     const groupedInvoices = useMemo(() => {
@@ -86,10 +86,8 @@ export default function InvoiceTable({ invoices }: { invoices: any[] }) {
     }, [groupedInvoices, initialized]);
 
     const openInvoice = (invoice: any) => {
-        if (invoice.provider === 'Bouygues Telecom') {
-            window.open('https://www.bouyguestelecom.fr/mon-compte', '_blank', 'noopener,noreferrer');
-        } else if (invoice.fileUrl) {
-            window.open(invoice.fileUrl, '_blank', 'noopener,noreferrer');
+        if (invoice.fileUrl) {
+            setPreviewUrl(invoice.fileUrl);
         }
     };
 
@@ -121,11 +119,11 @@ export default function InvoiceTable({ invoices }: { invoices: any[] }) {
     return (
         <div className="space-y-4">
             {/* Toolbar for filters */}
-            <div className="flex flex-col sm:flex-row gap-3 bg-[#FDFBEF]/50 p-4 rounded-xl border border-[#1E2A33]/10">
+            <div className="flex flex-col sm:flex-row gap-3 mb-2">
                 <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#1E2A33]/40" />
                     <Input
-                        placeholder="Chercher un nom de prélèvement, SumUp, Apple..."
+                        placeholder=""
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         className="pl-9 pr-10 bg-white border-[#1E2A33]/10 focus-visible:ring-[#AE7D5C] rounded-lg [&::-webkit-search-cancel-button]:appearance-none"
@@ -140,35 +138,50 @@ export default function InvoiceTable({ invoices }: { invoices: any[] }) {
                         </button>
                     )}
                 </div>
-                <div className="flex gap-2 min-w-[280px]">
-                    <div className="flex-1 relative">
-                        <Input
-                            type="date"
-                            value={startDate}
-                            onChange={(e) => setStartDate(e.target.value)}
-                            className="bg-white border-[#1E2A33]/10 focus-visible:ring-[#AE7D5C] text-[#1E2A33]/70 font-roboto text-sm w-full"
-                        />
-                    </div>
-                    <div className="flex-1 relative">
-                        <Input
-                            type="date"
-                            value={endDate}
-                            onChange={(e) => setEndDate(e.target.value)}
-                            className="bg-white border-[#1E2A33]/10 focus-visible:ring-[#AE7D5C] text-[#1E2A33]/70 font-roboto text-sm w-full"
-                        />
-                    </div>
+                <div className="flex flex-1 min-w-[200px] sm:max-w-xs gap-2">
+                    <select
+                        value={filterMonth}
+                        onChange={(e) => setFilterMonth(e.target.value)}
+                        className="flex-1 bg-white border border-[#1E2A33]/10 rounded-lg focus-visible:ring-1 focus-visible:outline-none focus-visible:ring-[#AE7D5C] text-[#1E2A33]/70 font-roboto text-sm px-3 h-10"
+                    >
+                        <option value="all">Tous les mois</option>
+                        <option value="01">Janvier</option>
+                        <option value="02">Février</option>
+                        <option value="03">Mars</option>
+                        <option value="04">Avril</option>
+                        <option value="05">Mai</option>
+                        <option value="06">Juin</option>
+                        <option value="07">Juillet</option>
+                        <option value="08">Août</option>
+                        <option value="09">Septembre</option>
+                        <option value="10">Octobre</option>
+                        <option value="11">Novembre</option>
+                        <option value="12">Décembre</option>
+                    </select>
+
+                    <select
+                        value={filterYear}
+                        onChange={(e) => setFilterYear(e.target.value)}
+                        className="flex-1 bg-white border border-[#1E2A33]/10 rounded-lg focus-visible:ring-1 focus-visible:outline-none focus-visible:ring-[#AE7D5C] text-[#1E2A33]/70 font-roboto text-sm px-3 h-10"
+                    >
+                        <option value="all">Toutes les années</option>
+                        <option value="2026">2026</option>
+                        <option value="2025">2025</option>
+                        <option value="2024">2024</option>
+                        <option value="2023">2023</option>
+                    </select>
                 </div>
             </div>
 
             <Table>
                 <TableHeader>
                     <TableRow className="border-[#1E2A33]/10 hover:bg-transparent hidden sm:table-row">
-                        <TableHead className="font-bebas text-[#1E2A33]/50 uppercase tracking-widest w-12"></TableHead>
-                        <TableHead className="font-bebas text-[#1E2A33]/50 uppercase tracking-widest">Date</TableHead>
-                        <TableHead className="font-bebas text-[#1E2A33]/50 uppercase tracking-widest">Fournisseur</TableHead>
-                        <TableHead className="font-bebas text-[#1E2A33]/50 uppercase tracking-widest">Montant</TableHead>
-                        <TableHead className="font-bebas text-[#1E2A33]/50 uppercase tracking-widest">Statut</TableHead>
-                        <TableHead className="text-right font-bebas text-[#1E2A33]/50 uppercase tracking-widest">Action</TableHead>
+                        <TableHead className="font-roboto text-[#1E2A33]/40 text-[10px] uppercase tracking-widest w-12"></TableHead>
+                        <TableHead className="font-roboto text-[#1E2A33]/40 text-[10px] uppercase tracking-widest">Date</TableHead>
+                        <TableHead className="font-roboto text-[#1E2A33]/40 text-[10px] uppercase tracking-widest">Fournisseur</TableHead>
+                        <TableHead className="font-roboto text-[#1E2A33]/40 text-[10px] uppercase tracking-widest">Montant</TableHead>
+                        <TableHead className="font-roboto text-[#1E2A33]/40 text-[10px] uppercase tracking-widest">Statut</TableHead>
+                        <TableHead className="text-right font-roboto text-[#1E2A33]/40 text-[10px] uppercase tracking-widest">Action</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -196,12 +209,12 @@ export default function InvoiceTable({ invoices }: { invoices: any[] }) {
                                         <TableCell colSpan={5} className="py-4">
                                             <div className="flex justify-between w-full items-center">
                                                 <div className="flex items-center gap-3">
-                                                    <span className="font-bebas text-xl tracking-wider text-[#1E2A33] capitalize">{group.label}</span>
-                                                    <Badge variant="secondary" className="bg-white text-[#1E2A33]/60 font-roboto border border-[#1E2A33]/10 hidden sm:inline-flex shadow-sm">
+                                                    <span className="font-roboto text-sm font-bold tracking-wide text-[#1E2A33]/80 uppercase">{group.label}</span>
+                                                    <Badge variant="secondary" className="bg-transparent text-[#1E2A33]/40 font-roboto hidden sm:inline-flex px-2 py-0 h-5 text-[10px]">
                                                         {group.invoices.length} relevé{group.invoices.length > 1 ? 's' : ''}
                                                     </Badge>
                                                 </div>
-                                                <span className="font-roboto font-semibold text-[#AE7D5C] sm:pr-4">{group.total.toFixed(2)} €</span>
+                                                <span className="font-roboto text-sm font-light text-[#1E2A33] sm:pr-4">{group.total.toFixed(2)} €</span>
                                             </div>
                                         </TableCell>
                                     </TableRow>
@@ -210,49 +223,43 @@ export default function InvoiceTable({ invoices }: { invoices: any[] }) {
                                     {isExpanded && group.invoices.map((invoice: any) => (
                                         <TableRow key={invoice.id} className="border-[#1E2A33]/5 hover:bg-[#FDFBEF] transition-colors group cursor-pointer" onClick={() => (window.innerWidth < 640) ? openInvoice(invoice) : null}>
                                             <TableCell className="hidden sm:table-cell"></TableCell>
-                                            <TableCell className="font-roboto font-light text-[#1E2A33]/70 hidden sm:table-cell whitespace-nowrap pl-0">{new Date(invoice.date).toLocaleDateString('fr-FR')}</TableCell>
-                                            <TableCell className="font-roboto font-medium text-[#1E2A33] whitespace-normal sm:whitespace-nowrap sm:pl-0 pl-4 py-4">
+                                            <TableCell className="font-roboto font-light text-[#1E2A33]/50 text-sm hidden sm:table-cell whitespace-nowrap pl-0">{new Date(invoice.date).toLocaleDateString('fr-FR')}</TableCell>
+                                            <TableCell className="font-roboto font-light text-[#1E2A33] text-sm whitespace-normal sm:whitespace-nowrap sm:pl-0 pl-4 py-4">
                                                 <div className="flex flex-col">
-                                                    <span className="text-[15px]">{invoice.provider}</span>
-                                                    <span className="text-xs text-[#1E2A33]/50 sm:hidden mt-1">{new Date(invoice.date).toLocaleDateString('fr-FR')} • {invoice.status}</span>
+                                                    <span>{invoice.provider}</span>
+                                                    <span className="text-[10px] text-[#1E2A33]/40 sm:hidden mt-1">{new Date(invoice.date).toLocaleDateString('fr-FR')} • {invoice.status}</span>
                                                 </div>
                                             </TableCell>
-                                            <TableCell className="font-roboto text-[#1E2A33] whitespace-nowrap text-[15px]">
+                                            <TableCell className="font-roboto font-light text-[#1E2A33] text-sm whitespace-nowrap">
                                                 {invoice.amount !== null && invoice.amount !== undefined
                                                     ? `${invoice.amount.toFixed(2)} €`
                                                     : '-'}
                                             </TableCell>
                                             <TableCell className="hidden sm:table-cell">
-                                                <Badge variant="outline" className={`font-roboto tracking-wide bg-transparent ${invoice.status === 'PENDING' ? 'text-[#AE7D5C] border-[#AE7D5C]/30' : 'text-[#1E2A33]/60 border-[#1E2A33]/20'}`}>
-                                                    {invoice.status}
-                                                </Badge>
+                                                <div className="flex items-center gap-1.5">
+                                                    <div className={`w-1.5 h-1.5 rounded-full ${invoice.status === 'PENDING' ? 'bg-[#AE7D5C]' : 'bg-green-500'}`} />
+                                                    <span className="text-[11px] font-roboto tracking-wide text-[#1E2A33]/70 uppercase">{invoice.status}</span>
+                                                </div>
                                             </TableCell>
                                             <TableCell className="text-right sm:pr-4">
-                                                {(invoice.fileUrl || invoice.provider === 'Bouygues Telecom') && (
+                                                {invoice.fileUrl && (
                                                     <div className="flex justify-end gap-1 items-center">
-                                                        {invoice.provider !== 'Bouygues Telecom' && invoice.fileUrl && (
-                                                            <Button
-                                                                variant="ghost"
-                                                                size="icon"
-                                                                className="h-8 w-8 text-[#1E2A33]/40 hover:text-[#1E2A33] hover:bg-[#1E2A33]/5 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-all cursor-pointer z-10 rounded-full hidden sm:inline-flex"
-                                                                onClick={(e) => downloadPdf(e, invoice)}
-                                                                title="Forcer le téléchargement"
-                                                            >
-                                                                <Download className="w-4 h-4" />
-                                                            </Button>
-                                                        )}
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-8 w-8 text-[#1E2A33]/40 hover:text-[#1E2A33] hover:bg-[#1E2A33]/5 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-all cursor-pointer z-10 rounded-full hidden sm:inline-flex"
+                                                            onClick={(e) => downloadPdf(e, invoice)}
+                                                            title="Forcer le téléchargement"
+                                                        >
+                                                            <Download className="w-4 h-4" />
+                                                        </Button>
                                                         <Button
                                                             variant="ghost"
                                                             size="sm"
                                                             className="h-8 font-roboto font-medium text-[#AE7D5C] hover:text-[#AE7D5C] hover:bg-[#AE7D5C]/10 sm:opacity-0 group-hover:opacity-100 transition-all cursor-pointer z-10 px-3 rounded-full"
                                                             onClick={(e) => { e.stopPropagation(); openInvoice(invoice); }}
                                                         >
-                                                            {invoice.provider === 'Bouygues Telecom' ? (
-                                                                <>
-                                                                    <ExternalLink className="w-4 h-4 sm:mr-2" />
-                                                                    <span className="hidden sm:inline">Espace Client</span>
-                                                                </>
-                                                            ) : invoice.fileUrl?.toLowerCase().includes('.html') ? (
+                                                            {invoice.fileUrl?.toLowerCase().includes('.html') ? (
                                                                 <>
                                                                     <FileText className="w-4 h-4 sm:mr-2" />
                                                                     <span className="hidden sm:inline">Voir le Reçu</span>
@@ -275,6 +282,42 @@ export default function InvoiceTable({ invoices }: { invoices: any[] }) {
                     )}
                 </TableBody>
             </Table>
+
+            {/* PDF Preview Modal */}
+            <Dialog open={!!previewUrl} onOpenChange={(open) => !open && setPreviewUrl(null)}>
+                <DialogContent className="max-w-5xl w-[95vw] h-[90vh] flex flex-col p-0 overflow-hidden bg-white/95 backdrop-blur-xl border-[#1E2A33]/10">
+                    <DialogHeader className="p-4 border-b border-[#1E2A33]/5 flex-shrink-0 flex flex-row items-center justify-between">
+                        <DialogTitle className="text-xl font-bebas tracking-wide text-[#1E2A33]">
+                            Aperçu de la Facture
+                        </DialogTitle>
+                        {previewUrl && (
+                            <a
+                                href={previewUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-sm font-roboto font-medium text-[#AE7D5C] hover:underline mr-8"
+                            >
+                                <ExternalLink className="w-4 h-4 inline-block mr-1" />
+                                Ouvrir dans un nouvel onglet
+                            </a>
+                        )}
+                    </DialogHeader>
+                    <div className="flex-1 w-full h-full relative bg-[#1E2A33]/5 flex flex-col items-center justify-center">
+                        <div className="absolute inset-0 flex flex-col items-center justify-center text-[#1E2A33]/50 -z-10">
+                            <span className="loader mb-4 border-2 border-[#AE7D5C] border-t-transparent rounded-full w-8 h-8 animate-spin" />
+                            <p className="font-roboto text-sm">Chargement du document...</p>
+                            <p className="font-roboto text-xs mt-2 opacity-60">Si rien ne s'affiche, utilisez le lien "Ouvrir dans un nouvel onglet" en haut à droite.</p>
+                        </div>
+                        {previewUrl && (
+                            <iframe
+                                src={`/api/invoices/preview?url=${encodeURIComponent(previewUrl)}`}
+                                className="absolute inset-0 w-full h-full border-none z-10"
+                                title="Aperçu PDF"
+                            />
+                        )}
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

@@ -1,28 +1,27 @@
 import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
-import https from 'https';
 
 import { prisma } from "@/lib/prisma";
 
-function downloadFile(url: string, dest: string): Promise<boolean> {
-    return new Promise((resolve, reject) => {
-        https.get(url, (res) => {
-            if (res.statusCode !== 200) {
-                reject(new Error(`Echec du téléchargement ${url}: Code ${res.statusCode}`));
-                return;
-            }
-            const fileStream = fs.createWriteStream(dest);
-            res.pipe(fileStream);
-            fileStream.on('finish', () => {
-                fileStream.close();
-                resolve(true);
-            });
-        }).on('error', (err) => {
-            fs.unlink(dest, () => { });
-            reject(err);
-        });
-    });
+async function downloadFile(url: string, dest: string): Promise<boolean> {
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`Echec du téléchargement ${url}: Code ${response.status}`);
+        }
+
+        const arrayBuffer = await response.arrayBuffer();
+        const buffer = Buffer.from(arrayBuffer);
+        await fs.promises.writeFile(dest, buffer);
+        return true;
+    } catch (err) {
+        console.error(`Error downloading ${url}:`, err);
+        if (fs.existsSync(dest)) {
+            await fs.promises.unlink(dest).catch(() => { });
+        }
+        throw err;
+    }
 }
 
 function getFormattedMonth(date: Date) {

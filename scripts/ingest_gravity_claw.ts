@@ -41,7 +41,7 @@ async function walkDir(dir: string, baseDir: string = dir): Promise<{ filePath: 
             const fullPath = path.join(dir, entry.name);
             if (entry.isDirectory()) {
                 files.push(...(await walkDir(fullPath, baseDir)));
-            } else if (entry.isFile() && (entry.name.endsWith('.md') || entry.name.endsWith('.txt') || entry.name.endsWith('.vtt'))) {
+            } else if (entry.isFile() && (entry.name.endsWith('.md') || entry.name.endsWith('.txt') || entry.name.endsWith('.vtt') || entry.name.endsWith('.pdf'))) {
                 // Find matching metadata based on directory name
                 const relPath = path.relative(baseDir, fullPath);
                 const topLevelDir = relPath.split(path.sep)[0];
@@ -80,7 +80,17 @@ function chunkText(text: string, maxLen: number = 3000): string[] {
 
 async function processFile(filePath: string, docMetadata: any) {
     try {
-        const text = await fs.readFile(filePath, 'utf-8');
+        let text = '';
+        if (filePath.endsWith('.pdf')) {
+            const pdfParseModule = await import('pdf-parse');
+            const pdfParse = pdfParseModule.default || pdfParseModule;
+            const dataBuffer = await fs.readFile(filePath);
+            const data = await pdfParse(dataBuffer);
+            text = data.text;
+        } else {
+            text = await fs.readFile(filePath, 'utf-8');
+        }
+
         const chunks = chunkText(text);
         const fileName = path.basename(filePath);
 

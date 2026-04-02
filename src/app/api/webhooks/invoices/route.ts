@@ -21,7 +21,10 @@ function extractInvoiceDataFromText(htmlText: string, currentProvider: string, c
     const isProtected = protectedProviders.some(p => currentProvider.toLowerCase().includes(p));
 
     // Detect Amazon only if not protected
-    if (!isProtected && (textStr.toLowerCase().includes('amazon') || provider.toLowerCase().includes('amazon'))) {
+    const isUnknown = provider === 'Inconnu (à classer)';
+    const hasStrongAmazonSignal = /amazon\s*(?:eu|business|web services|\.fr|\.com|prime)/i.test(textStr);
+
+    if (!isProtected && (provider.toLowerCase().includes('amazon') || (isUnknown && hasStrongAmazonSignal))) {
         provider = 'Amazon Business';
 
         // Match standard Amazon EU amounts like "Montant total : 45,00 €" or "EUR 45.00"
@@ -35,6 +38,18 @@ function extractInvoiceDataFromText(htmlText: string, currentProvider: string, c
             const parsed = parseFloat(match[1].replace(',', '.'));
             if (!isNaN(parsed) && (!amount || amount === 0)) {
                 amount = parsed;
+            }
+        }
+    }
+
+    // Detect PayPal Merchant
+    if (provider.toLowerCase().includes('paypal') || textStr.toLowerCase().includes('paypal')) {
+        const paypalMerchantRegex = /(?:paiement\s*à\s*|payé\s*à\s*|transaction\s*avec\s*|pour\s*votre\s*paiement\s*à\s*|paiement\s*de\s*.*?à\s*|merchant\s*:\s*|marchand\s*:\s*)\*?\*?([A-Z0-9][A-Za-z0-9\s.\-&]{1,30}?)(?:\*?\*?\s*<|\n|\r|€|\s*-|$)/i;
+        const matchMerchant = textStr.match(paypalMerchantRegex);
+        if (matchMerchant && matchMerchant[1]) {
+            const p = matchMerchant[1].trim();
+            if (!p.toLowerCase().startsWith('paypal') && p.length > 2) {
+                provider = p;
             }
         }
     }
@@ -111,7 +126,10 @@ export async function POST(req: Request) {
         invoiceAmount = extracted.amount;
 
         // 2. Safely try to fetch and upload the file to Supabase if Zapier sent a URL
-        if (fileUrl) {
+        // Ignore fileUrl for providers that send HTML receipts (Apple, PayPal) to avoid downloading useless tracking pixels
+        const isHtmlReceiptProvider = provider.toLowerCase().includes('apple') || provider.toLowerCase().includes('paypal') || provider.toLowerCase().includes('spotify') || provider.toLowerCase().includes('netflix');
+
+        if (fileUrl && !isHtmlReceiptProvider) {
             try {
                 // If Zapier sends multiple attachments comma-separated, take the first one
                 const firstUrl = fileUrl.split(',')[0].trim();
@@ -163,7 +181,9 @@ export async function POST(req: Request) {
 
                 const displayDate = invoiceDateRaw || new Date().toLocaleDateString('fr-FR');
                 const displayAmount = invoiceAmount !== null && invoiceAmount !== undefined ? invoiceAmount.toFixed(2) + ' €' : 'À vérifier';
-                const safeHtmlBody = body.body_html.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/\\n/g, "<br>");
+                const safeHtmlBody = body.body_plain
+                    ? body.body_plain.replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/(?:\\r\\n|\\r|\\n)/g, '<br>')
+                    : (body.body_html || 'Aucun contenu d\\\'e-mail disponible.');
 
                 const htmlContent = `<!DOCTYPE html>
 <html lang="fr">
