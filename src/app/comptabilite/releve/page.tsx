@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import {
   CreditCard,
   Bot,
@@ -65,6 +65,36 @@ interface MonthGroup {
   sortedDates: string[];
 }
 
+const formatAmount = (num: number) => {
+  return new Intl.NumberFormat("fr-FR", {
+    style: "currency",
+    currency: "EUR"
+  }).format(num);
+};
+
+const formatDateLabel = (dateStr: string) => {
+  const d = new Date(dateStr);
+  return d.toLocaleDateString("fr-FR", {
+    weekday: "long",
+    day: "numeric",
+    month: "long",
+    year: "numeric"
+  });
+};
+
+const getCategoryBadge = (category: string) => {
+  switch (category) {
+    case "card":
+      return { label: "Carte", icon: <CreditCard className="w-3.5 h-3.5 text-[#AE7D5C]" /> };
+    case "direct_debit":
+      return { label: "Prélèvement", icon: <Bot className="w-3.5 h-3.5 text-[#1E2A33]" /> };
+    case "transfer":
+      return { label: "Virement", icon: <ReceiptEuro className="w-3.5 h-3.5 text-blue-600" /> };
+    default:
+      return { label: "Autre", icon: <Layers className="w-3.5 h-3.5 text-gray-500" /> };
+  }
+};
+
 export default function RelevePage() {
   const [loading, setLoading] = useState(true);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -72,6 +102,7 @@ export default function RelevePage() {
   const [activeTab, setActiveTab] = useState<"pro" | "perso">("pro");
   const [selectedMonth, setSelectedMonth] = useState<string>("all");
   const [togglingTxId, setTogglingTxId] = useState<string | null>(null);
+  const [reconcilingTxId, setReconcilingTxId] = useState<string | null>(null);
   
   // Filters
   const [filterFlow, setFilterFlow] = useState<"all" | "inflow" | "outflow">("all");
@@ -81,7 +112,7 @@ export default function RelevePage() {
 
   const [expandedMonths, setExpandedMonths] = useState<Record<string, boolean>>({});
 
-  const handleTogglePro = async (transactionId: string | number, currentIsPro: boolean) => {
+  const handleTogglePro = useCallback(async (transactionId: string | number, currentIsPro: boolean) => {
     const newIsPro = !currentIsPro;
     setTogglingTxId(String(transactionId));
     
@@ -128,7 +159,44 @@ export default function RelevePage() {
     } finally {
       setTogglingTxId(null);
     }
-  };
+  }, [setTransactions]);
+
+  const handleReconcileAuto = useCallback(async (tx: Transaction) => {
+    setReconcilingTxId(String(tx.id));
+    try {
+      const res = await fetch('/api/transactions/reconcile-auto', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          transactionId: String(tx.id),
+          label: tx.label,
+          amount: tx.amount,
+          date: tx.date
+        }),
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        // Update transaction locally with the new matchedInvoice
+        setTransactions(prev =>
+          prev.map(t =>
+            String(t.id) === String(tx.id)
+              ? { ...t, matchedInvoice: data.invoice }
+              : t
+          )
+        );
+        alert(`Rapprochement réussi avec le fichier : ${data.matchedFile}`);
+      } else {
+        alert(data.error || "Une erreur s'est produite lors du rapprochement automatique.");
+      }
+    } catch (err: any) {
+      alert(err.message || "Erreur de connexion lors du rapprochement.");
+    } finally {
+      setReconcilingTxId(null);
+    }
+  }, [setTransactions]);
 
   const loadData = async () => {
     setLoading(true);
@@ -298,28 +366,7 @@ export default function RelevePage() {
     }).format(num);
   };
 
-  const formatDateLabel = (dateStr: string) => {
-    const d = new Date(dateStr);
-    return d.toLocaleDateString("fr-FR", {
-      weekday: "long",
-      day: "numeric",
-      month: "long",
-      year: "numeric"
-    });
-  };
-
-  const getCategoryBadge = (category: string) => {
-    switch (category) {
-      case "card":
-        return { label: "Carte", icon: <CreditCard className="w-3.5 h-3.5 text-[#AE7D5C]" /> };
-      case "direct_debit":
-        return { label: "Prélèvement", icon: <Bot className="w-3.5 h-3.5 text-[#1E2A33]" /> };
-      case "transfer":
-        return { label: "Virement", icon: <ReceiptEuro className="w-3.5 h-3.5 text-blue-600" /> };
-      default:
-        return { label: "Autre", icon: <Layers className="w-3.5 h-3.5 text-gray-500" /> };
-    }
-  };
+  // Helpers are defined at the module level
 
   return (
     <main className="min-h-screen bg-[#FDFBEF] text-[#1E2A33] p-4 sm:p-6 lg:p-8 font-sans relative overflow-hidden">
@@ -612,86 +659,16 @@ export default function RelevePage() {
 
                             {/* Day's Transactions list */}
                             <div className="border border-[#1E2A33]/10 rounded-2xl overflow-hidden divide-y divide-[#1E2A33]/5">
-                              {dayTxs.map(tx => {
-                                const badgeInfo = getCategoryBadge(tx.category);
-
-                                return (
-                                  <div key={tx.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 gap-3 sm:gap-4 hover:bg-[#FDFBEF]/25 transition-colors">
-                                    <div className="flex items-start gap-3 min-w-0">
-                                      {/* Payment Icon */}
-                                      <div className="p-2 bg-[#FDFBEF] border border-[#1E2A33]/10 rounded-xl shrink-0 mt-0.5">
-                                        {badgeInfo.icon}
-                                      </div>
-                                      <div className="min-w-0 flex-1">
-                                        <span className="text-xs sm:text-sm font-semibold text-[#1E2A33] block leading-snug break-words">
-                                          {tx.label}
-                                        </span>
-                                        <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1 text-[10px] font-medium text-[#1E2A33]/50">
-                                          <span>{tx.bankAccountName}</span>
-                                          <span>•</span>
-                                          <span>{badgeInfo.label}</span>
-                                        </div>
-                                      </div>
-                                    </div>
-
-                                    <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 border-t sm:border-none pt-2.5 sm:pt-0">
-                                      {/* Pro/Perso Toggle Button */}
-                                      <button
-                                        onClick={() => handleTogglePro(tx.id, tx.isPro)}
-                                        className={`h-7 px-2.5 font-roboto text-[10px] font-medium rounded-full border transition-all cursor-pointer flex items-center shrink-0 ${
-                                          !tx.isPro
-                                            ? 'border-blue-200 text-blue-700 bg-blue-50/40 hover:bg-blue-100/50'
-                                            : 'border-amber-200 text-amber-800 bg-amber-50/40 hover:bg-amber-100/50'
-                                        }`}
-                                      >
-                                        {!tx.isPro ? (
-                                          <>
-                                            <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mr-1.5" />
-                                            <span>🏠 Perso</span>
-                                          </>
-                                        ) : (
-                                          <>
-                                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mr-1.5" />
-                                            <span>💼 Pro</span>
-                                          </>
-                                        )}
-                                      </button>
-
-                                      {/* Rapprochement Badge */}
-                                      <div className="flex items-center gap-2">
-                                        {/* Match Status / Action Badge */}
-                                        {!tx.isPro ? null : tx.matchedInvoice ? (
-                                          <a
-                                            href={tx.matchedInvoice.publicFileUrl || "#"}
-                                            target="_blank"
-                                            rel="noopener noreferrer"
-                                            className="flex items-center gap-1 text-emerald-600 bg-emerald-50 border border-emerald-200/60 hover:bg-emerald-100/80 transition-colors px-2.5 py-1 rounded-xl text-[10px] font-bold cursor-pointer"
-                                          >
-                                            <CheckCircle className="w-3.5 h-3.5 shrink-0" />
-                                            Rapproché
-                                            <FileText className="w-3 h-3 ml-0.5 shrink-0" />
-                                          </a>
-                                        ) : tx.noJustificatif ? (
-                                          <span className="flex items-center gap-1.5 text-slate-500 bg-slate-100/50 border border-slate-200/50 px-2.5 py-1 rounded-xl text-[10px] font-bold">
-                                            <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                                            Sans justificatif
-                                          </span>
-                                        ) : (
-                                          <span className="flex items-center gap-1.5 text-amber-600 bg-amber-50 border border-amber-200/50 px-2.5 py-1 rounded-xl text-[10px] font-bold">
-                                            <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                                            À rapprocher
-                                          </span>
-                                        )}
-                                      </div>
-
-                                      {/* Amount */}
-                                      <span className={`text-base sm:text-lg font-bebas tracking-wider whitespace-nowrap ${tx.isOutflow ? "text-rose-600" : "text-emerald-600"}`}>
-                                        {tx.isOutflow ? "-" : "+"}{formatAmount(tx.absAmount)}
-                                      </span>
-                                    </div>
-                                  </div>
-                                );
-                              })}
+                              {dayTxs.map(tx => (
+                                <TransactionRow
+                                  key={tx.id}
+                                  tx={tx}
+                                  toggling={togglingTxId === String(tx.id)}
+                                  onTogglePro={handleTogglePro}
+                                  reconciling={reconcilingTxId === String(tx.id)}
+                                  onReconcileAuto={handleReconcileAuto}
+                                />
+                              ))}
                             </div>
                           </div>
                         );
@@ -707,3 +684,108 @@ export default function RelevePage() {
     </main>
   );
 }
+
+interface TransactionRowProps {
+  tx: Transaction;
+  toggling: boolean;
+  onTogglePro: (transactionId: string | number, currentIsPro: boolean) => void;
+  reconciling: boolean;
+  onReconcileAuto: (tx: Transaction) => void;
+}
+
+const TransactionRow = React.memo(({ tx, toggling, onTogglePro, reconciling, onReconcileAuto }: TransactionRowProps) => {
+  const badgeInfo = getCategoryBadge(tx.category);
+
+  return (
+    <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 gap-3 sm:gap-4 hover:bg-[#FDFBEF]/25 transition-colors">
+      <div className="flex items-start gap-3 min-w-0">
+        {/* Payment Icon */}
+        <div className="p-2 bg-[#FDFBEF] border border-[#1E2A33]/10 rounded-xl shrink-0 mt-0.5">
+          {badgeInfo.icon}
+        </div>
+        <div className="min-w-0 flex-1">
+          <span className="text-xs sm:text-sm font-semibold text-[#1E2A33] block leading-snug break-words">
+            {tx.label}
+          </span>
+          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1 text-[10px] font-medium text-[#1E2A33]/50">
+            <span>{tx.bankAccountName}</span>
+            <span>•</span>
+            <span>{badgeInfo.label}</span>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 border-t sm:border-none pt-2.5 sm:pt-0">
+        {/* Pro/Perso Toggle Button */}
+        <button
+          onClick={() => onTogglePro(tx.id, tx.isPro)}
+          className={`h-7 px-2.5 font-roboto text-[10px] font-medium rounded-full border transition-all cursor-pointer flex items-center shrink-0 ${
+            !tx.isPro
+              ? 'border-blue-200 text-blue-700 bg-blue-50/40 hover:bg-blue-100/50'
+              : 'border-amber-200 text-amber-800 bg-amber-50/40 hover:bg-amber-100/50'
+          }`}
+        >
+          {toggling ? (
+            <RefreshCcw className="w-3 h-3 animate-spin" />
+          ) : !tx.isPro ? (
+            <>
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mr-1.5" />
+              <span>🏠 Perso</span>
+            </>
+          ) : (
+            <>
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mr-1.5" />
+              <span>💼 Pro</span>
+            </>
+          )}
+        </button>
+
+        {/* Rapprochement Badge */}
+        <div className="flex items-center gap-2">
+          {/* Match Status / Action Badge */}
+          {!tx.isPro ? null : tx.matchedInvoice ? (
+            <a
+              href={tx.matchedInvoice.publicFileUrl || "#"}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1 text-emerald-600 bg-emerald-50 border border-emerald-200/60 hover:bg-emerald-100/80 transition-colors px-2.5 py-1 rounded-xl text-[10px] font-bold cursor-pointer"
+            >
+              <CheckCircle className="w-3.5 h-3.5 shrink-0" />
+              Rapproché
+              <FileText className="w-3 h-3 ml-0.5 shrink-0" />
+            </a>
+          ) : tx.noJustificatif ? (
+            <span className="flex items-center gap-1.5 text-slate-500 bg-slate-100/50 border border-slate-200/50 px-2.5 py-1 rounded-xl text-[10px] font-bold">
+              <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+              Sans justificatif
+            </span>
+          ) : (
+            <button
+              onClick={() => onReconcileAuto(tx)}
+              disabled={reconciling}
+              className="flex items-center gap-1.5 text-amber-600 bg-amber-50 border border-amber-200/50 hover:bg-amber-100/80 transition-colors px-2.5 py-1 rounded-xl text-[10px] font-bold cursor-pointer disabled:opacity-50"
+            >
+              {reconciling ? (
+                <>
+                  <RefreshCcw className="w-3 h-3 shrink-0 animate-spin mr-1" />
+                  Recherche...
+                </>
+              ) : (
+                <>
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                  À rapprocher
+                </>
+              )}
+            </button>
+          )}
+        </div>
+
+        {/* Amount */}
+        <span className={`text-base sm:text-lg font-bebas tracking-wider whitespace-nowrap ${tx.isOutflow ? "text-rose-600" : "text-emerald-600"}`}>
+          {tx.isOutflow ? "-" : "+"}{formatAmount(tx.absAmount)}
+        </span>
+      </div>
+    </div>
+  );
+});
+TransactionRow.displayName = "TransactionRow";

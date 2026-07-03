@@ -58,4 +58,10 @@ model SupplierCredential {
   updatedAt     DateTime @updatedAt
 }
 
+model TransactionOverride {
+  id        String   @id // The Pennylane transaction ID
+  isPro     Boolean
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
 
