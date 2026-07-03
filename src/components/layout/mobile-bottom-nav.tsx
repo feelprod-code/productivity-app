@@ -6,7 +6,7 @@ import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 const items = [
-    { title: "Compta", url: "/comptabilite", icon: ReceiptEuro },
+    { title: "Compta", url: "/comptabilite/releve", icon: ReceiptEuro },
     { title: "Sorties", url: "/comptabilite/sorties", icon: CreditCard },
     { title: "FinOps", url: "/cerveau/finops", icon: LineChart },
     { title: "Réglages", url: "#", icon: Settings },
@@ -19,7 +19,7 @@ export function MobileBottomNav() {
         <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden bg-[#FDFBEF] border-t border-[#1E2A33]/10 pb-safe shadow-[0_-5px_20px_rgba(0,0,0,0.05)]">
             <div className="flex items-center justify-around h-16 w-full px-2 max-w-md mx-auto">
                 {items.map((item) => {
-                    const isActive = pathname === item.url;
+                    const isActive = item.url !== "#" && (pathname === item.url || pathname.startsWith(item.url + "/"));
                     return (
                         <Link
                             key={item.title}

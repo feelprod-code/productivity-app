@@ -14,11 +14,6 @@ import {
 // Menu items.
 const items = [
     {
-        title: "Factures & Justificatifs",
-        url: "/comptabilite",
-        icon: ReceiptEuro,
-    },
-    {
         title: "Relevé & Rapprochement",
         url: "/comptabilite/releve",
         icon: Sparkles,
