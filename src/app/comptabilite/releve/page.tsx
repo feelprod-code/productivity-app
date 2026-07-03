@@ -71,6 +71,7 @@ export default function RelevePage() {
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
   const [activeTab, setActiveTab] = useState<"pro" | "perso">("pro");
   const [selectedMonth, setSelectedMonth] = useState<string>("all");
+  const [togglingTxId, setTogglingTxId] = useState<string | null>(null);
   
   // Filters
   const [filterFlow, setFilterFlow] = useState<"all" | "inflow" | "outflow">("all");
@@ -79,11 +80,21 @@ export default function RelevePage() {
   const [searchQuery, setSearchQuery] = useState<string>("");
 
   const [expandedMonths, setExpandedMonths] = useState<Record<string, boolean>>({});
-  const [togglingTxId, setTogglingTxId] = useState<string | null>(null);
 
   const handleTogglePro = async (transactionId: string | number, currentIsPro: boolean) => {
     const newIsPro = !currentIsPro;
     setTogglingTxId(String(transactionId));
+    
+    // 1. Optimistic Update: immediately update local state
+    setTransactions(prev => 
+      prev.map(tx => 
+        String(tx.id) === String(transactionId) 
+          ? { ...tx, isPro: newIsPro } 
+          : tx
+      )
+    );
+
+    // 2. Perform API call in the background
     try {
       const res = await fetch('/api/transactions/toggle-pro', {
         method: 'POST',
@@ -92,12 +103,27 @@ export default function RelevePage() {
         },
         body: JSON.stringify({ transactionId: String(transactionId), isPro: newIsPro }),
       });
-      if (res.ok) {
-        await loadData();
-      } else {
+      
+      if (!res.ok) {
+        // Revert change on error
+        setTransactions(prev => 
+          prev.map(tx => 
+            String(tx.id) === String(transactionId) 
+              ? { ...tx, isPro: currentIsPro } 
+              : tx
+          )
+        );
         alert("Erreur lors de la modification de la catégorie");
       }
     } catch (err: any) {
+      // Revert change on error
+      setTransactions(prev => 
+        prev.map(tx => 
+          String(tx.id) === String(transactionId) 
+            ? { ...tx, isPro: currentIsPro } 
+            : tx
+        )
+      );
       alert(err.message || "Erreur de connexion");
     } finally {
       setTogglingTxId(null);
@@ -612,16 +638,13 @@ export default function RelevePage() {
                                       {/* Pro/Perso Toggle Button */}
                                       <button
                                         onClick={() => handleTogglePro(tx.id, tx.isPro)}
-                                        disabled={togglingTxId === String(tx.id)}
                                         className={`h-7 px-2.5 font-roboto text-[10px] font-medium rounded-full border transition-all cursor-pointer flex items-center shrink-0 ${
                                           !tx.isPro
                                             ? 'border-blue-200 text-blue-700 bg-blue-50/40 hover:bg-blue-100/50'
                                             : 'border-amber-200 text-amber-800 bg-amber-50/40 hover:bg-amber-100/50'
                                         }`}
                                       >
-                                        {togglingTxId === String(tx.id) ? (
-                                          <RefreshCcw className="w-3 h-3 animate-spin" />
-                                        ) : !tx.isPro ? (
+                                        {!tx.isPro ? (
                                           <>
                                             <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mr-1.5" />
                                             <span>🏠 Perso</span>
