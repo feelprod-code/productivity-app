@@ -1,14 +1,13 @@
 "use client";
 
-import { Home, BrainCircuit, ReceiptEuro, Settings, LineChart } from "lucide-react";
+import { Home, BrainCircuit, ReceiptEuro, Settings, LineChart, CreditCard } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
 const items = [
-    { title: "Accueil", url: "/", icon: Home },
-    { title: "Cerveau", url: "/cerveau", icon: BrainCircuit },
     { title: "Compta", url: "/comptabilite", icon: ReceiptEuro },
+    { title: "Sorties", url: "/comptabilite/sorties", icon: CreditCard },
     { title: "FinOps", url: "/cerveau/finops", icon: LineChart },
     { title: "Réglages", url: "#", icon: Settings },
 ];

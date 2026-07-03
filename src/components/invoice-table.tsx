@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState, useMemo } from 'react';
-import { FileText, ExternalLink, ChevronDown, ChevronRight, Search, Download, X } from 'lucide-react';
+import React, { useState, useMemo, useRef } from 'react';
+import { useRouter } from 'next/navigation';
+import { FileText, ExternalLink, ChevronDown, ChevronRight, Search, Download, X, Upload, Loader2 } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -9,10 +10,15 @@ import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 export default function InvoiceTable({ invoices }: { invoices: any[] }) {
+    const router = useRouter();
+    const [togglingId, setTogglingId] = useState<string | null>(null);
     const [searchQuery, setSearchQuery] = useState('');
     const [filterYear, setFilterYear] = useState<string>(new Date().getFullYear().toString());
     const [filterMonth, setFilterMonth] = useState<string>('all');
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+    const fileInputRef = useRef<HTMLInputElement>(null);
+    const [uploadingId, setUploadingId] = useState<string | null>(null);
+    const [isUploading, setIsUploading] = useState<Record<string, boolean>>({});
 
     // Set auto-open behavior for the most recent month initially
     const [initialized, setInitialized] = useState(false);
@@ -107,6 +113,68 @@ export default function InvoiceTable({ invoices }: { invoices: any[] }) {
         }
     };
 
+    const triggerReplaceUpload = (e: React.MouseEvent, invoiceId: string) => {
+        e.stopPropagation();
+        setUploadingId(invoiceId);
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+            fileInputRef.current.click();
+        }
+    };
+
+    const handleToggleType = async (invoiceId: string, currentType: string) => {
+        const newType = currentType === 'PERSO' ? 'PRO' : 'PERSO';
+        setTogglingId(invoiceId);
+        try {
+            const res = await fetch('/api/invoices/toggle-type', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ id: invoiceId, type: newType }),
+            });
+            if (res.ok) {
+                router.refresh();
+            } else {
+                alert("Erreur lors de la modification de la catégorie");
+            }
+        } catch (err: any) {
+            alert(err.message || "Erreur de connexion");
+        } finally {
+            setTogglingId(null);
+        }
+    };
+
+    const handleReplaceFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (!uploadingId || !e.target.files || e.target.files.length === 0) return;
+        const file = e.target.files[0];
+        
+        setIsUploading(prev => ({ ...prev, [uploadingId]: true }));
+        
+        try {
+            const formData = new FormData();
+            formData.append("invoiceId", uploadingId);
+            formData.append("file", file);
+            
+            const res = await fetch("/api/finops/replace-invoice", {
+                method: "POST",
+                body: formData,
+            });
+            
+            const data = await res.json();
+            if (res.ok && data.success) {
+                window.location.reload();
+            } else {
+                alert(data.error || "Erreur de remplacement");
+            }
+        } catch (err: any) {
+            alert(err.message || "Erreur lors du téléversement");
+        } finally {
+            setIsUploading(prev => ({ ...prev, [uploadingId]: false }));
+            setUploadingId(null);
+        }
+    };
+
     if (invoices.length === 0) {
         return (
             <div className="text-center py-16 text-[#1E2A33]/50 bg-[#FDFBEF]/50 rounded-xl border border-[#1E2A33]/5">
@@ -181,13 +249,14 @@ export default function InvoiceTable({ invoices }: { invoices: any[] }) {
                         <TableHead className="font-roboto text-[#1E2A33]/40 text-[10px] uppercase tracking-widest">Fournisseur</TableHead>
                         <TableHead className="font-roboto text-[#1E2A33]/40 text-[10px] uppercase tracking-widest">Montant</TableHead>
                         <TableHead className="font-roboto text-[#1E2A33]/40 text-[10px] uppercase tracking-widest">Statut</TableHead>
+                        <TableHead className="font-roboto text-[#1E2A33]/40 text-[10px] uppercase tracking-widest">Catégorie</TableHead>
                         <TableHead className="text-right font-roboto text-[#1E2A33]/40 text-[10px] uppercase tracking-widest">Action</TableHead>
                     </TableRow>
                 </TableHeader>
                 <TableBody>
                     {sortedMonths.length === 0 ? (
                         <TableRow>
-                            <TableCell colSpan={6} className="text-center py-12 text-[#1E2A33]/50 font-roboto font-light bg-[#FDFBEF]/30 rounded-xl border border-[#1E2A33]/5">
+                            <TableCell colSpan={7} className="text-center py-12 text-[#1E2A33]/50 font-roboto font-light bg-[#FDFBEF]/30 rounded-xl border border-[#1E2A33]/5">
                                 Aucun résultat pour cette recherche ou ces dates.
                             </TableCell>
                         </TableRow>
@@ -206,7 +275,7 @@ export default function InvoiceTable({ invoices }: { invoices: any[] }) {
                                         <TableCell className="w-12 text-[#1E2A33]/50 sm:pl-4 pl-2">
                                             {isExpanded ? <ChevronDown className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
                                         </TableCell>
-                                        <TableCell colSpan={5} className="py-4">
+                                        <TableCell colSpan={6} className="py-4">
                                             <div className="flex justify-between w-full items-center">
                                                 <div className="flex items-center gap-3">
                                                     <span className="font-roboto text-sm font-bold tracking-wide text-[#1E2A33]/80 uppercase">{group.label}</span>
@@ -227,7 +296,7 @@ export default function InvoiceTable({ invoices }: { invoices: any[] }) {
                                             <TableCell className="font-roboto font-light text-[#1E2A33] text-sm whitespace-normal sm:whitespace-nowrap sm:pl-0 pl-4 py-4">
                                                 <div className="flex flex-col">
                                                     <span>{invoice.provider}</span>
-                                                    <span className="text-[10px] text-[#1E2A33]/40 sm:hidden mt-1">{new Date(invoice.date).toLocaleDateString('fr-FR')} • {invoice.status}</span>
+                                                    <span className="text-[10px] text-[#1E2A33]/40 sm:hidden mt-1">{new Date(invoice.date).toLocaleDateString('fr-FR')} • {invoice.status === 'PENDING' ? '⚠️ Reçu Email' : 'Payé'}</span>
                                                 </div>
                                             </TableCell>
                                             <TableCell className="font-roboto font-light text-[#1E2A33] text-sm whitespace-nowrap">
@@ -236,43 +305,104 @@ export default function InvoiceTable({ invoices }: { invoices: any[] }) {
                                                     : '-'}
                                             </TableCell>
                                             <TableCell className="hidden sm:table-cell">
-                                                <div className="flex items-center gap-1.5">
-                                                    <div className={`w-1.5 h-1.5 rounded-full ${invoice.status === 'PENDING' ? 'bg-[#AE7D5C]' : 'bg-green-500'}`} />
-                                                    <span className="text-[11px] font-roboto tracking-wide text-[#1E2A33]/70 uppercase">{invoice.status}</span>
-                                                </div>
+                                                {invoice.status === 'PENDING' ? (
+                                                    <Badge variant="outline" className="border-[#AE7D5C]/30 text-[#AE7D5C] bg-[#AE7D5C]/5 font-roboto font-normal text-[10px] px-2.5 py-0.5 flex items-center gap-1">
+                                                        <span className="w-1.5 h-1.5 rounded-full bg-[#AE7D5C]" />
+                                                        <span>⚠️ Reçu Email</span>
+                                                    </Badge>
+                                                ) : (
+                                                    <Badge variant="outline" className="border-green-500/30 text-green-700 bg-green-50/50 font-roboto font-normal text-[10px] px-2.5 py-0.5 flex items-center gap-1">
+                                                        <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
+                                                        <span>Payé</span>
+                                                    </Badge>
+                                                )}
                                             </TableCell>
-                                            <TableCell className="text-right sm:pr-4">
-                                                {invoice.fileUrl && (
-                                                    <div className="flex justify-end gap-1 items-center">
+                                            <TableCell className="hidden sm:table-cell" onClick={(e) => e.stopPropagation()}>
+                                                <Button
+                                                    variant="ghost"
+                                                    size="sm"
+                                                    className={`h-7 px-2.5 font-roboto text-[10px] font-medium rounded-full border transition-all cursor-pointer ${
+                                                        invoice.type === 'PERSO'
+                                                            ? 'border-blue-200 text-blue-700 bg-blue-50/40 hover:bg-blue-100/50'
+                                                            : 'border-amber-200 text-amber-800 bg-amber-50/40 hover:bg-amber-100/50'
+                                                    }`}
+                                                    onClick={() => handleToggleType(invoice.id, invoice.type)}
+                                                    disabled={togglingId === invoice.id}
+                                                >
+                                                    {togglingId === invoice.id ? (
+                                                        <Loader2 className="w-3 h-3 animate-spin" />
+                                                    ) : invoice.type === 'PERSO' ? (
+                                                        <>
+                                                            <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mr-1.5" />
+                                                            <span>🏠 Perso</span>
+                                                        </>
+                                                    ) : (
+                                                        <>
+                                                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mr-1.5" />
+                                                            <span>💼 Pro</span>
+                                                        </>
+                                                    )}
+                                                </Button>
+                                            </TableCell>
+                                            <TableCell className="text-right sm:pr-4" onClick={(e) => e.stopPropagation()}>
+                                                <div className="flex justify-end gap-1.5 items-center">
+                                                    {isUploading[invoice.id] ? (
                                                         <Button
                                                             variant="ghost"
                                                             size="icon"
-                                                            className="h-8 w-8 text-[#1E2A33]/40 hover:text-[#1E2A33] hover:bg-[#1E2A33]/5 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-all cursor-pointer z-10 rounded-full hidden sm:inline-flex"
-                                                            onClick={(e) => downloadPdf(e, invoice)}
-                                                            title="Forcer le téléchargement"
+                                                            className="h-8 w-8 text-[#AE7D5C] cursor-wait rounded-full"
+                                                            disabled
                                                         >
-                                                            <Download className="w-4 h-4" />
+                                                            <Loader2 className="w-4 h-4 animate-spin" />
                                                         </Button>
+                                                    ) : (
                                                         <Button
                                                             variant="ghost"
-                                                            size="sm"
-                                                            className="h-8 font-roboto font-medium text-[#AE7D5C] hover:text-[#AE7D5C] hover:bg-[#AE7D5C]/10 sm:opacity-0 group-hover:opacity-100 transition-all cursor-pointer z-10 px-3 rounded-full"
-                                                            onClick={(e) => { e.stopPropagation(); openInvoice(invoice); }}
+                                                            size="icon"
+                                                            className={`h-8 w-8 rounded-full transition-all cursor-pointer z-10 ${
+                                                                invoice.status === 'PENDING'
+                                                                    ? 'text-[#AE7D5C] hover:text-[#AE7D5C] bg-[#AE7D5C]/10 hover:bg-[#AE7D5C]/20 border border-[#AE7D5C]/30 opacity-100'
+                                                                    : 'text-[#1E2A33]/40 hover:text-[#1E2A33] hover:bg-[#1E2A33]/5 opacity-100 sm:opacity-0 group-hover:opacity-100'
+                                                            }`}
+                                                            onClick={(e) => triggerReplaceUpload(e, invoice.id)}
+                                                            title={invoice.status === 'PENDING' ? "Uploader la facture PDF" : "Remplacer le PDF"}
                                                         >
-                                                            {invoice.fileUrl?.toLowerCase().includes('.html') ? (
-                                                                <>
-                                                                    <FileText className="w-4 h-4 sm:mr-2" />
-                                                                    <span className="hidden sm:inline">Voir le Reçu</span>
-                                                                </>
-                                                            ) : (
-                                                                <>
-                                                                    <FileText className="w-4 h-4 sm:mr-2" />
-                                                                    <span className="hidden sm:inline">Ouvrir PDF</span>
-                                                                </>
-                                                            )}
+                                                            <Upload className="w-4 h-4" />
                                                         </Button>
-                                                    </div>
-                                                )}
+                                                    )}
+
+                                                    {invoice.fileUrl && (
+                                                        <>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                className="h-8 w-8 text-[#1E2A33]/40 hover:text-[#1E2A33] hover:bg-[#1E2A33]/5 opacity-100 sm:opacity-0 group-hover:opacity-100 transition-all cursor-pointer z-10 rounded-full hidden sm:inline-flex"
+                                                                onClick={(e) => downloadPdf(e, invoice)}
+                                                                title="Forcer le téléchargement"
+                                                            >
+                                                                <Download className="w-4 h-4" />
+                                                            </Button>
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                className="h-8 font-roboto font-medium text-[#AE7D5C] hover:text-[#AE7D5C] hover:bg-[#AE7D5C]/10 sm:opacity-0 group-hover:opacity-100 transition-all cursor-pointer z-10 px-3 rounded-full"
+                                                                onClick={(e) => { e.stopPropagation(); openInvoice(invoice); }}
+                                                            >
+                                                                {invoice.fileUrl?.toLowerCase().includes('.html') ? (
+                                                                    <>
+                                                                        <FileText className="w-4 h-4 sm:mr-2" />
+                                                                        <span className="hidden sm:inline">Voir le Reçu</span>
+                                                                    </>
+                                                                ) : (
+                                                                    <>
+                                                                        <FileText className="w-4 h-4 sm:mr-2" />
+                                                                        <span className="hidden sm:inline">Ouvrir PDF</span>
+                                                                    </>
+                                                                )}
+                                                            </Button>
+                                                        </>
+                                                    )}
+                                                </div>
                                             </TableCell>
                                         </TableRow>
                                     ))}
@@ -285,14 +415,14 @@ export default function InvoiceTable({ invoices }: { invoices: any[] }) {
 
             {/* PDF Preview Modal */}
             <Dialog open={!!previewUrl} onOpenChange={(open) => !open && setPreviewUrl(null)}>
-                <DialogContent className="max-w-5xl w-[95vw] h-[90vh] flex flex-col p-0 overflow-hidden bg-white/95 backdrop-blur-xl border-[#1E2A33]/10">
+                <DialogContent className="max-w-6xl w-[95vw] h-[90vh] flex flex-col p-0 overflow-hidden bg-white/95 backdrop-blur-xl border-[#1E2A33]/10">
                     <DialogHeader className="p-4 border-b border-[#1E2A33]/5 flex-shrink-0 flex flex-row items-center justify-between">
                         <DialogTitle className="text-xl font-bebas tracking-wide text-[#1E2A33]">
                             Aperçu de la Facture
                         </DialogTitle>
                         {previewUrl && (
                             <a
-                                href={previewUrl}
+                                href={`/api/invoices/preview?url=${encodeURIComponent(previewUrl)}`}
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="text-sm font-roboto font-medium text-[#AE7D5C] hover:underline mr-8"
@@ -310,7 +440,7 @@ export default function InvoiceTable({ invoices }: { invoices: any[] }) {
                         </div>
                         {previewUrl && (
                             <iframe
-                                src={`/api/invoices/preview?url=${encodeURIComponent(previewUrl)}`}
+                                src={`/api/invoices/preview?url=${encodeURIComponent(previewUrl)}#toolbar=1&navpanes=0&view=FitH`}
                                 className="absolute inset-0 w-full h-full border-none z-10"
                                 title="Aperçu PDF"
                             />
@@ -318,6 +448,15 @@ export default function InvoiceTable({ invoices }: { invoices: any[] }) {
                     </div>
                 </DialogContent>
             </Dialog>
+
+            {/* Hidden input for row-level upload/replacement */}
+            <input
+                type="file"
+                ref={fileInputRef}
+                className="hidden"
+                accept="application/pdf,image/png,image/jpeg"
+                onChange={handleReplaceFileChange}
+            />
         </div>
     );
 }

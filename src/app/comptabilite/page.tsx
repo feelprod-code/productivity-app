@@ -5,6 +5,8 @@ import InvoiceTable from '@/components/invoice-table';
 import DashboardStats from '@/components/dashboard-stats';
 import ExportButton from '@/components/ExportButton';
 
+import { InvoiceUploader } from '@/components/finops/InvoiceUploader';
+
 export const dynamic = 'force-dynamic';
 
 export default async function Dashboard() {
@@ -30,9 +32,10 @@ export default async function Dashboard() {
         <div className="flex flex-col lg:flex-row justify-between items-center gap-6 mb-6 pb-4 border-b border-[#1E2A33]/10">
           <div className="flex items-center gap-4 pt-4 lg:pt-0 shrink-0">
             <div className="h-full w-2 bg-[#AE7D5C] rounded-full self-stretch shadow-[0_0_15px_rgba(174,125,92,0.4)]"></div>
-            <h1 className="text-3xl sm:text-5xl font-bebas tracking-wide text-[#1E2A33] text-center md:text-left">TABLEAU DE BORD <span className="text-[#AE7D5C]">/ COMPTABILITE</span></h1>
+            <h1 className="text-3xl sm:text-5xl font-bebas tracking-wide text-[#1E2A33] text-center md:text-left leading-tight">TABLEAU DE BORD <span className="text-[#AE7D5C]">/ COMPTABILITE</span></h1>
           </div>
-          <div className="flex w-full lg:w-auto">
+          <div className="flex w-full lg:w-auto items-center justify-end gap-4">
+            <InvoiceUploader />
             <ExportButton />
           </div>
         </div>

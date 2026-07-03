@@ -27,6 +27,7 @@ model Invoice {
   date      DateTime
   fileUrl   String
   status    String   @default("PENDING")
+  type      String   @default("PRO")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -42,3 +43,19 @@ model Expense {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
+
+model SupplierCredential {
+  id            String   @id @default(uuid())
+  name          String
+  loginUrl      String?
+  email         String?
+  username      String?
+  password      String?
+  monthlyCharge Float?
+  currency      String   @default("EUR")
+  notes         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+

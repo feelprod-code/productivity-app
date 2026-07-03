@@ -1,4 +1,4 @@
-import { Calendar, Home, Inbox, Search, Settings, BrainCircuit, ReceiptEuro, LineChart } from "lucide-react"
+import { Calendar, Home, Inbox, Search, Settings, BrainCircuit, ReceiptEuro, LineChart, CreditCard, Sparkles, Key } from "lucide-react"
 
 import {
     Sidebar,
@@ -14,19 +14,24 @@ import {
 // Menu items.
 const items = [
     {
-        title: "Accueil Mission",
-        url: "/",
-        icon: Home,
-    },
-    {
-        title: "Cerveau Vectoriel",
-        url: "/cerveau",
-        icon: BrainCircuit,
-    },
-    {
-        title: "Comptabilité",
+        title: "Factures & Justificatifs",
         url: "/comptabilite",
         icon: ReceiptEuro,
+    },
+    {
+        title: "Relevé & Rapprochement",
+        url: "/comptabilite/releve",
+        icon: Sparkles,
+    },
+    {
+        title: "Sorties & Abonnements",
+        url: "/comptabilite/sorties",
+        icon: CreditCard,
+    },
+    {
+        title: "Identifiants & Fournisseurs",
+        url: "/comptabilite/fournisseurs",
+        icon: Key,
     },
     {
         title: "Coûts & FinOps",

@@ -7,6 +7,21 @@ import { supabase } from '@/lib/supabase';
 import { randomUUID } from 'crypto';
 import * as cheerio from 'cheerio';
 
+// Helper function to identify generic payment notifications vs specific merchants
+function isGenericProvider(name: string): boolean {
+    const lower = name.toLowerCase().trim();
+    return (
+        lower === 'paypal' ||
+        lower === 'apple' ||
+        lower === 'apple services' ||
+        lower === 'sumup' ||
+        lower === 'inconnu' ||
+        lower === 'inconnu (à classer)' ||
+        lower === 'google payment ireland' ||
+        lower.startsWith('inconnu')
+    );
+}
+
 // Helper function to extract data from raw email text for Amazon
 function extractInvoiceDataFromText(htmlText: string, currentProvider: string, currentAmount: number | null) {
     let provider = currentProvider;
@@ -131,17 +146,71 @@ export async function POST(req: Request) {
 
         if (fileUrl && !isHtmlReceiptProvider) {
             try {
-                // If Zapier sends multiple attachments comma-separated, take the first one
-                const firstUrl = fileUrl.split(',')[0].trim();
+                const urls = fileUrl.split(',').map((u: string) => u.trim()).filter(Boolean);
+                console.log(`Analyzing ${urls.length} attachment URLs from Zapier:`, urls);
 
-                console.log(`Downloading attachment from Zapier: ${firstUrl}`);
-                const response = await fetch(firstUrl);
+                const fetchResults = await Promise.all(
+                    urls.map(async (url: string) => {
+                        try {
+                            const res = await fetch(url);
+                            if (!res.ok) {
+                                console.warn(`Failed to fetch ${url}. Status: ${res.status}`);
+                                return null;
+                            }
+                            const blob = await res.blob();
+                            const contentType = res.headers.get('content-type') || 'application/octet-stream';
+                            
+                            let filename = 'file.pdf';
+                            try {
+                                const path = new URL(url).pathname;
+                                filename = path.split('/').pop() || 'file.pdf';
+                            } catch {}
+                            
+                            return { url, contentType, blob, size: blob.size, filename };
+                        } catch (err) {
+                            console.error(`Error fetching attachment url ${url}:`, err);
+                            return null;
+                        }
+                    })
+                );
 
-                if (response.ok) {
-                    const blob = await response.blob();
-                    // Basic check to guess extension (default to pdf)
-                    const fileExt = firstUrl.split('.').pop()?.split('?')[0] || 'pdf';
-                    const safeExt = fileExt.length > 5 ? 'pdf' : fileExt; // prevent weird query params
+                const validAttachments = fetchResults.filter((item): item is NonNullable<typeof item> => item !== null);
+
+                if (validAttachments.length > 0) {
+                    // Scoring function to prioritize PDFs and larger documents over logos/small images
+                    const getAttachmentScore = (item: { url: string; contentType: string; size: number; filename: string }) => {
+                        const mime = item.contentType.toLowerCase();
+                        const name = item.filename.toLowerCase();
+                        
+                        // 1. PDF is best
+                        if (mime === 'application/pdf' || name.endsWith('.pdf')) {
+                            return 100;
+                        }
+                        // 2. Other application documents
+                        if (mime.startsWith('application/')) {
+                            return 80;
+                        }
+                        // 3. Images
+                        if (mime.startsWith('image/')) {
+                            const isLogo = /logo|sign|banner|avatar|header|footer|icon|thumb/i.test(name) ||
+                                           /logo|sign|banner|avatar|header|footer|icon|thumb/i.test(item.url.toLowerCase()) ||
+                                           item.size < 15000; // Less than 15KB
+                            if (isLogo) {
+                                return 10; // Lowest priority
+                            }
+                            return 50; // Decent priority for screenshot invoices
+                        }
+                        return 30; // Default
+                    };
+
+                    // Sort descending by score
+                    validAttachments.sort((a, b) => getAttachmentScore(b) - getAttachmentScore(a));
+                    const bestAttachment = validAttachments[0];
+                    console.log(`Selected best attachment: ${bestAttachment.filename} (Mime: ${bestAttachment.contentType}, Size: ${bestAttachment.size} bytes)`);
+
+                    // Guess extension (default to pdf)
+                    const fileExt = bestAttachment.filename.split('.').pop() || 'pdf';
+                    const safeExt = fileExt.length > 5 ? 'pdf' : fileExt;
 
                     const safeProvider = provider.replace(/[^a-zA-Z0-9]/g, '_');
                     const fileName = `${safeProvider}_${randomUUID()}.${safeExt}`;
@@ -149,8 +218,8 @@ export async function POST(req: Request) {
                     console.log(`Uploading ${fileName} to Supabase Storage (invoices bucket)...`);
                     const { data, error } = await supabase.storage
                         .from('invoices')
-                        .upload(fileName, blob, {
-                            contentType: response.headers.get('content-type') || 'application/pdf',
+                        .upload(fileName, bestAttachment.blob, {
+                            contentType: bestAttachment.contentType,
                             upsert: false
                         });
 
@@ -166,7 +235,7 @@ export async function POST(req: Request) {
                         console.log(`File successfully uploaded and stored: ${fileUrl}`);
                     }
                 } else {
-                    console.error(`Failed to fetch attachment. Status: ${response.status}`);
+                    console.error('No valid attachments could be downloaded.');
                 }
             } catch (err) {
                 console.error('Error during file fetch/upload process:', err);
@@ -282,23 +351,114 @@ export async function POST(req: Request) {
             }
         }
 
-        // Insert into Database
-        const invoice = await prisma.invoice.create({
-            data: {
-                provider,
-                amount: invoiceAmount,
-                date: invoiceDate,
-                fileUrl,
-                status: 'PENDING',
-            },
-        });
+        // DUPLICATE & MERGING LOGIC
+        let finalInvoice = null;
 
-        console.log('Successfully created invoice:', invoice.id);
+        if (invoiceAmount !== null && invoiceAmount !== undefined) {
+            const startDate = new Date(invoiceDate.getTime() - 3 * 24 * 60 * 60 * 1000);
+            const endDate = new Date(invoiceDate.getTime() + 3 * 24 * 60 * 60 * 1000);
+
+            // Find any existing invoice within +/- 3 days with the same amount
+            const candidates = await prisma.invoice.findMany({
+                where: {
+                    amount: invoiceAmount,
+                    date: {
+                        gte: startDate,
+                        lte: endDate
+                    }
+                }
+            });
+
+            const isIncomingGeneric = isGenericProvider(provider);
+
+            if (!isIncomingGeneric) {
+                // Scenario A: Incoming is SPECIFIC (e.g. Spotify, Adobe, Google)
+                // 1. Look for a mergeable candidate (generic, or partial name match with PENDING status)
+                const mergeableCandidate = candidates.find(c => {
+                    const existingLower = c.provider.toLowerCase().trim();
+                    const incomingLower = provider.toLowerCase().trim();
+                    
+                    // Case 1: Existing is generic
+                    if (isGenericProvider(c.provider)) return true;
+                    
+                    // Case 2: Existing has a partial name match and is PENDING
+                    if (c.status === 'PENDING' && 
+                        (existingLower.includes(incomingLower) || incomingLower.includes(existingLower))) {
+                        return true;
+                    }
+                    
+                    return false;
+                });
+                
+                if (mergeableCandidate) {
+                    console.log(`Matching mergeable invoice found (ID: ${mergeableCandidate.id}, Provider: ${mergeableCandidate.provider}). Merging...`);
+                    
+                    // Update the generic/pending invoice with the specific merchant's info and mark COMPLETED
+                    finalInvoice = await prisma.invoice.update({
+                        where: { id: mergeableCandidate.id },
+                        data: {
+                            provider: provider, // Use specific provider name
+                            fileUrl: fileUrl || mergeableCandidate.fileUrl, // Keep existing fileUrl if new one is empty
+                            status: 'COMPLETED',
+                            date: invoiceDate, // Update to the specific invoice date
+                        }
+                    });
+                    
+                    console.log(`Merged into existing invoice: ${finalInvoice.id}`);
+                } else {
+                    // 2. No mergeable candidate. Check if a duplicate specific invoice already exists to skip
+                    const specificDuplicate = candidates.find(c => {
+                        const existingLower = c.provider.toLowerCase().trim();
+                        const incomingLower = provider.toLowerCase().trim();
+                        return existingLower.includes(incomingLower) || incomingLower.includes(existingLower);
+                    });
+                    
+                    if (specificDuplicate) {
+                        console.log(`Duplicate specific invoice already exists (ID: ${specificDuplicate.id}, Provider: ${specificDuplicate.provider}). Skipping insertion.`);
+                        finalInvoice = specificDuplicate;
+                    }
+                }
+            } else {
+                // Scenario B: Incoming is GENERIC (e.g. PayPal, Apple, SumUp)
+                // 1. Check if a specific merchant invoice already exists
+                const specificMerchant = candidates.find(c => !isGenericProvider(c.provider));
+                if (specificMerchant) {
+                    console.log(`Specific merchant invoice already exists (ID: ${specificMerchant.id}, Provider: ${specificMerchant.provider}) for this generic payment. Skipping insertion.`);
+                    finalInvoice = specificMerchant;
+                } else {
+                    // 2. Check if a generic duplicate already exists (same generic provider or very close)
+                    const genericDuplicate = candidates.find(c => {
+                        return isGenericProvider(c.provider) && 
+                               (c.provider.toLowerCase().trim() === provider.toLowerCase().trim() ||
+                                c.provider.toLowerCase().includes('inconnu') ||
+                                provider.toLowerCase().includes('inconnu'));
+                    });
+                    if (genericDuplicate) {
+                        console.log(`Generic duplicate already exists (ID: ${genericDuplicate.id}, Provider: ${genericDuplicate.provider}). Skipping insertion.`);
+                        finalInvoice = genericDuplicate;
+                    }
+                }
+            }
+        }
+
+        if (!finalInvoice) {
+            // Insert into Database since no match was found/updated/skipped
+            finalInvoice = await prisma.invoice.create({
+                data: {
+                    provider,
+                    amount: invoiceAmount,
+                    date: invoiceDate,
+                    fileUrl,
+                    status: 'PENDING',
+                },
+            });
+            console.log('Successfully created invoice:', finalInvoice.id);
+        }
 
         return NextResponse.json({
             success: true,
-            message: 'Invoice received and stored successfully',
-            id: invoice.id
+            message: 'Invoice processed successfully',
+            id: finalInvoice.id
         });
 
     } catch (error) {
