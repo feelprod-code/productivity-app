@@ -804,10 +804,17 @@ export default function RelevePage() {
                                       {!tx.isPro ? (
                                         <span className="text-[10px] text-[#1E2A33]/30 font-light">—</span>
                                       ) : tx.matchedInvoice ? (
-                                        <Badge variant="outline" className="border-green-500/30 text-green-700 bg-green-50/50 font-roboto font-normal text-[10px] px-2 py-0.5 flex items-center gap-1">
-                                          <span className="w-1 h-1 rounded-full bg-green-500" />
-                                          <span>Rapproché</span>
-                                        </Badge>
+                                        <button
+                                          onClick={() => setPreviewUrl(tx.matchedInvoice?.publicFileUrl || null)}
+                                          className="cursor-pointer hover:scale-105 active:scale-95 transition-transform"
+                                          title="Ouvrir le justificatif PDF"
+                                        >
+                                          <Badge variant="outline" className="border-green-500/30 text-green-700 bg-green-50/50 hover:bg-green-100/50 font-roboto font-normal text-[10px] px-2 py-0.5 flex items-center gap-1">
+                                            <span className="w-1 h-1 rounded-full bg-green-500" />
+                                            <span>Rapproché</span>
+                                            <FileText className="w-2.5 h-2.5 ml-0.5 opacity-70" />
+                                          </Badge>
+                                        </button>
                                       ) : tx.noJustificatif ? (
                                         <Badge variant="outline" className="border-slate-300 text-slate-600 bg-slate-100/50 font-roboto font-normal text-[10px] px-2 py-0.5 flex items-center gap-1">
                                           <span className="w-1 h-1 rounded-full bg-slate-400" />
@@ -845,7 +852,6 @@ export default function RelevePage() {
                                     </div>
                                   </TableCell>
                                 </TableRow>
-
                                 {/* Expanded Transaction Details */}
                                 {txExpanded && (
                                   <TableRow className="bg-[#1E2A33]/[0.01] hover:bg-transparent">
@@ -854,22 +860,16 @@ export default function RelevePage() {
                                         
                                         {/* Left Side: Metadata details */}
                                         <div className="space-y-3 text-xs">
-                                          <h4 className="font-roboto font-bold text-[10px] uppercase tracking-wider text-[#1E2A33]/50">Détails du relevé bancaire</h4>
+                                          <h4 className="font-roboto font-bold text-[10px] uppercase tracking-wider text-[#1E2A33]/50">Opération</h4>
                                           <div className="grid grid-cols-3 gap-y-2 gap-x-4">
-                                            <span className="text-[#1E2A33]/50 font-light">Libellé Brut :</span>
-                                            <span className="col-span-2 font-medium text-[#1E2A33] break-words">{tx.label}</span>
-
-                                            <span className="text-[#1E2A33]/50 font-light">Compte Source :</span>
-                                            <span className="col-span-2 font-medium text-[#1E2A33]">{tx.bankAccountName}</span>
-
-                                            <span className="text-[#1E2A33]/50 font-light">Mode de paiement :</span>
+                                            <span className="text-[#1E2A33]/50 font-light">Type :</span>
                                             <span className="col-span-2 font-medium text-[#1E2A33] flex items-center gap-1.5">
                                               {badgeInfo.icon}
                                               {badgeInfo.label}
                                             </span>
 
-                                            <span className="text-[#1E2A33]/50 font-light">ID Mouvement :</span>
-                                            <span className="col-span-2 font-mono text-[10px] text-[#1E2A33]/60">{tx.id}</span>
+                                            <span className="text-[#1E2A33]/50 font-light">Compte :</span>
+                                            <span className="col-span-2 font-medium text-[#1E2A33]">{tx.bankAccountName}</span>
                                           </div>
                                         </div>
 
