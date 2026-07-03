@@ -731,9 +731,9 @@ export default function RelevePage() {
                           <TableRow className="border-[#1E2A33]/10 hover:bg-transparent hidden sm:table-row">
                             <TableHead className="font-roboto text-[#1E2A33]/40 text-[10px] uppercase tracking-widest pl-6 w-24">Date</TableHead>
                             <TableHead className="font-roboto text-[#1E2A33]/40 text-[10px] uppercase tracking-widest flex-1">Libellé / Marchand</TableHead>
-                            <TableHead className="font-roboto text-[#1E2A33]/40 text-[10px] uppercase tracking-widest w-40">Compte</TableHead>
-                            <TableHead className="font-roboto text-[#1E2A33]/40 text-[10px] uppercase tracking-widest w-28 text-center">Catégorie</TableHead>
-                            <TableHead className="font-roboto text-[#1E2A33]/40 text-[10px] uppercase tracking-widest w-36 text-center">Justificatif</TableHead>
+                            <TableHead className="font-roboto text-[#1E2A33]/40 text-[10px] uppercase tracking-widest w-40 hidden sm:table-cell">Compte</TableHead>
+                            <TableHead className="font-roboto text-[#1E2A33]/40 text-[10px] uppercase tracking-widest w-28 text-center hidden sm:table-cell">Catégorie</TableHead>
+                            <TableHead className="font-roboto text-[#1E2A33]/40 text-[10px] uppercase tracking-widest w-36 text-center hidden sm:table-cell">Justificatif</TableHead>
                             <TableHead className="text-right font-roboto text-[#1E2A33]/40 text-[10px] uppercase tracking-widest pr-6 w-32">Montant</TableHead>
                           </TableRow>
                         </TableHeader>
@@ -755,12 +755,84 @@ export default function RelevePage() {
                                   </TableCell>
 
                                   {/* Libellé */}
-                                  <TableCell className="font-roboto font-medium text-[#1E2A33] text-sm whitespace-normal sm:whitespace-nowrap py-3.5">
-                                    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
-                                      <span className="truncate max-w-[320px] block font-semibold" title={tx.label}>{cleanDisplayLabel(tx.label)}</span>
-                                      <span className="text-[9px] text-[#1E2A33]/40 sm:hidden mt-0.5">
-                                        {tx.bankAccountName} • {badgeInfo.label}
-                                      </span>
+                                  <TableCell className="font-roboto font-medium text-[#1E2A33] text-sm py-3.5 max-w-[200px] sm:max-w-none">
+                                    <div className="flex flex-col gap-1.5 min-w-0">
+                                      <span className="truncate max-w-[180px] xs:max-w-[240px] sm:max-w-[400px] block font-semibold" title={tx.label}>{cleanDisplayLabel(tx.label)}</span>
+                                      
+                                      {/* Mobile-only badges and details stacked inline */}
+                                      <div className="flex flex-wrap items-center gap-1.5 text-[9px] text-[#1E2A33]/50 sm:hidden mt-1">
+                                        <span className="truncate max-w-[120px]">{tx.bankAccountName}</span>
+                                        <span>•</span>
+                                        <span className="flex items-center gap-1">
+                                          {badgeInfo.icon}
+                                          {badgeInfo.label}
+                                        </span>
+                                        <span>•</span>
+                                        
+                                        {/* Mobile Pro/Perso toggler button */}
+                                        <div onClick={(e) => e.stopPropagation()} className="inline-flex">
+                                          <Button
+                                            variant="ghost"
+                                            size="sm"
+                                            className={`h-5 px-2 font-roboto text-[8px] font-medium rounded-full border transition-all cursor-pointer ${
+                                              !tx.isPro
+                                                ? 'border-blue-200 text-blue-700 bg-blue-50/40 hover:bg-blue-100/50'
+                                                : 'border-amber-200 text-amber-800 bg-amber-50/40 hover:bg-amber-100/50'
+                                            }`}
+                                            onClick={() => handleTogglePro(tx.id, tx.isPro)}
+                                            disabled={togglingTxId === String(tx.id)}
+                                          >
+                                            {togglingTxId === String(tx.id) ? (
+                                              <Loader2 className="w-2 h-2 animate-spin" />
+                                            ) : !tx.isPro ? (
+                                              <span>🏠 Perso</span>
+                                            ) : (
+                                              <span>💼 Pro</span>
+                                            )}
+                                          </Button>
+                                        </div>
+                                        
+                                        {/* Mobile Reconciled Badge / Button */}
+                                        {tx.isPro && (
+                                          <div onClick={(e) => e.stopPropagation()} className="inline-flex">
+                                            {tx.matchedInvoice ? (
+                                              <button
+                                                onClick={() => setPreviewUrl(tx.matchedInvoice?.publicFileUrl || null)}
+                                                className="cursor-pointer"
+                                              >
+                                                <Badge variant="outline" className="border-green-500/30 text-green-700 bg-green-50/50 font-roboto font-normal text-[8px] px-1.5 py-0 flex items-center gap-0.5">
+                                                  <span className="w-1 h-1 rounded-full bg-green-500" />
+                                                  <span>Rapproché</span>
+                                                  <FileText className="w-2 h-2 ml-0.5 opacity-70" />
+                                                </Badge>
+                                              </button>
+                                            ) : tx.noJustificatif ? (
+                                              <Badge variant="outline" className="border-slate-300 text-slate-600 bg-slate-100/50 font-roboto font-normal text-[8px] px-1.5 py-0 flex items-center gap-0.5">
+                                                <span className="w-1 h-1 rounded-full bg-slate-400" />
+                                                <span>Sans justificatif</span>
+                                              </Badge>
+                                            ) : (
+                                              <button
+                                                onClick={() => handleReconcileAuto(tx)}
+                                                disabled={reconcilingTxId === String(tx.id)}
+                                                className="flex items-center gap-0.5 text-amber-600 bg-amber-50 border border-amber-200/50 hover:bg-amber-100/80 transition-colors px-1.5 py-0 rounded text-[8px] font-bold cursor-pointer disabled:opacity-50"
+                                              >
+                                                {reconcilingTxId === String(tx.id) ? (
+                                                  <>
+                                                    <Loader2 className="w-2 h-2 animate-spin mr-0.5" />
+                                                    <span>Recherche...</span>
+                                                  </>
+                                                ) : (
+                                                  <>
+                                                    <AlertCircle className="w-2 h-2 shrink-0" />
+                                                    <span>À rapprocher</span>
+                                                  </>
+                                                )}
+                                              </button>
+                                            )}
+                                          </div>
+                                        )}
+                                      </div>
                                     </div>
                                   </TableCell>
 
@@ -799,7 +871,7 @@ export default function RelevePage() {
                                   </TableCell>
 
                                   {/* Justificatif */}
-                                  <TableCell className="text-center py-3.5" onClick={(e) => e.stopPropagation()}>
+                                  <TableCell className="text-center py-3.5 hidden sm:table-cell" onClick={(e) => e.stopPropagation()}>
                                     <div className="inline-flex justify-center w-full">
                                       {!tx.isPro ? (
                                         <span className="text-[10px] text-[#1E2A33]/30 font-light">—</span>
