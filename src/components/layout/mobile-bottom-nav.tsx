@@ -8,7 +8,6 @@ import { cn } from "@/lib/utils";
 const items = [
     { title: "Compta", url: "/comptabilite/releve", icon: ReceiptEuro },
     { title: "Sorties", url: "/comptabilite/sorties", icon: CreditCard },
-    { title: "FinOps", url: "/cerveau/finops", icon: LineChart },
     { title: "Réglages", url: "#", icon: Settings },
 ];
 

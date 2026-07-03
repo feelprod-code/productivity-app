@@ -29,11 +29,6 @@ const items = [
         icon: Key,
     },
     {
-        title: "Coûts & FinOps",
-        url: "/cerveau/finops",
-        icon: LineChart,
-    },
-    {
         title: "Paramètres",
         url: "#",
         icon: Settings,
