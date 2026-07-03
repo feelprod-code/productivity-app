@@ -292,6 +292,26 @@ export async function GET() {
             }
           }
         }
+        // Generic keyword check for matching non-tech providers with slightly different amounts (e.g. partial payments/fees)
+        if (!amountMatch && !isTechProvider && closeDate) {
+          const txWords = labelLower.split(/[^a-z0-9]/).filter((w: string) => w.length >= 3 && !['prelvt', 'sepa', 'confrere', 'prlv', 'recu'].includes(w));
+          if (txWords.length > 0) {
+            const invLabelLower = (inv.label || '').toLowerCase();
+            const invFileLower = (inv.filename || '').toLowerCase();
+            const invProvLower = (inv.provider || '').toLowerCase();
+            
+            const matchesAllWords = txWords.every((word: string) => 
+              invLabelLower.includes(word) || invFileLower.includes(word) || invProvLower.includes(word)
+            );
+            
+            if (matchesAllWords) {
+              const diffRatio = Math.abs(invAmount - absAmount) / Math.max(invAmount, absAmount);
+              if (diffRatio <= 0.20) { // allow up to 20% difference
+                amountMatch = true;
+              }
+            }
+          }
+        }
 
         return amountMatch && closeDate && providerMatch;
       });
