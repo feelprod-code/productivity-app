@@ -136,7 +136,7 @@ def load_pennylane_suppliers() -> List[Dict[str, Any]]:
         data = call_pennylane_api("GET", endpoint, params=params)
         
         # Récupération de la clé contenant la liste des fournisseurs
-        batch = data.get("suppliers", [])
+        batch = data.get("suppliers") or data.get("items") or []
         suppliers.extend(batch)
         
         # Gestion de la pagination par curseur
@@ -169,7 +169,7 @@ def load_incomplete_invoices() -> List[Dict[str, Any]]:
     
     while True:
         data = call_pennylane_api("GET", endpoint, params=params)
-        batch = data.get("supplier_invoices", [])
+        batch = data.get("supplier_invoices") or data.get("items") or []
         invoices.extend(batch)
         
         next_cursor = data.get("meta", {}).get("next_cursor")
@@ -180,15 +180,15 @@ def load_incomplete_invoices() -> List[Dict[str, Any]]:
             
     print(f"📋 {len(invoices)} factures totales récupérées.")
     
-    # Filtrage : Fournisseur manquant (supplier_name ou supplier_id vide/None) ET fichier justificatif présent
+    # Filtrage : Fournisseur manquant (l'objet supplier est None ou absent) ET fichier justificatif présent (public_file_url)
     incomplete = []
     for inv in invoices:
+        supplier_obj = inv.get("supplier")
         has_no_supplier = (
-            not inv.get("supplier_name") or 
-            not inv.get("supplier_id") or 
-            inv.get("supplier_name").strip() == ""
+            supplier_obj is None or 
+            not supplier_obj.get("id")
         )
-        has_file = bool(inv.get("file_url"))
+        has_file = bool(inv.get("public_file_url"))
         
         if has_no_supplier and has_file:
             incomplete.append(inv)
@@ -376,7 +376,7 @@ def run_cleaner(dry_run: bool = True, auto_create_supplier: bool = True, limit_c
     
     for idx, inv in enumerate(incomplete_invoices, 1):
         inv_id = inv.get("id")
-        pdf_url = inv.get("file_url")
+        pdf_url = inv.get("public_file_url")
         inv_label = inv.get("label") or inv.get("invoice_number") or f"Facture #{idx}"
         
         print(f"[{idx}/{len(incomplete_invoices)}] Traitement de la Facture ID {inv_id} ({inv_label})...")
