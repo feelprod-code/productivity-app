@@ -1,11 +1,10 @@
 "use client";
 
-import React, { useEffect, useState, useMemo, useCallback } from "react";
+import React, { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import {
   CreditCard,
   Bot,
   ReceiptEuro,
-  ArrowLeft,
   FileText,
   Sparkles,
   RefreshCcw,
@@ -19,10 +18,18 @@ import {
   Calendar,
   Layers,
   ChevronDown,
+  ChevronRight,
   Search,
-  X
+  X,
+  Upload,
+  Download,
+  ExternalLink,
+  Loader2
 } from "lucide-react";
-import Link from "next/link";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 
 interface Transaction {
   id: number;
@@ -61,8 +68,6 @@ interface MonthGroup {
   matchedCount: number;
   totalOutflowCount: number;
   matchingRate: number;
-  groupedByDate: { [key: string]: Transaction[] };
-  sortedDates: string[];
 }
 
 const formatAmount = (num: number) => {
@@ -70,16 +75,6 @@ const formatAmount = (num: number) => {
     style: "currency",
     currency: "EUR"
   }).format(num);
-};
-
-const formatDateLabel = (dateStr: string) => {
-  const d = new Date(dateStr);
-  return d.toLocaleDateString("fr-FR", {
-    weekday: "long",
-    day: "numeric",
-    month: "long",
-    year: "numeric"
-  });
 };
 
 const getCategoryBadge = (category: string) => {
@@ -95,6 +90,51 @@ const getCategoryBadge = (category: string) => {
   }
 };
 
+function cleanDisplayLabel(label: string): string {
+  let cleaned = label;
+
+  // 1. Clean common payment method tags
+  cleaned = cleaned.replace(/PRELVT SEPA RECU D\/O CONFRERE PRLV SEPA/gi, 'Prélèvement');
+  cleaned = cleaned.replace(/PRELVT SEPA RECU D\/O CONFRERE/gi, 'Prélèvement');
+  cleaned = cleaned.replace(/VIREMENT PERMANENT/gi, 'VT PERM');
+  cleaned = cleaned.replace(/VIR\.PERMANENT/gi, 'VT PERM');
+  cleaned = cleaned.replace(/VIREMENT INSTANTANE/gi, 'Virement Inst.');
+  cleaned = cleaned.replace(/VIREMENT SEPA RECU/gi, 'Virement');
+  cleaned = cleaned.replace(/VIR SEPA/gi, 'Virement');
+  cleaned = cleaned.replace(/VIR INST/gi, 'Virement Inst.');
+  cleaned = cleaned.replace(/PRLV SEPA/gi, 'Prélèvement');
+  cleaned = cleaned.replace(/PRELVT/gi, 'Prélèvement');
+  cleaned = cleaned.replace(/PRLV/gi, 'Prélèvement');
+  
+  // Specific cases
+  cleaned = cleaned.replace(/VT PERM appart/gi, 'VT PERM - Appartement');
+
+  // 2. Remove standard bank tracking metadata
+  cleaned = cleaned.replace(/ICS\.[A-Z0-9]+/gi, '');
+  cleaned = cleaned.replace(/\.RUM\.[A-Z0-9]+/gi, '');
+  cleaned = cleaned.replace(/SDR\d+/gi, '');
+  cleaned = cleaned.replace(/PID\d+/gi, '');
+  cleaned = cleaned.replace(/PAYOUT\s+\d+/gi, '');
+  cleaned = cleaned.replace(/EXT BAL SWEEP\s+[A-Z0-9]+/gi, '');
+  cleaned = cleaned.replace(/\b[A-Z0-9]{15,}\b/g, ''); // Mandate IDs
+  cleaned = cleaned.replace(/\b\d{10,}\b/g, ''); // Serial numbers
+
+  // 3. Remove client name repetitions
+  cleaned = cleaned.replace(/M GUILLAUME PHILIPPE/gi, '');
+  cleaned = cleaned.replace(/M GUILLAUME OU MM/gi, '');
+  cleaned = cleaned.replace(/MR PHILIPPE GUILLAUME/gi, '');
+  cleaned = cleaned.replace(/M\.? PHILIPPE GUILLAUME/gi, '');
+
+  // 4. Final sanitization
+  cleaned = cleaned.replace(/\s+/g, ' ');
+  cleaned = cleaned.trim();
+  
+  // Remove trailing dots, dashes, or slashes
+  cleaned = cleaned.replace(/[\s\-\.\/]+$/, '');
+
+  return cleaned || label;
+}
+
 export default function RelevePage() {
   const [loading, setLoading] = useState(true);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -104,6 +144,17 @@ export default function RelevePage() {
   const [togglingTxId, setTogglingTxId] = useState<string | null>(null);
   const [reconcilingTxId, setReconcilingTxId] = useState<string | null>(null);
   
+  // PDF Preview State
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+
+  // Manual File Upload State
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [uploadingTx, setUploadingTx] = useState<Transaction | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+
+  // Expanded Transactions State
+  const [expandedTxIds, setExpandedTxIds] = useState<Set<string>>(new Set());
+
   // Filters
   const [filterFlow, setFilterFlow] = useState<"all" | "inflow" | "outflow">("all");
   const [filterCategory, setFilterCategory] = useState<string>("all");
@@ -198,6 +249,66 @@ export default function RelevePage() {
     }
   }, [setTransactions]);
 
+  const triggerManualUpload = (e: React.MouseEvent, tx: Transaction) => {
+    e.stopPropagation();
+    setUploadingTx(tx);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+      fileInputRef.current.click();
+    }
+  };
+
+  const handleManualFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!uploadingTx || !e.target.files || e.target.files.length === 0) return;
+    const file = e.target.files[0];
+    
+    setIsUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("transactionId", String(uploadingTx.id));
+      formData.append("label", uploadingTx.label);
+      formData.append("amount", String(uploadingTx.amount));
+      formData.append("date", uploadingTx.date);
+      formData.append("file", file);
+
+      const res = await fetch("/api/transactions/reconcile-file", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (res.ok && data.success) {
+        setTransactions(prev =>
+          prev.map(t =>
+            String(t.id) === String(uploadingTx.id)
+              ? { ...t, matchedInvoice: data.invoice }
+              : t
+          )
+        );
+        alert(`Justificatif téléversé et transaction rapprochée avec succès !`);
+      } else {
+        alert(data.error || "Erreur de rapprochement manuel.");
+      }
+    } catch (err: any) {
+      alert(err.message || "Erreur réseau lors de l'envoi.");
+    } finally {
+      setIsUploading(false);
+      setUploadingTx(null);
+    }
+  };
+
+  const toggleTxExpansion = (txId: string) => {
+    setExpandedTxIds(prev => {
+      const next = new Set(prev);
+      if (next.has(txId)) {
+        next.delete(txId);
+      } else {
+        next.add(txId);
+      }
+      return next;
+    });
+  };
+
   const loadData = async () => {
     setLoading(true);
     try {
@@ -242,7 +353,7 @@ export default function RelevePage() {
       if (filterMatched === "matched" && !tx.matchedInvoice) return false;
       if (filterMatched === "unmatched" && (tx.matchedInvoice || tx.noJustificatif)) return false;
 
-      // 6. Search query (magnifying glass)
+      // 6. Search query
       if (searchQuery.trim() !== "") {
         const query = searchQuery.toLowerCase();
         const matchesLabel = tx.label.toLowerCase().includes(query);
@@ -266,7 +377,7 @@ export default function RelevePage() {
     ).sort((a, b) => b.localeCompare(a));
   }, [transactions, activeTab]);
 
-  // Group by Month first, then by Day
+  // Group by Month (sorted descending, no day sub-grouping for minimalist look)
   const groupedByMonth = useMemo(() => {
     const groups: { [key: string]: MonthGroup } = {};
     
@@ -286,9 +397,7 @@ export default function RelevePage() {
           net: 0,
           matchedCount: 0,
           totalOutflowCount: 0,
-          matchingRate: 100,
-          groupedByDate: {},
-          sortedDates: []
+          matchingRate: 100
         };
       }
       
@@ -307,11 +416,6 @@ export default function RelevePage() {
           g.matchedCount++;
         }
       }
-      
-      if (!g.groupedByDate[tx.date]) {
-        g.groupedByDate[tx.date] = [];
-      }
-      g.groupedByDate[tx.date].push(tx);
     });
     
     const sortedMonthKeys = Object.keys(groups).sort((a, b) => b.localeCompare(a));
@@ -319,7 +423,8 @@ export default function RelevePage() {
       const g = groups[mKey];
       g.net = g.inflows - g.outflows;
       g.matchingRate = g.totalOutflowCount > 0 ? Math.round((g.matchedCount / g.totalOutflowCount) * 100) : 100;
-      g.sortedDates = Object.keys(g.groupedByDate).sort((a, b) => b.localeCompare(a));
+      // Sort transactions of this month by date descending
+      g.transactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
     });
     
     return { groups, sortedMonthKeys };
@@ -347,7 +452,7 @@ export default function RelevePage() {
   }, [filteredTxs]);
 
   // Toggle Month Accordion
-  const isExpanded = (monthKey: string) => {
+  const isMonthExpanded = (monthKey: string) => {
     return expandedMonths[monthKey] !== false; // Default to true
   };
 
@@ -357,16 +462,6 @@ export default function RelevePage() {
       [monthKey]: prev[monthKey] === false
     }));
   };
-
-  // Formatter helpers
-  const formatAmount = (num: number) => {
-    return new Intl.NumberFormat("fr-FR", {
-      style: "currency",
-      currency: "EUR"
-    }).format(num);
-  };
-
-  // Helpers are defined at the module level
 
   return (
     <main className="min-h-screen bg-[#FDFBEF] text-[#1E2A33] p-4 sm:p-6 lg:p-8 font-sans relative overflow-hidden">
@@ -378,12 +473,6 @@ export default function RelevePage() {
         <div className="flex flex-col lg:flex-row justify-between items-center gap-6 mb-6 pb-4 border-b border-[#1E2A33]/10">
           <div className="flex items-center gap-4 pt-4 lg:pt-0 shrink-0 self-stretch">
             <div className="w-2 bg-[#AE7D5C] rounded-full self-stretch shadow-[0_0_15px_rgba(174,125,92,0.4)] min-h-[40px]"></div>
-            <Link
-              href="/comptabilite"
-              className="p-2 hover:bg-[#1E2A33]/5 rounded-xl transition-all border border-[#1E2A33]/5 text-[#1E2A33]/70 shrink-0"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </Link>
             <h1 className="text-3xl sm:text-5xl font-bebas tracking-wide text-[#1E2A33] text-center md:text-left leading-tight">
               RELEVÉ BANCAIRE <span className="text-[#AE7D5C]">/ TRANSACTIONS & RAPPROCHEMENT</span>
             </h1>
@@ -455,7 +544,7 @@ export default function RelevePage() {
             <Search className="w-4 h-4 text-[#1E2A33]/50 shrink-0" />
             <input
               type="text"
-              placeholder="Rechercher par fournisseur..."
+              placeholder="Rechercher par marchand/facture..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="bg-transparent text-xs font-semibold text-[#1E2A33] border-none outline-none w-full placeholder-[#1E2A33]/40"
@@ -502,7 +591,6 @@ export default function RelevePage() {
         {/* Filter Bar */}
         <div className="bg-white border border-[#1E2A33]/10 p-4 rounded-2xl shadow-sm">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-row lg:flex-wrap lg:items-center gap-3 w-full">
-
             {/* Month Filter */}
             <div className="flex items-center gap-2 bg-[#FDFBEF] border border-[#1E2A33]/10 rounded-xl px-3 py-2 w-full lg:w-auto">
               <Calendar className="w-4 h-4 text-[#1E2A33]/50 shrink-0" />
@@ -579,7 +667,6 @@ export default function RelevePage() {
                 À rapprocher
               </button>
             </div>
-
           </div>
         </div>
 
@@ -601,7 +688,7 @@ export default function RelevePage() {
           <div className="space-y-6">
             {groupedByMonth.sortedMonthKeys.map(mKey => {
               const group = groupedByMonth.groups[mKey];
-              const expanded = isExpanded(mKey);
+              const isExpanded = isMonthExpanded(mKey);
 
               return (
                 <div key={mKey} className="bg-white border border-[#1E2A33]/10 rounded-2xl overflow-hidden shadow-sm">
@@ -611,12 +698,12 @@ export default function RelevePage() {
                     className="w-full flex flex-col md:flex-row md:items-center justify-between p-4 bg-[#1E2A33]/5 hover:bg-[#1E2A33]/10 transition-colors text-left gap-3 border-b border-[#1E2A33]/10"
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
-                      <ChevronDown className={`w-5 h-5 text-[#AE7D5C] transition-transform shrink-0 ${expanded ? "" : "-rotate-90"}`} />
+                      {isExpanded ? <ChevronDown className="w-5 h-5 text-[#AE7D5C]" /> : <ChevronRight className="w-5 h-5 text-[#AE7D5C]" />}
                       <span className="text-lg sm:text-xl font-bebas tracking-wider text-[#1E2A33] uppercase truncate">
                         {group.label}
                       </span>
                       <span className="text-[10px] font-bold px-2 py-0.5 bg-[#AE7D5C]/10 text-[#AE7D5C] rounded-lg shrink-0">
-                        {group.transactions.length} tx
+                        {group.transactions.length} relevé{group.transactions.length > 1 ? 's' : ''}
                       </span>
                     </div>
                     
@@ -636,43 +723,256 @@ export default function RelevePage() {
                     </div>
                   </button>
 
-                  {/* Month Accordion Content */}
-                  {expanded && (
-                    <div className="p-4 space-y-6 bg-white">
-                      {group.sortedDates.map(dateStr => {
-                        const dayTxs = group.groupedByDate[dateStr];
-                        const dayInflow = dayTxs.filter(tx => !tx.isOutflow).reduce((sum, tx) => sum + tx.amount, 0);
-                        const dayOutflow = dayTxs.filter(tx => tx.isOutflow).reduce((sum, tx) => sum + Math.abs(tx.amount), 0);
-                        const dayNet = dayInflow - dayOutflow;
+                  {/* Month Accordion Content: Sleek single-line Table */}
+                  {isExpanded && (
+                    <div className="overflow-x-auto">
+                      <Table>
+                        <TableHeader>
+                          <TableRow className="border-[#1E2A33]/10 hover:bg-transparent hidden sm:table-row">
+                            <TableHead className="font-roboto text-[#1E2A33]/40 text-[10px] uppercase tracking-widest pl-6 w-24">Date</TableHead>
+                            <TableHead className="font-roboto text-[#1E2A33]/40 text-[10px] uppercase tracking-widest flex-1">Libellé / Marchand</TableHead>
+                            <TableHead className="font-roboto text-[#1E2A33]/40 text-[10px] uppercase tracking-widest w-40">Compte</TableHead>
+                            <TableHead className="font-roboto text-[#1E2A33]/40 text-[10px] uppercase tracking-widest w-28 text-center">Catégorie</TableHead>
+                            <TableHead className="font-roboto text-[#1E2A33]/40 text-[10px] uppercase tracking-widest w-36 text-center">Justificatif</TableHead>
+                            <TableHead className="text-right font-roboto text-[#1E2A33]/40 text-[10px] uppercase tracking-widest pr-6 w-32">Montant</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {group.transactions.map((tx) => {
+                            const badgeInfo = getCategoryBadge(tx.category);
+                            const txExpanded = expandedTxIds.has(String(tx.id));
 
-                        return (
-                          <div key={dateStr} className="space-y-2">
-                            {/* Daily Header */}
-                            <div className="flex justify-between items-center px-4 py-1.5 bg-[#1E2A33]/5 rounded-xl border border-[#1E2A33]/5">
-                              <span className="text-[10px] sm:text-xs font-bold text-[#1E2A33]/70 uppercase tracking-wider">
-                                {formatDateLabel(dateStr)}
-                              </span>
-                              <span className={`text-[10px] sm:text-xs font-extrabold px-2 py-0.5 rounded-lg ${dayNet >= 0 ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-800"}`}>
-                                {dayNet >= 0 ? "+" : ""}{formatAmount(dayNet)}
-                              </span>
-                            </div>
+                            return (
+                              <React.Fragment key={tx.id}>
+                                {/* Transaction Row (single line) */}
+                                <TableRow
+                                  className={`border-[#1E2A33]/5 hover:bg-[#FDFBEF] transition-colors cursor-pointer group ${txExpanded ? 'bg-[#FDFBEF]/30' : ''}`}
+                                  onClick={() => toggleTxExpansion(String(tx.id))}
+                                >
+                                  {/* Date */}
+                                  <TableCell className="font-roboto font-light text-[#1E2A33]/50 text-xs sm:pl-6 pl-4 whitespace-nowrap py-3.5">
+                                    {new Date(tx.date).toLocaleDateString('fr-FR')}
+                                  </TableCell>
 
-                            {/* Day's Transactions list */}
-                            <div className="border border-[#1E2A33]/10 rounded-2xl overflow-hidden divide-y divide-[#1E2A33]/5">
-                              {dayTxs.map(tx => (
-                                <TransactionRow
-                                  key={tx.id}
-                                  tx={tx}
-                                  toggling={togglingTxId === String(tx.id)}
-                                  onTogglePro={handleTogglePro}
-                                  reconciling={reconcilingTxId === String(tx.id)}
-                                  onReconcileAuto={handleReconcileAuto}
-                                />
-                              ))}
-                            </div>
-                          </div>
-                        );
-                      })}
+                                  {/* Libellé */}
+                                  <TableCell className="font-roboto font-medium text-[#1E2A33] text-sm whitespace-normal sm:whitespace-nowrap py-3.5">
+                                    <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+                                      <span className="truncate max-w-[320px] block font-semibold" title={tx.label}>{cleanDisplayLabel(tx.label)}</span>
+                                      <span className="text-[9px] text-[#1E2A33]/40 sm:hidden mt-0.5">
+                                        {tx.bankAccountName} • {badgeInfo.label}
+                                      </span>
+                                    </div>
+                                  </TableCell>
+
+                                  {/* Compte */}
+                                  <TableCell className="font-roboto font-light text-[#1E2A33]/50 text-xs hidden sm:table-cell py-3.5 max-w-[160px] truncate">
+                                    {tx.bankAccountName}
+                                  </TableCell>
+
+                                  {/* Catégorie */}
+                                  <TableCell className="hidden sm:table-cell text-center py-3.5" onClick={(e) => e.stopPropagation()}>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className={`h-7 px-2.5 font-roboto text-[10px] font-medium rounded-full border transition-all cursor-pointer ${
+                                        !tx.isPro
+                                          ? 'border-blue-200 text-blue-700 bg-blue-50/40 hover:bg-blue-100/50'
+                                          : 'border-amber-200 text-amber-800 bg-amber-50/40 hover:bg-amber-100/50'
+                                      }`}
+                                      onClick={() => handleTogglePro(tx.id, tx.isPro)}
+                                      disabled={togglingTxId === String(tx.id)}
+                                    >
+                                      {togglingTxId === String(tx.id) ? (
+                                        <Loader2 className="w-3 h-3 animate-spin" />
+                                      ) : !tx.isPro ? (
+                                        <>
+                                          <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mr-1.5" />
+                                          <span>🏠 Perso</span>
+                                        </>
+                                      ) : (
+                                        <>
+                                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mr-1.5" />
+                                          <span>💼 Pro</span>
+                                        </>
+                                      )}
+                                    </Button>
+                                  </TableCell>
+
+                                  {/* Justificatif */}
+                                  <TableCell className="text-center py-3.5" onClick={(e) => e.stopPropagation()}>
+                                    <div className="inline-flex justify-center w-full">
+                                      {!tx.isPro ? (
+                                        <span className="text-[10px] text-[#1E2A33]/30 font-light">—</span>
+                                      ) : tx.matchedInvoice ? (
+                                        <Badge variant="outline" className="border-green-500/30 text-green-700 bg-green-50/50 font-roboto font-normal text-[10px] px-2 py-0.5 flex items-center gap-1">
+                                          <span className="w-1 h-1 rounded-full bg-green-500" />
+                                          <span>Rapproché</span>
+                                        </Badge>
+                                      ) : tx.noJustificatif ? (
+                                        <Badge variant="outline" className="border-slate-300 text-slate-600 bg-slate-100/50 font-roboto font-normal text-[10px] px-2 py-0.5 flex items-center gap-1">
+                                          <span className="w-1 h-1 rounded-full bg-slate-400" />
+                                          <span>Sans justificatif</span>
+                                        </Badge>
+                                      ) : (
+                                        <button
+                                          onClick={() => handleReconcileAuto(tx)}
+                                          disabled={reconcilingTxId === String(tx.id)}
+                                          className="flex items-center gap-1 text-amber-600 bg-amber-50 border border-amber-200/50 hover:bg-amber-100/80 transition-colors px-2 py-0.5 rounded-lg text-[10px] font-bold cursor-pointer disabled:opacity-50"
+                                        >
+                                          {reconcilingTxId === String(tx.id) ? (
+                                            <>
+                                              <Loader2 className="w-2.5 h-2.5 animate-spin mr-0.5" />
+                                              <span>Recherche...</span>
+                                            </>
+                                          ) : (
+                                            <>
+                                              <AlertCircle className="w-2.5 h-2.5 shrink-0" />
+                                              <span>À rapprocher</span>
+                                            </>
+                                          )}
+                                        </button>
+                                      )}
+                                    </div>
+                                  </TableCell>
+
+                                  {/* Montant */}
+                                  <TableCell className="text-right sm:pr-6 pr-4 py-3.5 whitespace-nowrap">
+                                    <div className="flex items-center justify-end gap-2">
+                                      <span className={`text-sm sm:text-base font-bebas tracking-wider ${tx.isOutflow ? "text-rose-600" : "text-emerald-600"}`}>
+                                        {tx.isOutflow ? "-" : "+"}{formatAmount(tx.absAmount)}
+                                      </span>
+                                      {txExpanded ? <ChevronDown className="w-3.5 h-3.5 text-[#1E2A33]/40" /> : <ChevronRight className="w-3.5 h-3.5 text-[#1E2A33]/40 opacity-0 group-hover:opacity-100 transition-opacity" />}
+                                    </div>
+                                  </TableCell>
+                                </TableRow>
+
+                                {/* Expanded Transaction Details */}
+                                {txExpanded && (
+                                  <TableRow className="bg-[#1E2A33]/[0.01] hover:bg-transparent">
+                                    <TableCell colSpan={6} className="p-0 border-t-0">
+                                      <div className="px-6 py-5 bg-[#FDFBEF]/30 border-l-4 border-[#AE7D5C] rounded-r-xl grid grid-cols-1 md:grid-cols-2 gap-6 transition-all">
+                                        
+                                        {/* Left Side: Metadata details */}
+                                        <div className="space-y-3 text-xs">
+                                          <h4 className="font-roboto font-bold text-[10px] uppercase tracking-wider text-[#1E2A33]/50">Détails du relevé bancaire</h4>
+                                          <div className="grid grid-cols-3 gap-y-2 gap-x-4">
+                                            <span className="text-[#1E2A33]/50 font-light">Libellé Brut :</span>
+                                            <span className="col-span-2 font-medium text-[#1E2A33] break-words">{tx.label}</span>
+
+                                            <span className="text-[#1E2A33]/50 font-light">Compte Source :</span>
+                                            <span className="col-span-2 font-medium text-[#1E2A33]">{tx.bankAccountName}</span>
+
+                                            <span className="text-[#1E2A33]/50 font-light">Mode de paiement :</span>
+                                            <span className="col-span-2 font-medium text-[#1E2A33] flex items-center gap-1.5">
+                                              {badgeInfo.icon}
+                                              {badgeInfo.label}
+                                            </span>
+
+                                            <span className="text-[#1E2A33]/50 font-light">ID Mouvement :</span>
+                                            <span className="col-span-2 font-mono text-[10px] text-[#1E2A33]/60">{tx.id}</span>
+                                          </div>
+                                        </div>
+
+                                        {/* Right Side: Reconcile / Attachments manager */}
+                                        <div className="space-y-3 flex flex-col justify-center border-t md:border-t-0 md:border-l border-[#1E2A33]/10 pt-4 md:pt-0 md:pl-6">
+                                          <h4 className="font-roboto font-bold text-[10px] uppercase tracking-wider text-[#1E2A33]/50 mb-1">Pièce Justificative (Facture)</h4>
+                                          
+                                          {tx.matchedInvoice ? (
+                                            <div className="space-y-3">
+                                              <div className="p-3 bg-white border border-[#1E2A33]/10 rounded-xl flex items-center justify-between shadow-sm">
+                                                <div className="flex items-center gap-2 min-w-0">
+                                                  <FileText className="w-5 h-5 text-[#AE7D5C] shrink-0" />
+                                                  <div className="min-w-0">
+                                                    <span className="text-xs font-semibold text-[#1E2A33] block truncate max-w-[200px]" title={tx.matchedInvoice.filename}>
+                                                      {tx.matchedInvoice.filename}
+                                                    </span>
+                                                    <span className="text-[9px] text-[#1E2A33]/40 block">Identifié sur Pennylane</span>
+                                                  </div>
+                                                </div>
+                                                <Button
+                                                  variant="ghost"
+                                                  size="icon"
+                                                  className="h-8 w-8 text-[#1E2A33]/40 hover:text-rose-600 rounded-full"
+                                                  onClick={() => triggerManualUpload(null as any, tx)}
+                                                  title="Remplacer le justificatif"
+                                                >
+                                                  <Upload className="w-4 h-4" />
+                                                </Button>
+                                              </div>
+                                              
+                                              <div className="flex gap-2">
+                                                <Button
+                                                  variant="outline"
+                                                  size="sm"
+                                                  className="text-xs bg-white text-[#1E2A33] hover:bg-[#FDFBEF] rounded-xl flex-1 h-9 cursor-pointer"
+                                                  onClick={() => setPreviewUrl(tx.matchedInvoice?.publicFileUrl || null)}
+                                                >
+                                                  <FileText className="w-4 h-4 mr-2" />
+                                                  Voir la facture
+                                                </Button>
+                                                
+                                                {tx.matchedInvoice.publicFileUrl && (
+                                                  <a
+                                                    href={tx.matchedInvoice.publicFileUrl}
+                                                    target="_blank"
+                                                    rel="noopener noreferrer"
+                                                    className="h-9 px-3 border border-[#1E2A33]/10 text-[#1E2A33]/60 hover:text-[#1E2A33] bg-white rounded-xl flex items-center justify-center shrink-0"
+                                                    title="Télécharger directement"
+                                                  >
+                                                    <Download className="w-4 h-4" />
+                                                  </a>
+                                                )}
+                                              </div>
+                                            </div>
+                                          ) : !tx.isPro ? (
+                                            <p className="text-xs font-light text-[#1E2A33]/40 italic">
+                                              Les transactions personnelles ne requièrent pas de justificatifs pro.
+                                            </p>
+                                          ) : (
+                                            <div className="space-y-2">
+                                              <p className="text-xs font-light text-[#1E2A33]/60 mb-2">
+                                                Aucune pièce jointe n'est liée à cette opération.
+                                              </p>
+                                              <div className="flex flex-col sm:flex-row gap-2">
+                                                <Button
+                                                  onClick={() => handleReconcileAuto(tx)}
+                                                  disabled={reconcilingTxId === String(tx.id)}
+                                                  className="text-xs bg-[#1E2A33] hover:bg-[#1E2A33]/90 text-white rounded-xl flex-1 h-9 font-semibold shadow-sm transition-all cursor-pointer disabled:opacity-50"
+                                                >
+                                                  {reconcilingTxId === String(tx.id) ? (
+                                                    <>
+                                                      <Loader2 className="w-3.5 h-3.5 animate-spin mr-2" />
+                                                      Recherche en cours...
+                                                    </>
+                                                  ) : (
+                                                    <>
+                                                      <Sparkles className="w-3.5 h-3.5 mr-2 text-[#AE7D5C]" />
+                                                      Rechercher automatique
+                                                    </>
+                                                  )}
+                                                </Button>
+
+                                                <Button
+                                                  onClick={(e) => triggerManualUpload(e, tx)}
+                                                  className="text-xs bg-white border border-[#AE7D5C]/40 text-[#AE7D5C] hover:bg-[#AE7D5C]/5 rounded-xl flex-1 h-9 font-semibold shadow-sm transition-all cursor-pointer"
+                                                >
+                                                  <Upload className="w-3.5 h-3.5 mr-2" />
+                                                  Uploader un fichier
+                                                </Button>
+                                              </div>
+                                            </div>
+                                          )}
+                                        </div>
+
+                                      </div>
+                                    </TableCell>
+                                  </TableRow>
+                                )}
+                              </React.Fragment>
+                            );
+                          })}
+                        </TableBody>
+                      </Table>
                     </div>
                   )}
                 </div>
@@ -681,111 +981,51 @@ export default function RelevePage() {
           </div>
         )}
       </div>
+
+      {/* PDF Preview Modal */}
+      <Dialog open={!!previewUrl} onOpenChange={(open) => !open && setPreviewUrl(null)}>
+        <DialogContent className="max-w-6xl w-[95vw] h-[90vh] flex flex-col p-0 overflow-hidden bg-white/95 backdrop-blur-xl border-[#1E2A33]/10">
+          <DialogHeader className="p-4 border-b border-[#1E2A33]/5 flex-shrink-0 flex flex-row items-center justify-between">
+            <DialogTitle className="text-xl font-bebas tracking-wide text-[#1E2A33]">
+              Aperçu de la Facture
+            </DialogTitle>
+            {previewUrl && (
+              <a
+                href={`/api/invoices/preview?url=${encodeURIComponent(previewUrl)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm font-roboto font-medium text-[#AE7D5C] hover:underline mr-8 flex items-center gap-1"
+              >
+                <ExternalLink className="w-4 h-4" />
+                Ouvrir dans un nouvel onglet
+              </a>
+            )}
+          </DialogHeader>
+          <div className="flex-1 w-full h-full relative bg-[#1E2A33]/5 flex flex-col items-center justify-center">
+            <div className="absolute inset-0 flex flex-col items-center justify-center text-[#1E2A33]/50 -z-10">
+              <span className="loader mb-4 border-2 border-[#AE7D5C] border-t-transparent rounded-full w-8 h-8 animate-spin" />
+              <p className="font-roboto text-sm">Chargement du document...</p>
+              <p className="font-roboto text-xs mt-2 opacity-60">Si rien ne s'affiche, utilisez le lien en haut à droite.</p>
+            </div>
+            {previewUrl && (
+              <iframe
+                src={`/api/invoices/preview?url=${encodeURIComponent(previewUrl)}#toolbar=1&navpanes=0&view=FitH`}
+                className="absolute inset-0 w-full h-full border-none z-10"
+                title="Aperçu PDF"
+              />
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Hidden manual file input for reconciliation */}
+      <input
+        type="file"
+        ref={fileInputRef}
+        className="hidden"
+        accept="application/pdf,image/png,image/jpeg"
+        onChange={handleManualFileChange}
+      />
     </main>
   );
 }
-
-interface TransactionRowProps {
-  tx: Transaction;
-  toggling: boolean;
-  onTogglePro: (transactionId: string | number, currentIsPro: boolean) => void;
-  reconciling: boolean;
-  onReconcileAuto: (tx: Transaction) => void;
-}
-
-const TransactionRow = React.memo(({ tx, toggling, onTogglePro, reconciling, onReconcileAuto }: TransactionRowProps) => {
-  const badgeInfo = getCategoryBadge(tx.category);
-
-  return (
-    <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 gap-3 sm:gap-4 hover:bg-[#FDFBEF]/25 transition-colors">
-      <div className="flex items-start gap-3 min-w-0">
-        {/* Payment Icon */}
-        <div className="p-2 bg-[#FDFBEF] border border-[#1E2A33]/10 rounded-xl shrink-0 mt-0.5">
-          {badgeInfo.icon}
-        </div>
-        <div className="min-w-0 flex-1">
-          <span className="text-xs sm:text-sm font-semibold text-[#1E2A33] block leading-snug break-words">
-            {tx.label}
-          </span>
-          <div className="flex flex-wrap items-center gap-x-2 gap-y-1 mt-1 text-[10px] font-medium text-[#1E2A33]/50">
-            <span>{tx.bankAccountName}</span>
-            <span>•</span>
-            <span>{badgeInfo.label}</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 border-t sm:border-none pt-2.5 sm:pt-0">
-        {/* Pro/Perso Toggle Button */}
-        <button
-          onClick={() => onTogglePro(tx.id, tx.isPro)}
-          className={`h-7 px-2.5 font-roboto text-[10px] font-medium rounded-full border transition-all cursor-pointer flex items-center shrink-0 ${
-            !tx.isPro
-              ? 'border-blue-200 text-blue-700 bg-blue-50/40 hover:bg-blue-100/50'
-              : 'border-amber-200 text-amber-800 bg-amber-50/40 hover:bg-amber-100/50'
-          }`}
-        >
-          {toggling ? (
-            <RefreshCcw className="w-3 h-3 animate-spin" />
-          ) : !tx.isPro ? (
-            <>
-              <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mr-1.5" />
-              <span>🏠 Perso</span>
-            </>
-          ) : (
-            <>
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mr-1.5" />
-              <span>💼 Pro</span>
-            </>
-          )}
-        </button>
-
-        {/* Rapprochement Badge */}
-        <div className="flex items-center gap-2">
-          {/* Match Status / Action Badge */}
-          {!tx.isPro ? null : tx.matchedInvoice ? (
-            <a
-              href={tx.matchedInvoice.publicFileUrl || "#"}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-1 text-emerald-600 bg-emerald-50 border border-emerald-200/60 hover:bg-emerald-100/80 transition-colors px-2.5 py-1 rounded-xl text-[10px] font-bold cursor-pointer"
-            >
-              <CheckCircle className="w-3.5 h-3.5 shrink-0" />
-              Rapproché
-              <FileText className="w-3 h-3 ml-0.5 shrink-0" />
-            </a>
-          ) : tx.noJustificatif ? (
-            <span className="flex items-center gap-1.5 text-slate-500 bg-slate-100/50 border border-slate-200/50 px-2.5 py-1 rounded-xl text-[10px] font-bold">
-              <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-              Sans justificatif
-            </span>
-          ) : (
-            <button
-              onClick={() => onReconcileAuto(tx)}
-              disabled={reconciling}
-              className="flex items-center gap-1.5 text-amber-600 bg-amber-50 border border-amber-200/50 hover:bg-amber-100/80 transition-colors px-2.5 py-1 rounded-xl text-[10px] font-bold cursor-pointer disabled:opacity-50"
-            >
-              {reconciling ? (
-                <>
-                  <RefreshCcw className="w-3 h-3 shrink-0 animate-spin mr-1" />
-                  Recherche...
-                </>
-              ) : (
-                <>
-                  <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                  À rapprocher
-                </>
-              )}
-            </button>
-          )}
-        </div>
-
-        {/* Amount */}
-        <span className={`text-base sm:text-lg font-bebas tracking-wider whitespace-nowrap ${tx.isOutflow ? "text-rose-600" : "text-emerald-600"}`}>
-          {tx.isOutflow ? "-" : "+"}{formatAmount(tx.absAmount)}
-        </span>
-      </div>
-    </div>
-  );
-});
-TransactionRow.displayName = "TransactionRow";
