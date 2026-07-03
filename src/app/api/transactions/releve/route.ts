@@ -1,4 +1,7 @@
 import { NextResponse } from "next/server";
+import fs from "fs";
+import path from "path";
+import { prisma } from "@/lib/prisma";
 
 export const dynamic = 'force-dynamic';
 
@@ -7,6 +10,28 @@ export async function GET() {
     const pennylaneKey = process.env.PENNYLANE_API_KEY;
     if (!pennylaneKey) {
       return NextResponse.json({ error: "Missing PENNYLANE_API_KEY" }, { status: 500 });
+    }
+
+    // Load overrides from DB
+    const overridesMap: Record<string, boolean> = {};
+    try {
+      const overrides = await prisma.transactionOverride.findMany();
+      overrides.forEach(o => {
+        overridesMap[o.id] = o.isPro;
+      });
+    } catch (err) {
+      console.error("Failed to load transaction overrides:", err);
+    }
+
+    // Load PayPal Merchant Cache
+    let paypalCache: Record<string, string> = {};
+    try {
+      const cachePath = path.join(process.cwd(), 'src/app/api/transactions/releve/paypal_cache.json');
+      if (fs.existsSync(cachePath)) {
+        paypalCache = JSON.parse(fs.readFileSync(cachePath, 'utf8'));
+      }
+    } catch (err) {
+      console.error("Failed to load PayPal cache:", err);
     }
 
     const BASE_URL = "https://app.pennylane.com/api/external/v2";
@@ -118,29 +143,86 @@ export async function GET() {
       // Check Pro vs Perso
       const accountId = tx.bank_account ? tx.bank_account.id : null;
       const accInfo = accountId ? accountMap[accountId] : null;
-      let isPro = accInfo ? accInfo.isPro : true; // Default to Pro if account info missing
+      const isProAccount = accInfo ? accInfo.isPro : true; // Default to Pro if account info missing
+      let isPro = isProAccount;
 
-      // Exclude personal transactions even on pro account
-      const personalKeywords = [
-        'canal', 'netflix', 'disney', 'carrefour', 'monoprix', 'auchan', 'leclerc', 'intermarche',
-        'uber', 'deliveroo', 'fnac', 'zara', 'decathlon', 'leroy', 'boulangerie', 'restau', 
-        'cafe', 'darty', 'spotify', 'sncf', 'airbnb', 'booking.com', 'h&m', 'ikea', 'castorama',
-        'appart', 'loyer', 'mgen', 'bouygues', 'magd', 'kaori', 'vw bank', 'volkswagen',
-        'prestations', 'assurance voiture', 'poissonnerie', 'guillaume ou mm', 'cpam 75 prestations',
-        'cpam du val d oise', 'cpam carcassonne'
-      ];
-      
-      const isAlreadyExploitant = tx.categories && tx.categories.some((c: any) => c.account_number && c.account_number.startsWith('108'));
-      const matchesPersonal = personalKeywords.some(k => labelLower.includes(k)) || 
-                             (labelLower.includes('cpam') && labelLower.includes('prestation')) ||
-                             (labelLower.includes('cpam') && !labelLower.includes('tp-'));
-      
-      if (isAlreadyExploitant || matchesPersonal) {
-        isPro = false;
+      const isOverridden = overridesMap[String(tx.id)] !== undefined;
+      if (isOverridden) {
+        isPro = overridesMap[String(tx.id)];
       }
 
-      const noJustificatifKeywords = ['genspark'];
-      const noJustificatif = noJustificatifKeywords.some(k => labelLower.includes(k));
+      const isPaypal = labelLower.includes('paypal');
+      
+      // Look up real merchant name from PayPal cache if it's a PayPal transaction
+      let realMerchantName = "";
+      if (isPaypal) {
+        // Try exact match first
+        const exactKey = `${tx.date}_${absAmount.toFixed(2)}`;
+        realMerchantName = paypalCache[exactKey] || "";
+        
+        // If not found, look up with a date window (1 to 6 days before transaction date)
+        if (!realMerchantName) {
+          const txDate = new Date(tx.date);
+          for (let i = 1; i <= 6; i++) {
+            const checkDate = new Date(txDate);
+            checkDate.setDate(txDate.getDate() - i);
+            const checkDateStr = checkDate.toISOString().split('T')[0];
+            const checkKey = `${checkDateStr}_${absAmount.toFixed(2)}`;
+            if (paypalCache[checkKey]) {
+              realMerchantName = paypalCache[checkKey];
+              break;
+            }
+          }
+        }
+      }
+      
+      if (!isOverridden) {
+        // Exclude personal transactions even on pro account
+        const personalKeywords = [
+          'canal', 'netflix', 'disney', 'carrefour', 'monoprix', 'auchan', 'leclerc', 'intermarche',
+          'uber', 'deliveroo', 'fnac', 'zara', 'decathlon', 'leroy', 'boulangerie', 'restau', 
+          'cafe', 'darty', 'spotify', 'sncf', 'airbnb', 'booking.com', 'h&m', 'ikea', 'castorama',
+          'appart', 'loyer', 'mgen', 'bouygues', 'magd', 'kaori', 'vw bank', 'volkswagen',
+          'prestations', 'assurance voiture', 'poissonnerie', 'guillaume ou mm', 'cpam 75 prestations',
+          'cpam du val d oise', 'cpam carcassonne',
+          // PayPal/New personal keywords
+          'zalando', 'emma', 'fashion retail', 'apple', 'luiza', 'poste', 'theo', 'compagnie du',
+          'draps'
+        ];
+
+        const isAlreadyExploitant = tx.categories && tx.categories.some((c: any) => c.account_number && c.account_number.startsWith('108'));
+        const matchesPersonal = personalKeywords.some(k => labelLower.includes(k)) || 
+                               (labelLower.includes('cpam') && labelLower.includes('prestation')) ||
+                               (labelLower.includes('cpam') && !labelLower.includes('tp-')) ||
+                               (realMerchantName && personalKeywords.some(k => realMerchantName.toLowerCase().includes(k)));
+        
+        if (isAlreadyExploitant || matchesPersonal) {
+          isPro = false;
+        }
+      }
+
+      const noJustificatifKeywords = [
+        'genspark', 
+        'telelion', 
+        'decadaire', 
+        'agio', 
+        'commission',
+        'zen pro',
+        'formule zen',
+        'convention professionnel',
+        'access',
+        'cb facture/retrait dt differe',
+        'releve cb',
+        // Highway tolls
+        'dyn dac', 'vironvay', 'sapn', 'aprr', 'sanef', 'cofiroute', 'autoroute'
+      ];
+      
+      const isIndigo = labelLower.includes('indigo');
+      const isSmallIndigo = isIndigo && absAmount < 10.00;
+      
+      const noJustificatif = noJustificatifKeywords.some(k => labelLower.includes(k)) || 
+                             !isPro || 
+                             isSmallIndigo;
 
       // Match with Supplier Invoice locally
       const txTime = new Date(tx.date).getTime();
@@ -149,12 +231,12 @@ export async function GET() {
       const techKeywords = [
         'vercel', 'supabase', 'openrouter', 'github', 'pinecone', 'openai', 'google',
         'stripe', 'microsoft', 'aws', 'amazon', 'dropbox', 'adobe', 'zoom', 'figma',
-        'spotify', 'linkedin', 'eleven labs', 'assemblyai', 'anthropic', 'midjourney',
+        'spotify', 'linkedin', 'eleven labs', 'elevenlabs', 'assemblyai', 'anthropic', 'midjourney',
         'heygen', 'suno', 'runway', 'cloudflare', 'genspark', 'qr-code-generator', 'qrcg', 'bitly'
       ];
       
-      const isPaypal = labelLower.includes('paypal');
-      const isTechProvider = isPaypal || techKeywords.some(prov => labelLower.includes(prov));
+      const isTechProvider = (isPaypal && (!realMerchantName || techKeywords.some(prov => realMerchantName.toLowerCase().includes(prov)))) || 
+                             (!isPaypal && techKeywords.some(prov => labelLower.includes(prov)));
 
       const matchedInvoice = allInvs.find((inv: any) => {
         if (!inv.date) return false;
@@ -185,8 +267,15 @@ export async function GET() {
           const invFileLower = (inv.filename || '').toLowerCase();
           
           if (isPaypal) {
-            // PayPal payments from Guillaume usually map to Cloudflare
-            providerMatch = invLabelLower.includes('cloudflare') || invFileLower.includes('cloudflare');
+            if (realMerchantName) {
+              const cleanMerchant = realMerchantName.toLowerCase().replace(/[^a-z0-9]/g, '');
+              const cleanInvLabel = invLabelLower.replace(/[^a-z0-9]/g, '');
+              const cleanInvFile = invFileLower.replace(/[^a-z0-9]/g, '');
+              providerMatch = cleanInvLabel.includes(cleanMerchant) || cleanInvFile.includes(cleanMerchant) ||
+                              cleanMerchant.includes(cleanInvLabel) || cleanMerchant.includes(cleanInvFile);
+            } else {
+              providerMatch = invLabelLower.includes('cloudflare') || invFileLower.includes('cloudflare');
+            }
           } else {
             const matchedKeyword = techKeywords.find(prov => labelLower.includes(prov));
             if (matchedKeyword) {
@@ -215,6 +304,7 @@ export async function GET() {
         absAmount,
         isOutflow,
         category,
+        isProAccount,
         isPro,
         noJustificatif,
         bankAccountName: accInfo ? accInfo.name : "Compte Inconnu",

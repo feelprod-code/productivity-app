@@ -32,6 +32,7 @@ interface Transaction {
   absAmount: number;
   isOutflow: boolean;
   category: "card" | "direct_debit" | "transfer" | "other";
+  isProAccount: boolean;
   isPro: boolean;
   noJustificatif?: boolean;
   bankAccountName: string;
@@ -78,6 +79,30 @@ export default function RelevePage() {
   const [searchQuery, setSearchQuery] = useState<string>("");
 
   const [expandedMonths, setExpandedMonths] = useState<Record<string, boolean>>({});
+  const [togglingTxId, setTogglingTxId] = useState<string | null>(null);
+
+  const handleTogglePro = async (transactionId: string | number, currentIsPro: boolean) => {
+    const newIsPro = !currentIsPro;
+    setTogglingTxId(String(transactionId));
+    try {
+      const res = await fetch('/api/transactions/toggle-pro', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ transactionId: String(transactionId), isPro: newIsPro }),
+      });
+      if (res.ok) {
+        await loadData();
+      } else {
+        alert("Erreur lors de la modification de la catégorie");
+      }
+    } catch (err: any) {
+      alert(err.message || "Erreur de connexion");
+    } finally {
+      setTogglingTxId(null);
+    }
+  };
 
   const loadData = async () => {
     setLoading(true);
@@ -102,9 +127,9 @@ export default function RelevePage() {
   // Filter transactions
   const filteredTxs = useMemo(() => {
     return transactions.filter(tx => {
-      // 1. Pro vs Perso
-      if (activeTab === "pro" && !tx.isPro) return false;
-      if (activeTab === "perso" && tx.isPro) return false;
+      // 1. Pro vs Perso Bank Account
+      if (activeTab === "pro" && !tx.isProAccount) return false;
+      if (activeTab === "perso" && tx.isProAccount) return false;
 
       // 2. Month Selector
       if (selectedMonth !== "all") {
@@ -141,7 +166,7 @@ export default function RelevePage() {
     return Array.from(
       new Set(
         transactions
-          .filter(tx => (activeTab === "pro" ? tx.isPro : !tx.isPro))
+          .filter(tx => (activeTab === "pro" ? tx.isProAccount : !tx.isProAccount))
           .map(tx => tx.date.substring(0, 7))
       )
     ).sort((a, b) => b.localeCompare(a));
@@ -178,14 +203,15 @@ export default function RelevePage() {
       
       if (tx.isOutflow) {
         g.outflows += Math.abs(tx.amount);
-        if (!tx.noJustificatif) {
-          g.totalOutflowCount++;
-          if (tx.matchedInvoice) {
-            g.matchedCount++;
-          }
-        }
       } else {
         g.inflows += tx.amount;
+      }
+
+      if (!tx.noJustificatif) {
+        g.totalOutflowCount++;
+        if (tx.matchedInvoice) {
+          g.matchedCount++;
+        }
       }
       
       if (!g.groupedByDate[tx.date]) {
@@ -221,9 +247,9 @@ export default function RelevePage() {
   const netBalance = totalInflows - totalOutflows;
 
   const globalMatchingRate = useMemo(() => {
-    const totalOutflowCount = filteredTxs.filter(tx => tx.isOutflow && !tx.noJustificatif).length;
-    const matchedOutflowCount = filteredTxs.filter(tx => tx.isOutflow && !tx.noJustificatif && tx.matchedInvoice).length;
-    return totalOutflowCount > 0 ? Math.round((matchedOutflowCount / totalOutflowCount) * 100) : 100;
+    const totalCount = filteredTxs.filter(tx => !tx.noJustificatif).length;
+    const matchedCount = filteredTxs.filter(tx => !tx.noJustificatif && tx.matchedInvoice).length;
+    return totalCount > 0 ? Math.round((matchedCount / totalCount) * 100) : 100;
   }, [filteredTxs]);
 
   // Toggle Month Accordion
@@ -276,31 +302,29 @@ export default function RelevePage() {
 
       <div className="relative z-10 max-w-6xl mx-auto space-y-6">
         {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 pb-4 border-b border-[#1E2A33]/10">
-          <div className="flex items-start gap-3">
+        <div className="flex flex-col lg:flex-row justify-between items-center gap-6 mb-6 pb-4 border-b border-[#1E2A33]/10">
+          <div className="flex items-center gap-4 pt-4 lg:pt-0 shrink-0 self-stretch">
+            <div className="w-2 bg-[#AE7D5C] rounded-full self-stretch shadow-[0_0_15px_rgba(174,125,92,0.4)] min-h-[40px]"></div>
             <Link
               href="/comptabilite"
-              className="p-2 hover:bg-[#1E2A33]/5 rounded-xl transition-all border border-[#1E2A33]/5 text-[#1E2A33]/70 shrink-0 mt-1"
+              className="p-2 hover:bg-[#1E2A33]/5 rounded-xl transition-all border border-[#1E2A33]/5 text-[#1E2A33]/70 shrink-0"
             >
               <ArrowLeft className="w-5 h-5" />
             </Link>
-            <div className="min-w-0">
-              <h1 className="text-xl sm:text-3xl lg:text-4xl font-bebas tracking-wide text-[#1E2A33] leading-tight break-words">
-                RELEVÉ BANCAIRE <span className="text-[#AE7D5C]">/ TRANSACTIONS & RAPPROCHEMENT</span>
-              </h1>
-              <p className="font-roboto font-light text-xs text-[#1E2A33]/60 mt-0.5">
-                Vue mensuelle et quotidienne simplifiée des mouvements et justificatifs
-              </p>
-            </div>
+            <h1 className="text-3xl sm:text-5xl font-bebas tracking-wide text-[#1E2A33] text-center md:text-left leading-tight">
+              RELEVÉ BANCAIRE <span className="text-[#AE7D5C]">/ TRANSACTIONS & RAPPROCHEMENT</span>
+            </h1>
           </div>
-          <button
-            onClick={loadData}
-            disabled={loading}
-            className="flex items-center gap-2 px-4 py-2 bg-white ring-1 ring-[#1E2A33]/5 hover:bg-[#FDFBEF] rounded-xl text-xs font-semibold shadow-sm transition-all shrink-0 self-end md:self-auto"
-          >
-            <RefreshCcw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
-            Actualiser
-          </button>
+          <div className="flex w-full lg:w-auto items-center justify-end gap-4">
+            <button
+              onClick={loadData}
+              disabled={loading}
+              className="flex items-center gap-2 px-4 py-2.5 bg-white ring-1 ring-[#1E2A33]/5 hover:bg-[#FDFBEF] rounded-xl text-xs font-semibold shadow-sm transition-all shrink-0 cursor-pointer"
+            >
+              <RefreshCcw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
+              Actualiser
+            </button>
+          </div>
         </div>
 
         {/* Bank Balances Bar */}
@@ -584,16 +608,41 @@ export default function RelevePage() {
                                       </div>
                                     </div>
 
-                                    <div className="flex items-center justify-between sm:justify-end gap-4 shrink-0 border-t sm:border-none pt-2.5 sm:pt-0">
+                                    <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 border-t sm:border-none pt-2.5 sm:pt-0">
+                                      {/* Pro/Perso Toggle Button */}
+                                      <button
+                                        onClick={() => handleTogglePro(tx.id, tx.isPro)}
+                                        disabled={togglingTxId === String(tx.id)}
+                                        className={`h-7 px-2.5 font-roboto text-[10px] font-medium rounded-full border transition-all cursor-pointer flex items-center shrink-0 ${
+                                          !tx.isPro
+                                            ? 'border-blue-200 text-blue-700 bg-blue-50/40 hover:bg-blue-100/50'
+                                            : 'border-amber-200 text-amber-800 bg-amber-50/40 hover:bg-amber-100/50'
+                                        }`}
+                                      >
+                                        {togglingTxId === String(tx.id) ? (
+                                          <RefreshCcw className="w-3 h-3 animate-spin" />
+                                        ) : !tx.isPro ? (
+                                          <>
+                                            <span className="w-1.5 h-1.5 rounded-full bg-blue-500 mr-1.5" />
+                                            <span>🏠 Perso</span>
+                                          </>
+                                        ) : (
+                                          <>
+                                            <span className="w-1.5 h-1.5 rounded-full bg-amber-500 mr-1.5" />
+                                            <span>💼 Pro</span>
+                                          </>
+                                        )}
+                                      </button>
+
                                       {/* Rapprochement Badge */}
-                                      <div className="min-w-0">
-                                        {tx.matchedInvoice ? (
+                                      <div className="flex items-center gap-2">
+                                        {/* Match Status / Action Badge */}
+                                        {!tx.isPro ? null : tx.matchedInvoice ? (
                                           <a
                                             href={tx.matchedInvoice.publicFileUrl || "#"}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="flex items-center gap-1.5 text-emerald-600 hover:text-emerald-700 bg-emerald-50 border border-emerald-200/50 px-2.5 py-1 rounded-xl text-[10px] font-bold transition-all truncate max-w-[150px]"
-                                            title={tx.matchedInvoice.filename}
+                                            className="flex items-center gap-1 text-emerald-600 bg-emerald-50 border border-emerald-200/60 hover:bg-emerald-100/80 transition-colors px-2.5 py-1 rounded-xl text-[10px] font-bold cursor-pointer"
                                           >
                                             <CheckCircle className="w-3.5 h-3.5 shrink-0" />
                                             Rapproché
@@ -604,14 +653,10 @@ export default function RelevePage() {
                                             <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                                             Sans justificatif
                                           </span>
-                                        ) : tx.isOutflow ? (
+                                        ) : (
                                           <span className="flex items-center gap-1.5 text-amber-600 bg-amber-50 border border-amber-200/50 px-2.5 py-1 rounded-xl text-[10px] font-bold">
                                             <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                                             À rapprocher
-                                          </span>
-                                        ) : (
-                                          <span className="text-[9px] text-[#1E2A33]/30 font-medium italic">
-                                            Sans justificatif requis
                                           </span>
                                         )}
                                       </div>
