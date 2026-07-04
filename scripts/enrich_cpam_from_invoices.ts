@@ -15,6 +15,7 @@ interface PatientAmount {
 
 interface PaymentGroup {
     dateStr: string; // format "DD/MM/YYYY"
+    caisse: string;
     date: Date;
     totalAmount: number;
     patients: Record<string, number>; // name -> cumulative amount
@@ -35,34 +36,30 @@ async function parseCpamPdf(pdfBuffer: Buffer): Promise<PaymentGroup[]> {
     const lines = text.split('\n');
 
     const groups: PaymentGroup[] = [];
-    let currentPaymentDateStr: string | null = null;
-    let currentTotalAmount = 0;
     
-    // Regex pour détecter les lignes de détails
-    // DD/MM/YYYY <fac_id> CPAM n° <caisse> <NOM_PATIENT> <secu> ... <montant> €
-    const detailRegex = /(\d{2}\/\d{2}\/\d{4})\s+(\d+)\s+CPAM\s+n°\s+\d+\s+([A-Z\s\-]{3,})\s+\d{13,15}.*?([0-9.,]+)\s*€/;
-    
-    // Regex pour détecter les totaux réglés
-    const totalRegex = /Total\s+réglé\s+le\s+(\d{2}\/\d{2}\/\d{4})[^\d€]*([0-9.,]+)\s*€/i;
+    // Regex pour détecter les lignes de détails (sans espaces obligatoires)
+    const detailRegex = /(\d{2}\/\d{2}\/\d{4})\d{9}CPAM\s*n°\s*(\d{3})([A-Z\s\-]{3,})(\d{13,15})[A-Z]{3}\d{2}\/\d{2}\/\d{4}(?:\s*au\s*\d{2}\/\d{2}\/\d{4})?([0-9.,]+)\s*€/;
 
     for (const line of lines) {
-        // 1. Détecter si c'est une ligne de soin patient
         const detailMatch = line.match(detailRegex);
         if (detailMatch) {
             const payDateStr = detailMatch[1];
+            const caisse = detailMatch[2];
             const rawName = detailMatch[3].trim();
-            const amount = parseFloat(detailMatch[4].replace(',', '.'));
+            const amount = parseFloat(detailMatch[5].replace(',', '.'));
 
             if (!isNaN(amount) && rawName) {
                 const formattedName = formatPatientName(rawName);
+                const key = `${payDateStr}-${caisse}`;
                 
-                // Trouver ou créer le groupe pour cette date de paiement
-                let group = groups.find(g => g.dateStr === payDateStr);
+                // Trouver ou créer le groupe pour cette date de paiement et cette caisse
+                let group = groups.find(g => `${g.dateStr}-${g.caisse}` === key);
                 if (!group) {
                     const [d, m, y] = payDateStr.split('/');
                     const date = new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
                     group = {
                         dateStr: payDateStr,
+                        caisse,
                         date,
                         totalAmount: 0,
                         patients: {}
@@ -71,30 +68,7 @@ async function parseCpamPdf(pdfBuffer: Buffer): Promise<PaymentGroup[]> {
                 }
                 
                 group.patients[formattedName] = (group.patients[formattedName] || 0) + amount;
-            }
-            continue;
-        }
-
-        // 2. Détecter si c'est une ligne de total de versement d'une caisse
-        const totalMatch = line.match(totalRegex);
-        if (totalMatch) {
-            const payDateStr = totalMatch[1];
-            const netAmount = parseFloat(totalMatch[2].replace(',', '.'));
-
-            if (!isNaN(netAmount)) {
-                let group = groups.find(g => g.dateStr === payDateStr);
-                if (group) {
-                    group.totalAmount = netAmount;
-                } else {
-                    const [d, m, y] = payDateStr.split('/');
-                    const date = new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
-                    groups.push({
-                        dateStr: payDateStr,
-                        date,
-                        totalAmount: netAmount,
-                        patients: {}
-                    });
-                }
+                group.totalAmount += amount;
             }
         }
     }
