@@ -133,6 +133,11 @@ function cleanDisplayLabel(label: string): string {
   cleaned = cleaned.replace(/VT PERM appart/gi, 'VT PERM - Appartement');
 
   // 2. Remove standard bank tracking metadata
+  cleaned = cleaned.replace(/CARTE\s+\d+\s+CB/gi, '');
+  cleaned = cleaned.replace(/CARTE\s+CB/gi, '');
+  cleaned = cleaned.replace(/\bCB\b/g, '');
+  cleaned = cleaned.replace(/\bCBL[M]?\b/gi, '');
+  cleaned = cleaned.replace(/\b\d{2}\/\d{2}\/\d{2,4}\b/g, '');
   cleaned = cleaned.replace(/ICS\.[A-Z0-9]+/gi, '');
   cleaned = cleaned.replace(/\.RUM\.[A-Z0-9]+/gi, '');
   cleaned = cleaned.replace(/SDR\d+/gi, '');
