@@ -24,7 +24,9 @@ import {
   Upload,
   Download,
   ExternalLink,
-  Loader2
+  Loader2,
+  Wallet,
+  BadgeCheck
 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -561,32 +563,60 @@ export default function RelevePage() {
 
         {/* Synthese Cards */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#1E2A33]/5 shadow-sm relative overflow-hidden group">
-            <span className="text-[10px] uppercase font-bold text-[#1E2A33]/50 block">Entrées</span>
-            <span className="text-xl sm:text-2xl lg:text-3xl font-bebas tracking-wider text-emerald-600 block mt-2">
-              {formatAmount(totalInflows)}
-            </span>
+          {/* Card: Entrées */}
+          <div className="bg-white p-4 sm:p-5 rounded-2xl border border-emerald-100 shadow-sm relative overflow-hidden group hover:border-emerald-300 transition-all flex justify-between items-start">
+            <div className="space-y-1">
+              <span className="text-[10px] uppercase font-bold text-[#1E2A33]/50 block">Entrées (Crédit)</span>
+              <span className="text-xl sm:text-2xl lg:text-3xl font-bebas tracking-wider text-emerald-600 block">
+                + {formatAmount(totalInflows)}
+              </span>
+            </div>
+            <div className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 border border-emerald-100">
+              <ArrowUpRight className="w-4 h-4" />
+            </div>
           </div>
 
-          <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#1E2A33]/5 shadow-sm relative overflow-hidden group">
-            <span className="text-[10px] uppercase font-bold text-[#1E2A33]/50 block">Sorties</span>
-            <span className="text-xl sm:text-2xl lg:text-3xl font-bebas tracking-wider text-rose-600 block mt-2">
-              {formatAmount(totalOutflows)}
-            </span>
+          {/* Card: Sorties */}
+          <div className="bg-white p-4 sm:p-5 rounded-2xl border border-rose-100 shadow-sm relative overflow-hidden group hover:border-rose-300 transition-all flex justify-between items-start">
+            <div className="space-y-1">
+              <span className="text-[10px] uppercase font-bold text-[#1E2A33]/50 block">Sorties (Débit)</span>
+              <span className="text-xl sm:text-2xl lg:text-3xl font-bebas tracking-wider text-rose-600 block">
+                - {formatAmount(totalOutflows)}
+              </span>
+            </div>
+            <div className="w-8 h-8 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center shrink-0 border border-rose-100">
+              <ArrowDownLeft className="w-4 h-4" />
+            </div>
           </div>
 
-          <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#1E2A33]/5 shadow-sm relative overflow-hidden group">
-            <span className="text-[10px] uppercase font-bold text-[#1E2A33]/50 block">Solde Net</span>
-            <span className={`text-xl sm:text-2xl lg:text-3xl font-bebas tracking-wider block mt-2 ${netBalance >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
-              {formatAmount(netBalance)}
-            </span>
+          {/* Card: Solde Net */}
+          <div className="bg-white p-4 sm:p-5 rounded-2xl border border-blue-100 shadow-sm relative overflow-hidden group hover:border-blue-300 transition-all flex justify-between items-start">
+            <div className="space-y-1">
+              <span className="text-[10px] uppercase font-bold text-[#1E2A33]/50 block">Solde Net</span>
+              <span className={`text-xl sm:text-2xl lg:text-3xl font-bebas tracking-wider block ${netBalance >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
+                {netBalance >= 0 ? "+" : ""}{formatAmount(netBalance)}
+              </span>
+            </div>
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 border ${
+              netBalance >= 0 
+                ? "bg-emerald-50 text-emerald-600 border-emerald-100" 
+                : "bg-rose-50 text-rose-600 border-rose-100"
+            }`}>
+              <Wallet className="w-4 h-4" />
+            </div>
           </div>
 
-          <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#1E2A33]/5 shadow-sm relative overflow-hidden group col-span-2 lg:col-span-1">
-            <span className="text-[10px] uppercase font-bold text-[#1E2A33]/50 block">Rapprochement Global</span>
-            <span className="text-xl sm:text-2xl lg:text-3xl font-bebas tracking-wider text-[#AE7D5C] block mt-2">
-              {globalMatchingRate} %
-            </span>
+          {/* Card: Rapprochement */}
+          <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#AE7D5C]/20 shadow-sm relative overflow-hidden group hover:border-[#AE7D5C]/40 transition-all flex justify-between items-start col-span-2 lg:col-span-1">
+            <div className="space-y-1">
+              <span className="text-[10px] uppercase font-bold text-[#1E2A33]/50 block">Rapprochement Global</span>
+              <span className="text-xl sm:text-2xl lg:text-3xl font-bebas tracking-wider text-[#AE7D5C] block">
+                {globalMatchingRate} %
+              </span>
+            </div>
+            <div className="w-8 h-8 rounded-full bg-[#FDFBEF] text-[#AE7D5C] flex items-center justify-center shrink-0 border border-[#AE7D5C]/20">
+              <BadgeCheck className="w-4 h-4" />
+            </div>
           </div>
         </div>
 
@@ -748,7 +778,7 @@ export default function RelevePage() {
                               <React.Fragment key={tx.id}>
                                 {/* Transaction Row (single line) */}
                                 <TableRow
-                                  className={`border-[#1E2A33]/5 hover:bg-[#FDFBEF] transition-colors cursor-pointer group ${txExpanded ? 'bg-[#FDFBEF]/30' : ''}`}
+                                  className={`border-l-4 ${tx.isOutflow ? 'border-l-rose-500/70' : 'border-l-emerald-500/70'} border-b border-b-[#1E2A33]/5 hover:bg-[#FDFBEF] transition-colors cursor-pointer group ${txExpanded ? 'bg-[#FDFBEF]/30' : ''}`}
                                   onClick={() => toggleTxExpansion(String(tx.id))}
                                 >
                                   {/* Date */}
@@ -919,7 +949,11 @@ export default function RelevePage() {
                                   {/* Montant */}
                                   <TableCell className="text-right sm:pr-6 pr-4 py-3.5 whitespace-nowrap">
                                     <div className="flex items-center justify-end gap-2">
-                                      <span className={`text-sm sm:text-base font-bebas tracking-wider ${tx.isOutflow ? "text-rose-600" : "text-emerald-600"}`}>
+                                      <span className={`inline-flex items-center gap-1 text-sm sm:text-base font-bebas tracking-wider px-2.5 py-1 rounded-lg border font-bold ${
+                                        tx.isOutflow 
+                                          ? "text-rose-700 bg-rose-50/70 border-rose-200/50" 
+                                          : "text-emerald-700 bg-emerald-50/70 border-emerald-200/50"
+                                      }`}>
                                         {tx.isOutflow ? "-" : "+"}{formatAmount(tx.absAmount)}
                                       </span>
                                       {txExpanded ? <ChevronDown className="w-3.5 h-3.5 text-[#1E2A33]/40" /> : <ChevronRight className="w-3.5 h-3.5 text-[#1E2A33]/40 opacity-0 group-hover:opacity-100 transition-opacity" />}
