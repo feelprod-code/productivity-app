@@ -196,7 +196,7 @@ async function importInvoiceToPennylane(supplierId: number, fileAttachmentId: st
                 {
                     currency_amount: info.amount_ttc.toFixed(2),
                     currency_tax: info.amount_tva.toFixed(2),
-                    vat_rate: info.amount_tva > 0 ? '20' : 'exempt',
+                    vat_rate: info.amount_tva > 0 ? 'FR_200' : 'exempt',
                     label: `Facture Gandi ${info.invoice_number}`
                 }
             ]
