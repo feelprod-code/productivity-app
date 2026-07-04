@@ -122,6 +122,8 @@ function cleanDisplayLabel(label: string): string {
   if (lower.includes("urssaf")) return "URSSAF";
   if (lower.includes("dgfip") || lower.includes("impot")) return "IMPÔTS";
   if (lower.includes("malakoff") || lower.includes("humanis")) return "MALAKOFF HUMANIS";
+  if (lower.includes("nike")) return "NIKE";
+  if (lower.includes("agios") || lower.includes("commission") || lower.includes("arrete de compte")) return "Frais bancaires";
 
   let cleaned = label;
 
@@ -158,7 +160,14 @@ function cleanDisplayLabel(label: string): string {
   cleaned = cleaned.replace(/\b[A-Z0-9]{15,}\b/g, ''); // Mandate IDs
   cleaned = cleaned.replace(/\b\d{10,}\b/g, ''); // Serial numbers
 
-  // 3. Remove client name repetitions
+  // 3. Remove client name repetitions and card meta details
+  cleaned = cleaned.replace(/EUR\s*\d+[\.,]\d*/gi, '');
+  cleaned = cleaned.replace(/\d+[\.,]\d*\s*EUR/gi, '');
+  cleaned = cleaned.replace(/\b\d+[\.,]\d*\b/g, ''); 
+  cleaned = cleaned.replace(/\b(EUR|USD)\b/gi, '');
+  cleaned = cleaned.replace(/\b(Paris|PARIS)\b/gi, '');
+  cleaned = cleaned.replace(/PHILIPPE\s+GUILLAUME/gi, '');
+  cleaned = cleaned.replace(/GUILLAUME\s+PHILIPPE/gi, '');
   cleaned = cleaned.replace(/M GUILLAUME PHILIPPE/gi, '');
   cleaned = cleaned.replace(/M GUILLAUME OU MM/gi, '');
   cleaned = cleaned.replace(/MR PHILIPPE GUILLAUME/gi, '');
