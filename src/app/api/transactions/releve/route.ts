@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
+import * as fs from 'fs';
+import * as path from 'path';
 
 export const dynamic = 'force-dynamic';
 
@@ -265,7 +267,7 @@ export async function GET() {
         // Provider match logic
         let providerMatch = false;
         if (txWords.length > 0) {
-          providerMatch = txWords.some(word => cleanInv.includes(word) || word.includes(cleanInv));
+          providerMatch = txWords.some((word: string) => cleanInv.includes(word) || word.includes(cleanInv));
         } else {
           providerMatch = cleanInv.includes(cleanTx) || cleanTx.includes(cleanInv);
         }

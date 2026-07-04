@@ -85,20 +85,20 @@ async function main() {
     const filterStr = encodeURIComponent(JSON.stringify(filterObj));
 
     for (let page = 1; page <= 12; page++) {
-        const fetchUrl = `${BASE_URL}/transactions?filter=${filterStr}&limit=100` + (txCursor ? `&cursor=${txCursor}` : '');
-        const res = await fetch(fetchUrl, {
+        const fetchUrl: string = `${BASE_URL}/transactions?filter=${filterStr}&limit=100` + (txCursor ? `&cursor=${txCursor}` : '');
+        const res: Response = await fetch(fetchUrl, {
             headers: {
                 'Authorization': `Bearer ${pennylaneKey}`,
                 'Accept': 'application/json'
             }
         });
         if (!res.ok) break;
-        const data = await res.json();
+        const data: any = await res.json();
         const items = data.transactions || data.items || [];
         if (items.length === 0) break;
         allTxs.push(...items);
 
-        const nextCursor = data.next_cursor || data.meta?.next_cursor;
+        const nextCursor: string | null = data.next_cursor || data.meta?.next_cursor || null;
         if (nextCursor) {
             txCursor = nextCursor;
         } else {
