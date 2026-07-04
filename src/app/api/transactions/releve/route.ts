@@ -1,8 +1,5 @@
 import { NextResponse } from "next/server";
-import fs from "fs";
-import path from "path";
 import { prisma } from "@/lib/prisma";
-import pdfParse from "pdf-parse";
 
 export const dynamic = 'force-dynamic';
 
@@ -108,31 +105,8 @@ export async function GET() {
       }
     }
 
-    // 3. Fetch Supplier Invoices (fetch up to 10 pages to cover all invoices)
-    let invCursor: string | null = null;
-    const allInvs: any[] = [];
-    for (let page = 1; page <= 10; page++) {
-      const fetchUrl: string = `${BASE_URL}/supplier_invoices?limit=100` + (invCursor ? `&cursor=${invCursor}` : '');
-      const res = await fetch(fetchUrl, {
-        headers: {
-          'Authorization': `Bearer ${pennylaneKey}`,
-          'Accept': 'application/json',
-          'X-Use-2026-API-Changes': 'true'
-        }
-      });
-      if (!res.ok) break;
-      const data = await res.json();
-      const items = data.supplier_invoices || data.items || [];
-      if (items.length === 0) break;
-      allInvs.push(...items);
-
-      const nextCursor = data.next_cursor || data.meta?.next_cursor;
-      if (nextCursor) {
-        invCursor = nextCursor;
-      } else {
-        break;
-      }
-    }
+    // 3. Load Local Invoices from DB
+    const allInvs = await prisma.invoice.findMany() as any[];
 
     // 4. Process and Classify Transactions
     let backgroundEnrichCount = 0;
@@ -254,7 +228,7 @@ export async function GET() {
       const matchedInvoice = allInvs.find((inv: any) => {
         if (!inv.date) return false;
         const invTime = new Date(inv.date).getTime();
-        const invAmount = parseFloat(inv.amount || '0');
+        const invAmount = inv.amount || 0;
         
         let amountMatch = Math.abs(invAmount - absAmount) < 0.01;
         
@@ -276,29 +250,29 @@ export async function GET() {
         // Ensure the invoice provider matches the transaction provider to avoid cross-matching
         let providerMatch = true;
         if (isTechProvider) {
-          const invLabelLower = (inv.label || '').toLowerCase();
-          const invFileLower = (inv.filename || '').toLowerCase();
+          const invProvLower = (inv.provider || '').toLowerCase();
+          const invFileLower = (inv.fileUrl || '').toLowerCase();
           
           if (isPaypal) {
             if (realMerchantName) {
               const cleanMerchant = realMerchantName.toLowerCase().replace(/[^a-z0-9]/g, '');
-              const cleanInvLabel = invLabelLower.replace(/[^a-z0-9]/g, '');
+              const cleanInvLabel = invProvLower.replace(/[^a-z0-9]/g, '');
               const cleanInvFile = invFileLower.replace(/[^a-z0-9]/g, '');
               providerMatch = cleanInvLabel.includes(cleanMerchant) || cleanInvFile.includes(cleanMerchant) ||
                               cleanMerchant.includes(cleanInvLabel) || cleanMerchant.includes(cleanInvFile);
             } else {
-              providerMatch = invLabelLower.includes('cloudflare') || invFileLower.includes('cloudflare');
+              providerMatch = invProvLower.includes('cloudflare') || invFileLower.includes('cloudflare');
             }
           } else {
             const matchedKeyword = techKeywords.find(prov => labelLower.includes(prov));
             if (matchedKeyword) {
               const cleanKeyword = matchedKeyword.replace(/[^a-z0-9]/g, '');
-              const cleanInvLabel = invLabelLower.replace(/[^a-z0-9]/g, '');
+              const cleanInvLabel = invProvLower.replace(/[^a-z0-9]/g, '');
               const cleanInvFile = invFileLower.replace(/[^a-z0-9]/g, '');
               
               const isQrcg = matchedKeyword === 'qr-code-generator' || matchedKeyword === 'qrcg' || matchedKeyword === 'bitly';
               if (isQrcg) {
-                providerMatch = invLabelLower.includes('qr code') || invLabelLower.includes('qrcg') || invLabelLower.includes('bitly') || invFileLower.includes('qrcg') || invFileLower.includes('bitly');
+                providerMatch = invProvLower.includes('qr code') || invProvLower.includes('qrcg') || invProvLower.includes('bitly') || invFileLower.includes('qrcg') || invFileLower.includes('bitly');
               } else {
                 providerMatch = cleanInvLabel.includes(cleanKeyword) || cleanInvFile.includes(cleanKeyword);
               }
@@ -309,12 +283,11 @@ export async function GET() {
         if (!amountMatch && !isTechProvider && closeDate) {
           const txWords = labelLower.split(/[^a-z0-9]/).filter((w: string) => w.length >= 3 && !['prelvt', 'sepa', 'confrere', 'prlv', 'recu'].includes(w));
           if (txWords.length > 0) {
-            const invLabelLower = (inv.label || '').toLowerCase();
-            const invFileLower = (inv.filename || '').toLowerCase();
             const invProvLower = (inv.provider || '').toLowerCase();
+            const invFileLower = (inv.fileUrl || '').toLowerCase();
             
             const matchesAllWords = txWords.every((word: string) => 
-              invLabelLower.includes(word) || invFileLower.includes(word) || invProvLower.includes(word)
+              invProvLower.includes(word) || invFileLower.includes(word)
             );
             
             if (matchesAllWords) {
@@ -329,6 +302,11 @@ export async function GET() {
         return amountMatch && closeDate && providerMatch;
       });
 
+      let productDescription = detailsMap[String(tx.id)] || null;
+      if (!productDescription && matchedInvoice && matchedInvoice.provider.includes(' - ')) {
+        productDescription = matchedInvoice.provider.split(' - ').slice(1).join(' - ');
+      }
+
       const txResult = {
         id: tx.id,
         date: tx.date,
@@ -341,29 +319,21 @@ export async function GET() {
         isPro,
         noJustificatif,
         bankAccountName: accInfo ? accInfo.name : "Compte Inconnu",
-        productDescription: detailsMap[String(tx.id)] || null,
+        productDescription,
         matchedInvoice: matchedInvoice ? {
           id: matchedInvoice.id,
           date: matchedInvoice.date,
-          label: matchedInvoice.label,
-          filename: matchedInvoice.filename,
-          publicFileUrl: matchedInvoice.public_file_url,
-          invoiceLines: Array.isArray(matchedInvoice.invoice_lines) 
-            ? matchedInvoice.invoice_lines.map((line: any) => ({
-                label: line.label || line.description || "Article sans description",
-                amount: parseFloat(line.currency_amount || line.amount || '0')
-              }))
-            : []
+          label: matchedInvoice.provider,
+          filename: matchedInvoice.fileUrl ? matchedInvoice.fileUrl.substring(matchedInvoice.fileUrl.lastIndexOf('/') + 1) : "facture.pdf",
+          publicFileUrl: matchedInvoice.fileUrl,
+          invoiceLines: [
+            {
+              label: matchedInvoice.provider,
+              amount: matchedInvoice.amount || 0
+            }
+          ]
         } : null
       };
-
-      // Background extraction of invoice products if not already cached (throttled to max 2 per API call)
-      if (!txResult.productDescription && matchedInvoice && matchedInvoice.public_file_url && backgroundEnrichCount < 2) {
-        backgroundEnrichCount++;
-        enrichTransactionOnTheFly(String(tx.id), label, matchedInvoice.public_file_url).catch((err) => {
-          console.error(`[Background-Enrich] Error for tx ${tx.id}:`, err);
-        });
-      }
 
       return txResult;
     });
@@ -376,88 +346,5 @@ export async function GET() {
   } catch (error: any) {
     console.error("Error in bank statement API:", error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
-  }
-}
-
-async function enrichTransactionOnTheFly(txId: string, label: string, publicFileUrl: string) {
-  try {
-    const openrouterKey = process.env.OPENROUTER_API_KEY;
-    if (!openrouterKey) return;
-
-    console.log(`🧠 [Auto-Enrich] Démarrage de l'analyse en arrière-plan pour la transaction ${txId} (${label})...`);
-
-    // Télécharger le PDF
-    const fileRes = await fetch(publicFileUrl);
-    if (!fileRes.ok) {
-      console.error(`🧠 [Auto-Enrich] Échec de téléchargement du justificatif (${fileRes.status})`);
-      return;
-    }
-
-    const arrayBuffer = await fileRes.arrayBuffer();
-    const buffer = Buffer.from(arrayBuffer);
-
-    // Parser le PDF
-    const parsedPdf = await pdfParse(buffer);
-    const text = parsedPdf.text || "";
-    if (!text.trim()) {
-      console.warn(`🧠 [Auto-Enrich] Texte vide ou illisible pour la transaction ${txId}`);
-      return;
-    }
-
-    // Demander à l'IA d'extraire la description du produit
-    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${openrouterKey}`,
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify({
-        model: "google/gemini-2.5-flash",
-        response_format: { type: "json_object" },
-        messages: [
-          {
-            role: "user",
-            content: `Tu es un expert comptable. Analyse le texte extrait de cette facture et décris succinctement le ou les principaux produits ou services achetés (nom de l'objet, marque éventuelle, usage, max 10 mots).
-
-Le format de retour doit être un JSON strict comme suit :
-{
-  "product_description": "Description courte (ex: Objectif Sony FE 24-70mm, Trépied professionnel Manfrotto, Écran PC Dell 27)"
-}
-
-Voici le libellé de l'opération : ${label}
-
-Texte de la facture :
----
-${text.substring(0, 8000)}
----`
-          }
-        ]
-      })
-    });
-
-    if (!response.ok) {
-      console.error(`🧠 [Auto-Enrich] Échec appel OpenRouter (${response.status})`);
-      return;
-    }
-
-    const data = await response.json();
-    const contentText = data.choices?.[0]?.message?.content;
-    if (!contentText) return;
-
-    const parsed = JSON.parse(contentText);
-    const productDescription = parsed.product_description;
-
-    if (productDescription) {
-      console.log(`🧠 [Auto-Enrich] Produit extrait : "${productDescription}" pour la transaction ${txId}`);
-      
-      // Enregistrer dans la table TransactionDetail
-      await prisma.$executeRawUnsafe(
-        'INSERT INTO "TransactionDetail" (id, description, "updatedAt") VALUES ($1, $2, NOW()) ON CONFLICT (id) DO UPDATE SET description = $2, "updatedAt" = NOW()',
-        txId,
-        productDescription
-      );
-    }
-  } catch (err) {
-    console.error(`🧠 [Auto-Enrich] Erreur lors de l'extraction à la volée de la transaction ${txId} :`, err);
   }
 }
