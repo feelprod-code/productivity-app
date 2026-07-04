@@ -232,8 +232,8 @@ export async function GET() {
         
         let amountMatch = Math.abs(invAmount - absAmount) < 0.01;
         
-        // Currency-aware match for USD/EUR conversion of tech providers
-        if (!amountMatch && isTechProvider) {
+        // Tolerance for currency/tech conversion or minor variations
+        if (!amountMatch) {
           const ratio = absAmount / invAmount;
           if (ratio >= 0.80 && ratio <= 1.15) {
             amountMatch = true;
@@ -246,60 +246,31 @@ export async function GET() {
         }
         
         const closeDate = (txTime >= invTime - 2 * 24 * 60 * 60 * 1000) && (txTime - invTime <= thirtyFiveDaysMs);
+        if (!closeDate) return false;
+
+        // Clean label for transaction provider lookup
+        const cleanTx = (realMerchantName || labelLower)
+          .replace(/(virement|prlv|sepa|carte|cb|facture|achat|payments|digital|sarl|gmbh|inc|sas|eu)/gi, '')
+          .toLowerCase()
+          .trim();
         
-        // Ensure the invoice provider matches the transaction provider to avoid cross-matching
-        let providerMatch = true;
-        if (isTechProvider) {
-          const invProvLower = (inv.provider || '').toLowerCase();
-          const invFileLower = (inv.fileUrl || '').toLowerCase();
-          
-          if (isPaypal) {
-            if (realMerchantName) {
-              const cleanMerchant = realMerchantName.toLowerCase().replace(/[^a-z0-9]/g, '');
-              const cleanInvLabel = invProvLower.replace(/[^a-z0-9]/g, '');
-              const cleanInvFile = invFileLower.replace(/[^a-z0-9]/g, '');
-              providerMatch = cleanInvLabel.includes(cleanMerchant) || cleanInvFile.includes(cleanMerchant) ||
-                              cleanMerchant.includes(cleanInvLabel) || cleanMerchant.includes(cleanInvFile);
-            } else {
-              providerMatch = invProvLower.includes('cloudflare') || invFileLower.includes('cloudflare');
-            }
-          } else {
-            const matchedKeyword = techKeywords.find(prov => labelLower.includes(prov));
-            if (matchedKeyword) {
-              const cleanKeyword = matchedKeyword.replace(/[^a-z0-9]/g, '');
-              const cleanInvLabel = invProvLower.replace(/[^a-z0-9]/g, '');
-              const cleanInvFile = invFileLower.replace(/[^a-z0-9]/g, '');
-              
-              const isQrcg = matchedKeyword === 'qr-code-generator' || matchedKeyword === 'qrcg' || matchedKeyword === 'bitly';
-              if (isQrcg) {
-                providerMatch = invProvLower.includes('qr code') || invProvLower.includes('qrcg') || invProvLower.includes('bitly') || invFileLower.includes('qrcg') || invFileLower.includes('bitly');
-              } else {
-                providerMatch = cleanInvLabel.includes(cleanKeyword) || cleanInvFile.includes(cleanKeyword);
-              }
-            }
-          }
-        }
-        // Generic keyword check for matching non-tech providers with slightly different amounts (e.g. partial payments/fees)
-        if (!amountMatch && !isTechProvider && closeDate) {
-          const txWords = labelLower.split(/[^a-z0-9]/).filter((w: string) => w.length >= 3 && !['prelvt', 'sepa', 'confrere', 'prlv', 'recu'].includes(w));
-          if (txWords.length > 0) {
-            const invProvLower = (inv.provider || '').toLowerCase();
-            const invFileLower = (inv.fileUrl || '').toLowerCase();
-            
-            const matchesAllWords = txWords.every((word: string) => 
-              invProvLower.includes(word) || invFileLower.includes(word)
-            );
-            
-            if (matchesAllWords) {
-              const diffRatio = Math.abs(invAmount - absAmount) / Math.max(invAmount, absAmount);
-              if (diffRatio <= 0.20) { // allow up to 20% difference
-                amountMatch = true;
-              }
-            }
-          }
+        const txWords = cleanTx.split(/[^a-z0-9]/).filter((w: string) => w.length >= 3);
+
+        // Clean label for invoice provider
+        const cleanInv = (inv.provider || '')
+          .split(' - ')[0] // extract merchant name before product description
+          .toLowerCase()
+          .trim();
+
+        // Provider match logic
+        let providerMatch = false;
+        if (txWords.length > 0) {
+          providerMatch = txWords.some(word => cleanInv.includes(word) || word.includes(cleanInv));
+        } else {
+          providerMatch = cleanInv.includes(cleanTx) || cleanTx.includes(cleanInv);
         }
 
-        return amountMatch && closeDate && providerMatch;
+        return amountMatch && providerMatch;
       });
 
       let productDescription = detailsMap[String(tx.id)] || null;
