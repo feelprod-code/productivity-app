@@ -95,24 +95,39 @@ const getCategoryBadge = (category: string) => {
 };
 
 function cleanDisplayLabel(label: string): string {
-  if (label.toLowerCase().includes("sumup")) {
-    return "SUM UP";
-  }
+  const lower = label.toLowerCase();
+
+  // Remplacement immédiat par le fournisseur propre
+  if (lower.includes("sumup")) return "SUM UP";
+  if (lower.includes("amazon")) return "AMAZON";
+  if (lower.includes("gandi")) return "GANDI";
+  if (lower.includes("apple")) return "APPLE";
+  if (lower.includes("doctolib")) return "DOCTOLIB";
+  if (lower.includes("chargemap")) return "CHARGEMAP";
+  if (lower.includes("freebox")) return "FREEBOX";
+  if (lower.includes("google")) return "GOOGLE";
+  if (lower.includes("paypal")) return "PAYPAL";
+  if (lower.includes("cloudflare")) return "CLOUDFLARE";
+  if (lower.includes("spotify")) return "SPOTIFY";
+  if (lower.includes("canva")) return "CANVA";
+  if (lower.includes("soundcloud")) return "SOUNDCLOUD";
 
   let cleaned = label;
 
   // 1. Clean common payment method tags
-  cleaned = cleaned.replace(/PRELVT SEPA RECU D\/O CONFRERE PRLV SEPA/gi, 'Prélèvement');
-  cleaned = cleaned.replace(/PRELVT SEPA RECU D\/O CONFRERE/gi, 'Prélèvement');
+  cleaned = cleaned.replace(/PRELVT SEPA RECU D\/O CONFRERE PRLV SEPA/gi, 'PRLV Confrère');
+  cleaned = cleaned.replace(/PRELVT SEPA RECU D\/O CONFRERE/gi, 'PRLV Confrère');
   cleaned = cleaned.replace(/VIREMENT PERMANENT/gi, 'VT PERM');
   cleaned = cleaned.replace(/VIR\.PERMANENT/gi, 'VT PERM');
-  cleaned = cleaned.replace(/VIREMENT INSTANTANE/gi, 'Virement Inst.');
-  cleaned = cleaned.replace(/VIREMENT SEPA RECU/gi, 'Virement');
-  cleaned = cleaned.replace(/VIR SEPA/gi, 'Virement');
-  cleaned = cleaned.replace(/VIR INST/gi, 'Virement Inst.');
-  cleaned = cleaned.replace(/PRLV SEPA/gi, 'Prélèvement');
-  cleaned = cleaned.replace(/PRELVT/gi, 'Prélèvement');
-  cleaned = cleaned.replace(/PRLV/gi, 'Prélèvement');
+  cleaned = cleaned.replace(/VIREMENT INSTANTANE/gi, 'VIR Inst.');
+  cleaned = cleaned.replace(/VIREMENT SEPA RECU/gi, 'VIR');
+  cleaned = cleaned.replace(/VIR SEPA/gi, 'VIR');
+  cleaned = cleaned.replace(/VIR INST/gi, 'VIR Inst.');
+  cleaned = cleaned.replace(/PRLV SEPA/gi, 'PRLV');
+  cleaned = cleaned.replace(/PRELVT/gi, 'PRLV');
+  cleaned = cleaned.replace(/PRLV/gi, 'PRLV');
+  cleaned = cleaned.replace(/Virement/g, 'VIR');
+  cleaned = cleaned.replace(/VIREMENT/g, 'VIR');
   
   // Specific cases
   cleaned = cleaned.replace(/VT PERM appart/gi, 'VT PERM - Appartement');
