@@ -763,10 +763,11 @@ export default function RelevePage() {
                           <TableRow className="border-[#1E2A33]/10 hover:bg-transparent hidden sm:table-row">
                             <TableHead className="font-roboto text-[#1E2A33]/40 text-[10px] uppercase tracking-widest pl-6 w-24">Date</TableHead>
                             <TableHead className="font-roboto text-[#1E2A33]/40 text-[10px] uppercase tracking-widest flex-1">Libellé / Marchand</TableHead>
-                            <TableHead className="font-roboto text-[#1E2A33]/40 text-[10px] uppercase tracking-widest w-40 hidden sm:table-cell">Compte</TableHead>
-                            <TableHead className="font-roboto text-[#1E2A33]/40 text-[10px] uppercase tracking-widest w-28 text-center hidden sm:table-cell">Catégorie</TableHead>
-                            <TableHead className="font-roboto text-[#1E2A33]/40 text-[10px] uppercase tracking-widest w-36 text-center hidden sm:table-cell">Justificatif</TableHead>
-                            <TableHead className="text-right font-roboto text-[#1E2A33]/40 text-[10px] uppercase tracking-widest pr-6 w-32">Montant</TableHead>
+                            <TableHead className="font-roboto text-[#1E2A33]/40 text-[10px] uppercase tracking-widest w-36 hidden sm:table-cell">Compte</TableHead>
+                            <TableHead className="font-roboto text-[#1E2A33]/40 text-[10px] uppercase tracking-widest w-24 text-center hidden sm:table-cell">Catégorie</TableHead>
+                            <TableHead className="font-roboto text-[#1E2A33]/40 text-[10px] uppercase tracking-widest w-32 text-center hidden sm:table-cell">Justificatif</TableHead>
+                            <TableHead className="text-right font-roboto text-rose-600 text-[10px] uppercase tracking-widest w-28">Débit (Sorties)</TableHead>
+                            <TableHead className="text-right font-roboto text-emerald-600 text-[10px] uppercase tracking-widest pr-6 w-28">Crédit (Entrées)</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -778,7 +779,7 @@ export default function RelevePage() {
                               <React.Fragment key={tx.id}>
                                 {/* Transaction Row (single line) */}
                                 <TableRow
-                                  className={`border-l-4 ${tx.isOutflow ? 'border-l-rose-500/70' : 'border-l-emerald-500/70'} border-b border-b-[#1E2A33]/5 hover:bg-[#FDFBEF] transition-colors cursor-pointer group ${txExpanded ? 'bg-[#FDFBEF]/30' : ''}`}
+                                  className={`border-b border-b-[#1E2A33]/5 hover:bg-[#FDFBEF] transition-colors cursor-pointer group ${txExpanded ? 'bg-[#FDFBEF]/30' : ''}`}
                                   onClick={() => toggleTxExpansion(String(tx.id))}
                                 >
                                   {/* Date */}
@@ -946,16 +947,27 @@ export default function RelevePage() {
                                     </div>
                                   </TableCell>
 
-                                  {/* Montant */}
-                                  <TableCell className="text-right sm:pr-6 pr-4 py-3.5 whitespace-nowrap">
-                                    <div className="flex items-center justify-end gap-2">
-                                      <span className={`inline-flex items-center gap-1 text-sm sm:text-base font-bebas tracking-wider px-2.5 py-1 rounded-lg border font-bold ${
-                                        tx.isOutflow 
-                                          ? "text-rose-700 bg-rose-50/70 border-rose-200/50" 
-                                          : "text-emerald-700 bg-emerald-50/70 border-emerald-200/50"
-                                      }`}>
-                                        {tx.isOutflow ? "-" : "+"}{formatAmount(tx.absAmount)}
+                                  {/* Débit (Sorties) */}
+                                  <TableCell className="text-right py-3.5 whitespace-nowrap w-28">
+                                    {tx.isOutflow ? (
+                                      <span className="inline-flex items-center gap-1 text-sm sm:text-base font-bebas tracking-wider px-2 py-0.5 rounded-lg border font-bold text-rose-700 bg-rose-50/70 border-rose-200/50">
+                                        - {formatAmount(tx.absAmount)}
                                       </span>
+                                    ) : (
+                                      <span className="text-[#1E2A33]/20 font-light text-xs">-</span>
+                                    )}
+                                  </TableCell>
+
+                                  {/* Crédit (Entrées) */}
+                                  <TableCell className="text-right sm:pr-6 pr-4 py-3.5 whitespace-nowrap w-28">
+                                    <div className="flex items-center justify-end gap-2">
+                                      {!tx.isOutflow ? (
+                                        <span className="inline-flex items-center gap-1 text-sm sm:text-base font-bebas tracking-wider px-2 py-0.5 rounded-lg border font-bold text-emerald-700 bg-emerald-50/70 border-emerald-200/50">
+                                          + {formatAmount(tx.absAmount)}
+                                        </span>
+                                      ) : (
+                                        <span className="text-[#1E2A33]/20 font-light text-xs">-</span>
+                                      )}
                                       {txExpanded ? <ChevronDown className="w-3.5 h-3.5 text-[#1E2A33]/40" /> : <ChevronRight className="w-3.5 h-3.5 text-[#1E2A33]/40 opacity-0 group-hover:opacity-100 transition-opacity" />}
                                     </div>
                                   </TableCell>
@@ -963,7 +975,7 @@ export default function RelevePage() {
                                 {/* Expanded Transaction Details */}
                                 {txExpanded && (
                                   <TableRow className="bg-[#1E2A33]/[0.01] hover:bg-transparent">
-                                    <TableCell colSpan={6} className="p-0 border-t-0">
+                                    <TableCell colSpan={7} className="p-0 border-t-0">
                                       <div className="px-6 py-5 bg-[#FDFBEF]/30 border-l-4 border-[#AE7D5C] rounded-r-xl grid grid-cols-1 md:grid-cols-2 gap-6 transition-all">
                                         
                                         {/* Left Side: Metadata details */}
