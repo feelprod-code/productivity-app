@@ -113,6 +113,15 @@ function cleanDisplayLabel(label: string): string {
   if (lower.includes("soundcloud")) return "SOUNDCLOUD";
   if (lower.includes("gocardless") || lower.includes("viasana")) return "VIASANA";
   if (lower.includes("lcl") || lower.includes("telelion")) return "LCL";
+  if (lower.includes("bouygues")) return "BOUYGUES";
+  if (lower.includes("vw bank") || lower.includes("volkswagen")) return "VW BANK";
+  if (lower.includes("mgen")) return "MGEN";
+  if (lower.includes("sfr")) return "SFR";
+  if (lower.includes("orange")) return "ORANGE";
+  if (lower.includes("edf")) return "EDF";
+  if (lower.includes("urssaf")) return "URSSAF";
+  if (lower.includes("dgfip") || lower.includes("impot")) return "IMPÔTS";
+  if (lower.includes("malakoff") || lower.includes("humanis")) return "MALAKOFF HUMANIS";
 
   let cleaned = label;
 
@@ -1015,15 +1024,20 @@ export default function RelevePage() {
                                         <div className="space-y-4 text-xs">
                                           <div className="space-y-3">
                                             <h4 className="font-roboto font-bold text-[10px] uppercase tracking-wider text-[#1E2A33]/50">Opération</h4>
-                                            <div className="grid grid-cols-3 gap-y-2 gap-x-4">
-                                              <span className="text-[#1E2A33]/50 font-light">Type :</span>
+                                            <div className="grid grid-cols-3 gap-y-2.5 gap-x-4 items-start">
+                                              <span className="text-[#1E2A33]/50 font-light pt-0.5">Type :</span>
                                               <span className="col-span-2 font-medium text-[#1E2A33] flex items-center gap-1.5">
                                                 {badgeInfo.icon}
                                                 {badgeInfo.label}
                                               </span>
 
-                                              <span className="text-[#1E2A33]/50 font-light">Compte :</span>
+                                              <span className="text-[#1E2A33]/50 font-light pt-0.5">Compte :</span>
                                               <span className="col-span-2 font-medium text-[#1E2A33]">{tx.bankAccountName}</span>
+
+                                              <span className="text-[#1E2A33]/50 font-light pt-0.5">Libellé d'origine :</span>
+                                              <span className="col-span-2 font-mono text-[10px] text-[#1E2A33]/70 break-words bg-[#1E2A33]/5 p-2 rounded-xl leading-normal select-all">
+                                                {tx.label}
+                                              </span>
                                             </div>
                                           </div>
 
