@@ -334,10 +334,12 @@ export async function GET() {
           label: matchedInvoice.label,
           filename: matchedInvoice.filename,
           publicFileUrl: matchedInvoice.public_file_url,
-          invoiceLines: (matchedInvoice.invoice_lines || []).map((line: any) => ({
-            label: line.label || line.description || "Article sans description",
-            amount: parseFloat(line.currency_amount || line.amount || '0')
-          }))
+          invoiceLines: Array.isArray(matchedInvoice.invoice_lines) 
+            ? matchedInvoice.invoice_lines.map((line: any) => ({
+                label: line.label || line.description || "Article sans description",
+                amount: parseFloat(line.currency_amount || line.amount || '0')
+              }))
+            : []
         } : null
       };
     });
