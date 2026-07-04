@@ -163,7 +163,7 @@ async function main() {
             // Trouver la pièce jointe PDF du rapport des paiements
             const paymentPdf = mail.attachments.find(a => 
                 (a.contentType === 'application/pdf' || a.filename?.toLowerCase().endsWith('.pdf')) &&
-                a.filename?.toLowerCase().includes('daily-payout-payments-report')
+                a.filename?.toLowerCase().includes('daily-payments-report')
             );
 
             if (!paymentPdf) continue;
