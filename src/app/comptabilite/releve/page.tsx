@@ -149,6 +149,9 @@ function cleanDisplayLabel(label: string): string {
   cleaned = cleaned.replace(/M\.? PHILIPPE GUILLAUME/gi, '');
 
   // 4. Final sanitization
+  // Éliminer les répétitions consécutives de mots identiques comme "VIR VIR" ou "PRLV PRLV" (insensible à la casse)
+  cleaned = cleaned.replace(/\b(\w+)\b(?:\s+\1\b)+/gi, '$1');
+
   cleaned = cleaned.replace(/\s+/g, ' ');
   cleaned = cleaned.trim();
   
