@@ -994,14 +994,46 @@ export default function RelevePage() {
                                             </div>
                                           </div>
 
-                                          {tx.productDescription && (
-                                            <div className="pt-3 border-t border-[#1E2A33]/10 space-y-1">
-                                              <h4 className="font-roboto font-bold text-[10px] uppercase tracking-wider text-[#AE7D5C] font-semibold">Produit / Service acheté</h4>
-                                              <div className="bg-[#AE7D5C]/5 p-2.5 rounded-xl border border-[#AE7D5C]/10 text-[#1E2A33] font-medium leading-relaxed">
-                                                {tx.productDescription}
+                                          {tx.productDescription && (() => {
+                                            if (tx.productDescription.startsWith("SUMUP_JSON:")) {
+                                              try {
+                                                const patients = JSON.parse(tx.productDescription.substring(11)) as { name: string, amount: number }[];
+                                                return (
+                                                  <div className="pt-3 border-t border-[#1E2A33]/10 space-y-2">
+                                                    <h4 className="font-roboto font-bold text-[10px] uppercase tracking-wider text-emerald-700 font-semibold flex items-center gap-1">
+                                                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                                      Détail des règlements patients (SumUp)
+                                                    </h4>
+                                                    <div className="space-y-1.5 bg-emerald-50/20 border border-emerald-100 p-3 rounded-2xl max-h-[180px] overflow-y-auto">
+                                                      {patients.map((pat, idx) => (
+                                                        <div key={idx} className="flex justify-between items-center text-xs py-1 border-b border-emerald-500/10 last:border-b-0 last:pb-0">
+                                                          <span className="text-[#1E2A33] font-medium">{pat.name}</span>
+                                                          <span className="text-emerald-700 font-bold font-bebas tracking-wide text-sm">{pat.amount.toFixed(2)} €</span>
+                                                        </div>
+                                                      ))}
+                                                    </div>
+                                                  </div>
+                                                );
+                                              } catch (e) {
+                                                return (
+                                                  <div className="pt-3 border-t border-[#1E2A33]/10 space-y-1">
+                                                    <h4 className="font-roboto font-bold text-[10px] uppercase tracking-wider text-[#AE7D5C] font-semibold">Produit / Service acheté</h4>
+                                                    <div className="bg-[#AE7D5C]/5 p-2.5 rounded-xl border border-[#AE7D5C]/10 text-[#1E2A33] font-medium leading-relaxed">
+                                                      {tx.productDescription}
+                                                    </div>
+                                                  </div>
+                                                );
+                                              }
+                                            }
+                                            return (
+                                              <div className="pt-3 border-t border-[#1E2A33]/10 space-y-1">
+                                                <h4 className="font-roboto font-bold text-[10px] uppercase tracking-wider text-[#AE7D5C] font-semibold">Produit / Service acheté</h4>
+                                                <div className="bg-[#AE7D5C]/5 p-2.5 rounded-xl border border-[#AE7D5C]/10 text-[#1E2A33] font-medium leading-relaxed">
+                                                  {tx.productDescription}
+                                                </div>
                                               </div>
-                                            </div>
-                                          )}
+                                            );
+                                          })()}
 
                                           {tx.matchedInvoice?.invoiceLines && tx.matchedInvoice.invoiceLines.length > 0 && (
                                             <div className="pt-3 border-t border-[#1E2A33]/10 space-y-2">
