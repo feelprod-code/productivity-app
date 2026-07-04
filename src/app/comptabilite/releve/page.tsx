@@ -95,6 +95,10 @@ const getCategoryBadge = (category: string) => {
 };
 
 function cleanDisplayLabel(label: string): string {
+  if (label.toLowerCase().includes("sumup")) {
+    return "SUM UP";
+  }
+
   let cleaned = label;
 
   // 1. Clean common payment method tags
@@ -787,10 +791,14 @@ export default function RelevePage() {
                                     {new Date(tx.date).toLocaleDateString('fr-FR')}
                                   </TableCell>
 
-                                  {/* Libellé */}
                                   <TableCell className="font-roboto font-medium text-[#1E2A33] text-sm py-3.5 max-w-[200px] sm:max-w-none">
-                                    <div className="flex flex-col gap-1.5 min-w-0">
-                                      <span className="truncate max-w-[180px] xs:max-w-[240px] sm:max-w-[400px] block font-semibold" title={tx.label}>{cleanDisplayLabel(tx.label)}</span>
+                                    <div className="flex flex-col gap-0.5 min-w-0">
+                                      <span className="truncate max-w-[180px] xs:max-w-[240px] sm:max-w-[400px] block font-semibold text-[#1E2A33]" title={tx.label}>{cleanDisplayLabel(tx.label)}</span>
+                                      {tx.label !== cleanDisplayLabel(tx.label) && (
+                                        <span className="text-[10px] text-[#1E2A33]/40 font-light truncate max-w-[180px] xs:max-w-[240px] sm:max-w-[400px]" title={tx.label}>
+                                          {tx.label}
+                                        </span>
+                                      )}
                                       
                                       {/* Mobile-only badges and details stacked inline */}
                                       <div className="flex flex-wrap items-center gap-1.5 text-[9px] text-[#1E2A33]/50 sm:hidden mt-1">
