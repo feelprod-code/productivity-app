@@ -1,20 +1,24 @@
 import { PrismaClient } from '@prisma/client';
-import { GoogleGenAI, Type } from '@google/genai';
 import * as fs from 'fs';
 import * as path from 'path';
 import pdfParse from 'pdf-parse';
 import * as dotenv from 'dotenv';
 
-// Charger le fichier .env
+// Charger le fichier .env local de l'application
 dotenv.config({ path: path.resolve(process.cwd(), '.env') });
 
 const prisma = new PrismaClient();
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const openrouterKey = process.env.OPENROUTER_API_KEY;
 const pennylaneKey = process.env.PENNYLANE_API_KEY;
 const BASE_URL = "https://app.pennylane.com/api/external/v2";
 
 if (!pennylaneKey) {
     console.error("❌ ERREUR: PENNYLANE_API_KEY n'est pas défini dans .env");
+    process.exit(1);
+}
+
+if (!openrouterKey) {
+    console.error("❌ ERREUR: OPENROUTER_API_KEY n'est pas défini dans .env");
     process.exit(1);
 }
 
@@ -27,7 +31,7 @@ function getHeaders(extraHeaders: Record<string, string> = {}) {
     };
 }
 
-// Modèle pour l'extraction Gemini
+// Modèle pour l'extraction
 interface InvoiceData {
     invoice_number: string;
     invoice_date: string; // YYYY-MM-DD
@@ -39,39 +43,57 @@ interface InvoiceData {
 
 async function extractInvoiceData(pdfText: string, filename: string): Promise<InvoiceData | null> {
     try {
-        console.log(`🧠 Analyse IA du PDF avec Gemini pour ${filename}...`);
-        const response = await ai.models.generateContent({
-            model: 'gemini-2.5-flash',
-            contents: [
-                {
-                    role: 'user', parts: [
-                        { text: "Tu es un expert comptable. Analyse le texte extrait de cette facture Gandi et renvoie les informations financières demandées sous forme de JSON structuré." },
-                        { text: `Texte de la facture :\n---\n${pdfText}\n---` }
-                    ]
-                }
-            ],
-            config: {
-                temperature: 0,
-                responseMimeType: "application/json",
-                responseSchema: {
-                    type: Type.OBJECT,
-                    properties: {
-                        invoice_number: { type: Type.STRING, description: "Le numéro de facture de Gandi (ex: FRXXXXXXXX)" },
-                        invoice_date: { type: Type.STRING, description: "La date d'émission au format YYYY-MM-DD" },
-                        amount_ttc: { type: Type.NUMBER, description: "Le montant total TTC final payé" },
-                        amount_ht: { type: Type.NUMBER, description: "Le montant total Hors Taxes" },
-                        amount_tva: { type: Type.NUMBER, description: "Le montant total de la TVA" },
-                        is_2026_invoice: { type: Type.BOOLEAN, description: "Indique si l'année de facturation est bien 2026" }
-                    },
-                    required: ["invoice_number", "invoice_date", "amount_ttc", "amount_ht", "amount_tva", "is_2026_invoice"]
-                }
-            }
+        console.log(`🧠 Analyse IA du PDF via OpenRouter (Gemini) pour ${filename}...`);
+        
+        const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${openrouterKey}`,
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                model: "google/gemini-2.5-flash",
+                response_format: { type: "json_object" },
+                messages: [
+                    {
+                        role: "user",
+                        content: `Tu es un expert comptable. Analyse le texte extrait de cette facture Gandi et renvoie les informations financières demandées sous forme de JSON structuré.
+
+JSON attendu :
+{
+  "invoice_number": "Le numéro de facture de Gandi (ex: FRXXXXXXXX)",
+  "invoice_date": "La date d'émission au format YYYY-MM-DD",
+  "amount_ttc": 12.34 (nombre décimal, total payé TTC),
+  "amount_ht": 10.00 (nombre décimal, total Hors Taxes),
+  "amount_tva": 2.34 (nombre décimal, montant de la TVA),
+  "is_2026_invoice": true/false (indique si l'année de facturation est bien 2026)
+}
+
+Texte de la facture :
+---
+${pdfText}
+---`
+                    }
+                ]
+            })
         });
 
-        if (!response.text) return null;
-        return JSON.parse(response.text) as InvoiceData;
+        if (!response.ok) {
+            const errTxt = await response.text();
+            throw new Error(`OpenRouter HTTP ${response.status} : ${errTxt}`);
+        }
+
+        const data = await response.json();
+        const contentText = data.choices?.[0]?.message?.content;
+        
+        if (!contentText) {
+            console.error("❌ Pas de contenu retourné par OpenRouter.");
+            return null;
+        }
+
+        return JSON.parse(contentText) as InvoiceData;
     } catch (e) {
-        console.error("❌ Erreur lors de l'extraction par Gemini :", e);
+        console.error("❌ Erreur lors de l'extraction par OpenRouter :", e);
         return null;
     }
 }
@@ -204,21 +226,21 @@ async function importInvoiceToPennylane(supplierId: number, fileAttachmentId: st
 }
 
 async function main() {
-    const downloadsPath = path.resolve('/Users/philippeguillaume/Downloads');
-    console.log(`📂 Scan du dossier de téléchargements : ${downloadsPath}...`);
+    const desktopPath = path.resolve('/Users/philippeguillaume/Desktop');
+    console.log(`📂 Scan du Bureau : ${desktopPath}...`);
 
-    if (!fs.existsSync(downloadsPath)) {
-        console.error(`❌ Le dossier ${downloadsPath} n'existe pas.`);
+    if (!fs.existsSync(desktopPath)) {
+        console.error(`❌ Le Bureau n'existe pas.`);
         process.exit(1);
     }
 
-    const files = fs.readdirSync(downloadsPath);
+    const files = fs.readdirSync(desktopPath);
     const gandiPdfs = files.filter(f => f.toLowerCase().endsWith('.pdf') && f.toLowerCase().includes('gandi'));
 
     console.log(`🔍 ${gandiPdfs.length} fichier(s) PDF Gandi détecté(s).`);
 
     if (gandiPdfs.length === 0) {
-        console.log("👉 Place tes fichiers de factures Gandi au format PDF dans ton dossier Téléchargements.");
+        console.log("👉 Place tes fichiers de factures Gandi au format PDF sur ton Bureau.");
         return;
     }
 
@@ -229,7 +251,7 @@ async function main() {
     }
 
     for (const file of gandiPdfs) {
-        const filePath = path.join(downloadsPath, file);
+        const filePath = path.join(desktopPath, file);
         console.log(`\n📄 Traitement du fichier : ${file}...`);
 
         try {
