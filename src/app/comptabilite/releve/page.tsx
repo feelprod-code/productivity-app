@@ -1071,14 +1071,30 @@ export default function RelevePage() {
                                                   </div>
                                                 );
                                               } catch (e) {
+                                                // ignore
+                                              }
+                                            }
+                                            if (tx.productDescription.startsWith("CPAM_JSON:")) {
+                                              try {
+                                                const patients = JSON.parse(tx.productDescription.substring(10)) as { name: string, amount: number }[];
                                                 return (
-                                                  <div className="pt-3 border-t border-[#1E2A33]/10 space-y-1">
-                                                    <h4 className="font-roboto font-bold text-[10px] uppercase tracking-wider text-[#AE7D5C] font-semibold">Produit / Service acheté</h4>
-                                                    <div className="bg-[#AE7D5C]/5 p-2.5 rounded-xl border border-[#AE7D5C]/10 text-[#1E2A33] font-medium leading-relaxed">
-                                                      {tx.productDescription}
+                                                  <div className="pt-3 border-t border-[#1E2A33]/10 space-y-2">
+                                                    <h4 className="font-roboto font-bold text-[10px] uppercase tracking-wider text-blue-700 font-semibold flex items-center gap-1">
+                                                      <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                                                      Détail des remboursements tiers-payant (CPAM)
+                                                    </h4>
+                                                    <div className="space-y-1.5 bg-blue-50/20 border border-blue-100 p-3 rounded-2xl max-h-[180px] overflow-y-auto">
+                                                      {patients.map((pat, idx) => (
+                                                        <div key={idx} className="flex justify-between items-center text-xs py-1 border-b border-blue-500/10 last:border-b-0 last:pb-0">
+                                                          <span className="text-[#1E2A33] font-medium">{pat.name}</span>
+                                                          <span className="text-blue-700 font-bold font-bebas tracking-wide text-sm">{pat.amount.toFixed(2)} €</span>
+                                                        </div>
+                                                      ))}
                                                     </div>
                                                   </div>
                                                 );
+                                              } catch (e) {
+                                                // ignore
                                               }
                                             }
                                             return (
