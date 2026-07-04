@@ -112,6 +112,7 @@ function cleanDisplayLabel(label: string): string {
   if (lower.includes("canva")) return "CANVA";
   if (lower.includes("soundcloud")) return "SOUNDCLOUD";
   if (lower.includes("gocardless") || lower.includes("viasana")) return "VIASANA";
+  if (lower.includes("lcl") || lower.includes("telelion")) return "LCL";
 
   let cleaned = label;
 
