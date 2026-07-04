@@ -49,6 +49,7 @@ interface Transaction {
     label: string;
     filename: string;
     publicFileUrl: string;
+    invoiceLines?: Array<{ label: string; amount: number }>;
   } | null;
 }
 
@@ -931,18 +932,34 @@ export default function RelevePage() {
                                       <div className="px-6 py-5 bg-[#FDFBEF]/30 border-l-4 border-[#AE7D5C] rounded-r-xl grid grid-cols-1 md:grid-cols-2 gap-6 transition-all">
                                         
                                         {/* Left Side: Metadata details */}
-                                        <div className="space-y-3 text-xs">
-                                          <h4 className="font-roboto font-bold text-[10px] uppercase tracking-wider text-[#1E2A33]/50">Opération</h4>
-                                          <div className="grid grid-cols-3 gap-y-2 gap-x-4">
-                                            <span className="text-[#1E2A33]/50 font-light">Type :</span>
-                                            <span className="col-span-2 font-medium text-[#1E2A33] flex items-center gap-1.5">
-                                              {badgeInfo.icon}
-                                              {badgeInfo.label}
-                                            </span>
+                                        <div className="space-y-4 text-xs">
+                                          <div className="space-y-3">
+                                            <h4 className="font-roboto font-bold text-[10px] uppercase tracking-wider text-[#1E2A33]/50">Opération</h4>
+                                            <div className="grid grid-cols-3 gap-y-2 gap-x-4">
+                                              <span className="text-[#1E2A33]/50 font-light">Type :</span>
+                                              <span className="col-span-2 font-medium text-[#1E2A33] flex items-center gap-1.5">
+                                                {badgeInfo.icon}
+                                                {badgeInfo.label}
+                                              </span>
 
-                                            <span className="text-[#1E2A33]/50 font-light">Compte :</span>
-                                            <span className="col-span-2 font-medium text-[#1E2A33]">{tx.bankAccountName}</span>
+                                              <span className="text-[#1E2A33]/50 font-light">Compte :</span>
+                                              <span className="col-span-2 font-medium text-[#1E2A33]">{tx.bankAccountName}</span>
+                                            </div>
                                           </div>
+
+                                          {tx.matchedInvoice?.invoiceLines && tx.matchedInvoice.invoiceLines.length > 0 && (
+                                            <div className="pt-3 border-t border-[#1E2A33]/10 space-y-2">
+                                              <h4 className="font-roboto font-bold text-[10px] uppercase tracking-wider text-[#AE7D5C] font-semibold">Articles de la facture</h4>
+                                              <div className="space-y-1.5 bg-white border border-[#1E2A33]/5 p-2.5 rounded-xl max-h-[140px] overflow-y-auto">
+                                                {tx.matchedInvoice.invoiceLines.map((line, idx) => (
+                                                  <div key={idx} className="flex justify-between items-start gap-4 text-[11px] py-0.5 border-b border-[#1E2A33]/5 last:border-b-0 last:pb-0">
+                                                    <span className="text-[#1E2A33] font-medium leading-normal break-words">{line.label}</span>
+                                                    <span className="text-[#AE7D5C] font-mono font-semibold text-[10px] shrink-0">{line.amount.toFixed(2)} €</span>
+                                                  </div>
+                                                ))}
+                                              </div>
+                                            </div>
+                                          )}
                                         </div>
 
                                         {/* Right Side: Reconcile / Attachments manager */}

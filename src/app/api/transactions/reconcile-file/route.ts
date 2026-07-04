@@ -197,7 +197,11 @@ export async function POST(req: NextRequest) {
         date: txDateStr,
         label: label,
         filename: filename,
-        publicFileUrl: publicFileUrl
+        publicFileUrl: publicFileUrl,
+        invoiceLines: ((importData.supplier_invoice?.invoice_lines || importData.invoice_lines || []) as any[]).map((line: any) => ({
+          label: line.label || line.description || "Article sans description",
+          amount: parseFloat(line.currency_amount || line.amount || '0')
+        }))
       }
     });
 
