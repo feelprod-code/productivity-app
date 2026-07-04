@@ -43,6 +43,7 @@ interface Transaction {
   isPro: boolean;
   noJustificatif?: boolean;
   bankAccountName: string;
+  productDescription?: string | null;
   matchedInvoice?: {
     id: number;
     date: string;
@@ -946,6 +947,15 @@ export default function RelevePage() {
                                               <span className="col-span-2 font-medium text-[#1E2A33]">{tx.bankAccountName}</span>
                                             </div>
                                           </div>
+
+                                          {tx.productDescription && (
+                                            <div className="pt-3 border-t border-[#1E2A33]/10 space-y-1">
+                                              <h4 className="font-roboto font-bold text-[10px] uppercase tracking-wider text-[#AE7D5C] font-semibold">Produit / Service acheté</h4>
+                                              <div className="bg-[#AE7D5C]/5 p-2.5 rounded-xl border border-[#AE7D5C]/10 text-[#1E2A33] font-medium leading-relaxed">
+                                                {tx.productDescription}
+                                              </div>
+                                            </div>
+                                          )}
 
                                           {tx.matchedInvoice?.invoiceLines && tx.matchedInvoice.invoiceLines.length > 0 && (
                                             <div className="pt-3 border-t border-[#1E2A33]/10 space-y-2">

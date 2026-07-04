@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import fs from "fs";
 import path from "path";
 import { prisma } from "@/lib/prisma";
+import pdfParse from "pdf-parse";
 
 export const dynamic = 'force-dynamic';
 
@@ -21,6 +22,17 @@ export async function GET() {
       });
     } catch (err) {
       console.error("Failed to load transaction overrides:", err);
+    }
+
+    // Load transaction product descriptions from DB
+    const detailsMap: Record<string, string> = {};
+    try {
+      const details = await prisma.$queryRawUnsafe('SELECT id, description FROM "TransactionDetail"') as any[];
+      details.forEach((d: any) => {
+        detailsMap[d.id] = d.description;
+      });
+    } catch (err) {
+      console.error("Failed to load transaction details:", err);
     }
 
     // Load PayPal Merchant Cache
@@ -123,6 +135,7 @@ export async function GET() {
     }
 
     // 4. Process and Classify Transactions
+    let backgroundEnrichCount = 0;
     const processedTransactions = allTxs.map((tx: any) => {
       const amount = parseFloat(tx.amount || '0');
       const isOutflow = amount < 0;
@@ -316,7 +329,7 @@ export async function GET() {
         return amountMatch && closeDate && providerMatch;
       });
 
-      return {
+      const txResult = {
         id: tx.id,
         date: tx.date,
         label,
@@ -328,6 +341,7 @@ export async function GET() {
         isPro,
         noJustificatif,
         bankAccountName: accInfo ? accInfo.name : "Compte Inconnu",
+        productDescription: detailsMap[String(tx.id)] || null,
         matchedInvoice: matchedInvoice ? {
           id: matchedInvoice.id,
           date: matchedInvoice.date,
@@ -342,6 +356,16 @@ export async function GET() {
             : []
         } : null
       };
+
+      // Background extraction of invoice products if not already cached (throttled to max 2 per API call)
+      if (!txResult.productDescription && matchedInvoice && matchedInvoice.public_file_url && backgroundEnrichCount < 2) {
+        backgroundEnrichCount++;
+        enrichTransactionOnTheFly(String(tx.id), label, matchedInvoice.public_file_url).catch((err) => {
+          console.error(`[Background-Enrich] Error for tx ${tx.id}:`, err);
+        });
+      }
+
+      return txResult;
     });
 
     return NextResponse.json({
@@ -352,5 +376,88 @@ export async function GET() {
   } catch (error: any) {
     console.error("Error in bank statement API:", error);
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  }
+}
+
+async function enrichTransactionOnTheFly(txId: string, label: string, publicFileUrl: string) {
+  try {
+    const openrouterKey = process.env.OPENROUTER_API_KEY;
+    if (!openrouterKey) return;
+
+    console.log(`🧠 [Auto-Enrich] Démarrage de l'analyse en arrière-plan pour la transaction ${txId} (${label})...`);
+
+    // Télécharger le PDF
+    const fileRes = await fetch(publicFileUrl);
+    if (!fileRes.ok) {
+      console.error(`🧠 [Auto-Enrich] Échec de téléchargement du justificatif (${fileRes.status})`);
+      return;
+    }
+
+    const arrayBuffer = await fileRes.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    // Parser le PDF
+    const parsedPdf = await pdfParse(buffer);
+    const text = parsedPdf.text || "";
+    if (!text.trim()) {
+      console.warn(`🧠 [Auto-Enrich] Texte vide ou illisible pour la transaction ${txId}`);
+      return;
+    }
+
+    // Demander à l'IA d'extraire la description du produit
+    const response = await fetch("https://openrouter.ai/api/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${openrouterKey}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        model: "google/gemini-2.5-flash",
+        response_format: { type: "json_object" },
+        messages: [
+          {
+            role: "user",
+            content: `Tu es un expert comptable. Analyse le texte extrait de cette facture et décris succinctement le ou les principaux produits ou services achetés (nom de l'objet, marque éventuelle, usage, max 10 mots).
+
+Le format de retour doit être un JSON strict comme suit :
+{
+  "product_description": "Description courte (ex: Objectif Sony FE 24-70mm, Trépied professionnel Manfrotto, Écran PC Dell 27)"
+}
+
+Voici le libellé de l'opération : ${label}
+
+Texte de la facture :
+---
+${text.substring(0, 8000)}
+---`
+          }
+        ]
+      })
+    });
+
+    if (!response.ok) {
+      console.error(`🧠 [Auto-Enrich] Échec appel OpenRouter (${response.status})`);
+      return;
+    }
+
+    const data = await response.json();
+    const contentText = data.choices?.[0]?.message?.content;
+    if (!contentText) return;
+
+    const parsed = JSON.parse(contentText);
+    const productDescription = parsed.product_description;
+
+    if (productDescription) {
+      console.log(`🧠 [Auto-Enrich] Produit extrait : "${productDescription}" pour la transaction ${txId}`);
+      
+      // Enregistrer dans la table TransactionDetail
+      await prisma.$executeRawUnsafe(
+        'INSERT INTO "TransactionDetail" (id, description, "updatedAt") VALUES ($1, $2, NOW()) ON CONFLICT (id) DO UPDATE SET description = $2, "updatedAt" = NOW()',
+        txId,
+        productDescription
+      );
+    }
+  } catch (err) {
+    console.error(`🧠 [Auto-Enrich] Erreur lors de l'extraction à la volée de la transaction ${txId} :`, err);
   }
 }
