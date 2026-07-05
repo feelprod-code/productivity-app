@@ -556,8 +556,11 @@ export async function GET() {
       }
 
       if (!isOverridden) {
-        // If it's a CPAM, SumUp or Amazon transaction, it's absolutely Pro
-        if (labelLower.includes('cpam') || labelLower.includes('c.p.a.m.') || labelLower.includes('sumup') || labelLower.includes('sum up') || labelLower.includes('amazon') || labelLower.includes('amzn')) {
+        // If it's a CPAM, SumUp or Amazon transaction, it's absolutely Pro (except for AMZ Digital)
+        const isAmzDigital = labelLower.includes('amz digital') || labelLower.includes('amazon digital') || labelLower.includes('amz*digital');
+        if (isAmzDigital) {
+          isPro = false;
+        } else if (labelLower.includes('cpam') || labelLower.includes('c.p.a.m.') || labelLower.includes('sumup') || labelLower.includes('sum up') || labelLower.includes('amazon') || labelLower.includes('amzn')) {
           isPro = true;
         } else if (productDescription && (productDescription.startsWith("CPAM_JSON:") || productDescription.startsWith("SUMUP_JSON:"))) {
           isPro = true;
