@@ -357,6 +357,34 @@ export async function GET() {
         productDescription = matchedInvoice.provider.split(' - ').slice(1).join(' - ');
       }
 
+      // PayPal heuristic product descriptions based on merchant name and amount
+      if (!productDescription && isPaypal && realMerchantName) {
+        const merchantLower = realMerchantName.toLowerCase();
+        if (merchantLower.includes('spotify')) {
+          productDescription = "Abonnement Spotify Premium Famille (Musique)";
+        } else if (merchantLower.includes('openai') || merchantLower.includes('chatgpt')) {
+          productDescription = "Abonnement ChatGPT Plus (IA Générative)";
+        } else if (merchantLower.includes('suno')) {
+          productDescription = "Abonnement Suno AI (Création musicale IA)";
+        } else if (merchantLower.includes('headliner')) {
+          productDescription = "Abonnement Headliner Basic (Création Vidéo/Audiogrammes)";
+        } else if (merchantLower.includes('cloudflare')) {
+          productDescription = "Services d'hébergement et DNS (Cloudflare)";
+        } else if (merchantLower.includes('zapier')) {
+          productDescription = "Abonnement Zapier Pro (Automatisation de flux)";
+        } else if (merchantLower.includes('google')) {
+          productDescription = "Abonnement Google One / Google AI Premium";
+        } else if (merchantLower.includes('disney')) {
+          productDescription = "Abonnement Disney+ (Divertissement)";
+        } else if (merchantLower.includes('traite votre commande') || merchantLower.includes('lequi') || merchantLower.includes('leqi') || merchantLower.includes('深圳')) {
+          productDescription = "Accessoires et matériel de prise de vue (SmallRig)";
+        } else if (merchantLower.includes('paddle')) {
+          productDescription = "Licence logicielle ou service en ligne (via Paddle)";
+        } else if (merchantLower.includes('krotos')) {
+          productDescription = "Krotos Studio Pro (Effets sonores IA)";
+        }
+      }
+
       // Check Pro vs Perso
       const accountId = tx.bank_account ? tx.bank_account.id : null;
       const accInfo = accountId ? accountMap[accountId] : null;
