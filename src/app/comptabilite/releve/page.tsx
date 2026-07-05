@@ -571,9 +571,9 @@ export default function RelevePage() {
                 TRANSACTIONS
               </h1>
             </div>
-            <div className="flex items-center gap-2.5 shrink-0 -translate-y-1 sm:-translate-y-1.5">
+            <div className="flex items-center gap-3 shrink-0 -translate-y-0.5 sm:-translate-y-1">
               {/* Year Switcher (Segmented Control chic) */}
-              <div className="flex bg-white/60 p-0.5 rounded-lg border border-[#1E2A33]/5 gap-0.5 shadow-inner shrink-0">
+              <div className="flex bg-white/60 p-1.5 rounded-2xl border border-[#1E2A33]/5 gap-1.5 shadow-inner shrink-0">
                 {uniqueYears.map(y => (
                   <button
                     key={y}
@@ -581,7 +581,7 @@ export default function RelevePage() {
                       setSelectedYear(y);
                       setSelectedMonth("all");
                     }}
-                    className={`flex items-center justify-center px-2 py-1 rounded-md text-[9px] sm:text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+                    className={`flex items-center justify-center px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer ${
                       selectedYear === y
                         ? "bg-[#1E2A33] text-white shadow-md shadow-[#1E2A33]/20"
                         : "text-[#1E2A33]/60 hover:text-[#1E2A33]"
