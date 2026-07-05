@@ -38,9 +38,18 @@ export default function InvoiceTable({ invoices }: { invoices: any[] }) {
 
     // Filter invoices based on search query and dates
     const filteredInvoices = useMemo(() => {
+        const query = searchQuery.toLowerCase().trim();
         return invoices.filter(invoice => {
-            const matchesSearch = invoice.provider.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                (invoice.subject && invoice.subject.toLowerCase().includes(searchQuery.toLowerCase()));
+            let matchesStatus = false;
+            if (query === 'rapproches' || query === 'rapprochés' || query === 'rapproche' || query === 'rapprochée' || query === 'rapprochees' || query === 'rapprochées') {
+                matchesStatus = invoice.status === 'PAID';
+            } else if (query === 'a rapprocher' || query === 'à rapprocher' || query === 'non rapproche' || query === 'non rapproché' || query === 'non rapproches' || query === 'non rapprochés') {
+                matchesStatus = invoice.status === 'PENDING';
+            }
+
+            const matchesSearch = matchesStatus ||
+                invoice.provider.toLowerCase().includes(query) ||
+                (invoice.subject && invoice.subject.toLowerCase().includes(query));
 
             const invDate = new Date(invoice.date);
             const invYearStr = invDate.getFullYear().toString();

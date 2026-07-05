@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+import fs from 'fs';
+import path from 'path';
 
 export async function GET(request: Request) {
     try {
@@ -9,20 +11,35 @@ export async function GET(request: Request) {
             return new NextResponse('URL parameter is required', { status: 400 });
         }
 
-        const response = await fetch(url);
+        let arrayBuffer: ArrayBuffer;
+        const isHtml = url.toLowerCase().includes('.html');
+        const isLocal = url.startsWith('/') || url.startsWith('invoices/') || !url.startsWith('http');
 
-        if (!response.ok) {
-            return new NextResponse(`Failed to fetch PDF: ${response.status} ${response.statusText}`, { status: response.status });
+        if (isLocal) {
+            // Local file read from public directory
+            const cleanPath = url.startsWith('/') ? url.substring(1) : url;
+            const decodedPath = decodeURIComponent(cleanPath);
+            const absolutePath = path.join(process.cwd(), 'public', decodedPath);
+
+            if (!fs.existsSync(absolutePath)) {
+                console.error(`Local file not found at path: ${absolutePath}`);
+                return new NextResponse(`File not found: ${decodedPath}`, { status: 404 });
+            }
+
+            const fileBuffer = fs.readFileSync(absolutePath);
+            arrayBuffer = fileBuffer.buffer.slice(fileBuffer.byteOffset, fileBuffer.byteOffset + fileBuffer.byteLength);
+        } else {
+            // Remote fetch for Supabase URL
+            const response = await fetch(url);
+            if (!response.ok) {
+                return new NextResponse(`Failed to fetch PDF: ${response.status} ${response.statusText}`, { status: response.status });
+            }
+            arrayBuffer = await response.arrayBuffer();
         }
 
-        const arrayBuffer = await response.arrayBuffer();
-
-        // Determine content type based on URL
-        const isHtml = url.toLowerCase().includes('.html');
         const contentType = isHtml ? 'text/html' : 'application/pdf';
         const contentDisposition = isHtml ? 'inline' : 'inline; filename="facture.pdf"';
 
-        // Force inline display instead of download, while proxying the content
         return new NextResponse(arrayBuffer, {
             headers: {
                 'Content-Type': contentType,

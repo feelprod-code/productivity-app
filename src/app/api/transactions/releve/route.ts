@@ -334,7 +334,7 @@ export async function GET() {
         // Etape 1 : Matching prioritaire par partage de mots clés de la description du produit (évite les mauvais croisements)
         if (txDesc) {
           const cleanDescWords = txDesc.split(/[^a-z0-9]/).filter((w: string) => w.length >= 4);
-          const genericWords = ['avec', 'pour', 'dans', 'sans', 'noir', 'bleu', 'vert', 'rose', 'gris', 'blanc', 'taille', 'lot', 'pack', 'compatible', 'original', 'remplacement', 'rechange', 'recharge', 'produit', 'articles', 'divers'];
+          const genericWords = ['avec', 'pour', 'dans', 'sans', 'noir', 'bleu', 'vert', 'rose', 'gris', 'blanc', 'taille', 'lot', 'pack', 'compatible', 'original', 'remplacement', 'rechange', 'recharge', 'produit', 'articles', 'divers', 'amazon', 'payments', 'prime', 'bouygues', 'telecom', 'sarl', 'paypal', 'openrouter'];
           const filteredWords = cleanDescWords.filter(w => !genericWords.includes(w));
 
           const candidates = sortedInvs
@@ -409,7 +409,9 @@ export async function GET() {
               
               if (isInvAmazonOrRelated) {
                 const descWords = txDesc.split(/[^a-z0-9]/).filter((w: string) => w.length >= 4);
-                const hasSharedWords = descWords.length > 0 && descWords.some((word: string) => cleanInvProv.includes(word));
+                const genericWords = ['avec', 'pour', 'dans', 'sans', 'noir', 'bleu', 'vert', 'rose', 'gris', 'blanc', 'taille', 'lot', 'pack', 'compatible', 'original', 'remplacement', 'rechange', 'recharge', 'produit', 'articles', 'divers', 'amazon', 'payments', 'prime', 'bouygues', 'telecom', 'sarl', 'paypal', 'openrouter'];
+                const filteredWords = descWords.filter(w => !genericWords.includes(w));
+                const hasSharedWords = filteredWords.length > 0 && filteredWords.some((word: string) => cleanInvProv.includes(word));
                 
                 if (hasSharedWords) {
                   const ratio = absAmount / invAmount;
