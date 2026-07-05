@@ -562,16 +562,16 @@ export default function RelevePage() {
 
       <div className="relative z-10 max-w-6xl mx-auto space-y-4">
         {/* Sticky Header & Filters Container */}
-        <div className="sticky top-0 bg-[#FDFBEF]/95 backdrop-blur-md z-40 -mt-4 pt-8 pb-3 sm:-mt-6 sm:pt-10 lg:-mt-8 lg:pt-12 border-b border-[#1E2A33]/10 space-y-3 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+        <div className="sticky top-0 bg-[#FDFBEF]/95 backdrop-blur-md z-40 -mt-4 pt-10 pb-3 sm:-mt-6 sm:pt-14 lg:-mt-8 lg:pt-16 border-b border-[#1E2A33]/10 space-y-3 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
           {/* Header */}
           <div className="flex flex-row justify-between items-center gap-3 w-full">
             <div className="flex items-center gap-2.5 shrink-0">
-              <div className="w-1 bg-[#AE7D5C] rounded-full min-h-[26px] self-stretch shadow-[0_0_15px_rgba(174,125,92,0.4)]"></div>
-              <h1 className="text-xl sm:text-3xl font-bebas tracking-wide text-[#1E2A33] leading-none">
+              <div className="w-1 bg-[#AE7D5C] rounded-full min-h-[32px] self-stretch shadow-[0_0_15px_rgba(174,125,92,0.4)]"></div>
+              <h1 className="text-2xl sm:text-4xl font-bebas tracking-wide text-[#1E2A33] leading-none">
                 TRANSACTIONS
               </h1>
             </div>
-            <div className="flex items-center gap-3 shrink-0 -translate-y-0.5 sm:-translate-y-1">
+            <div className="flex items-center gap-3 shrink-0 -translate-y-1 sm:-translate-y-1.5">
               {/* Year Switcher (Segmented Control chic) */}
               <div className="flex bg-white/60 p-1.5 rounded-2xl border border-[#1E2A33]/5 gap-1.5 shadow-inner shrink-0">
                 {uniqueYears.map(y => (
