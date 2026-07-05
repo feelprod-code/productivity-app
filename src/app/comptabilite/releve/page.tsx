@@ -564,7 +564,7 @@ export default function RelevePage() {
         {/* Sticky Header & Filters Container */}
         <div className="sticky top-0 bg-[#FDFBEF]/95 backdrop-blur-md z-40 -mt-4 pt-10 pb-3 sm:-mt-6 sm:pt-14 lg:-mt-8 lg:pt-16 border-b border-[#1E2A33]/10 space-y-3 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
           {/* Header */}
-          <div className="flex flex-row justify-between items-center gap-3 w-full">
+          <div className="flex flex-row justify-between items-center gap-3 w-full mb-3.5">
             <div className="flex items-center gap-2.5 shrink-0">
               <div className="w-1 bg-[#AE7D5C] rounded-full min-h-[32px] self-stretch shadow-[0_0_15px_rgba(174,125,92,0.4)]"></div>
               <h1 className="text-2xl sm:text-4xl font-bebas tracking-wide text-[#1E2A33] leading-none">
@@ -604,7 +604,7 @@ export default function RelevePage() {
           </div>
 
           {/* Switcher & Search Bar */}
-          <div className="flex flex-row flex-wrap items-center gap-2.5 bg-transparent p-0 border-none shadow-none print:hidden select-none w-full">
+          <div className="flex flex-row flex-wrap justify-center items-center gap-3 bg-transparent p-0 border-none shadow-none print:hidden select-none w-full">
 
           {/* Account Switcher */}
           <div className="flex bg-white/60 p-1.5 rounded-2xl border border-[#1E2A33]/5 gap-1.5 shadow-inner shrink-0">
@@ -661,6 +661,10 @@ export default function RelevePage() {
               SORTIES
             </button>
           </div>
+        </div>
+
+        {/* Secondary Filters & Search Bar */}
+        <div className="flex flex-row flex-wrap items-center gap-2.5 bg-transparent p-0 border-none shadow-none print:hidden select-none w-full">
 
           {/* Month Filter Dropdown Premium */}
           <div className="relative shrink-0 z-30">
