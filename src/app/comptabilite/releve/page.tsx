@@ -571,7 +571,7 @@ export default function RelevePage() {
                 TRANSACTIONS
               </h1>
             </div>
-            <div className="flex items-center gap-2.5 shrink-0">
+            <div className="flex items-center gap-2.5 shrink-0 -translate-y-1 sm:-translate-y-1.5">
               {/* Year Switcher (Segmented Control chic) */}
               <div className="flex bg-white/60 p-0.5 rounded-lg border border-[#1E2A33]/5 gap-0.5 shadow-inner shrink-0">
                 {uniqueYears.map(y => (
