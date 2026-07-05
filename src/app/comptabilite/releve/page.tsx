@@ -556,22 +556,42 @@ export default function RelevePage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#FDFBEF] text-[#1E2A33] p-4 sm:p-6 lg:p-8 font-sans relative overflow-hidden">
+    <main className="min-h-screen bg-[#FDFBEF] text-[#1E2A33] p-4 sm:p-6 lg:p-8 font-sans relative">
       {/* TDT Grid Background Effect */}
       <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))] opacity-5 z-0"></div>
 
       <div className="relative z-10 max-w-6xl mx-auto space-y-4">
         {/* Sticky Header & Filters Container */}
-        <div className="sticky top-0 bg-[#FDFBEF]/95 backdrop-blur-md z-40 pt-4 pb-3 border-b border-[#1E2A33]/10 space-y-3 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+        <div className="sticky top-0 bg-[#FDFBEF]/95 backdrop-blur-md z-40 -mt-4 pt-8 pb-3 sm:-mt-6 sm:pt-10 lg:-mt-8 lg:pt-12 border-b border-[#1E2A33]/10 space-y-3 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
           {/* Header */}
-          <div className="flex flex-col lg:flex-row justify-between items-center gap-4">
-            <div className="flex items-center gap-3 pt-2 lg:pt-0 shrink-0 self-stretch">
-              <div className="w-1.5 bg-[#AE7D5C] rounded-full self-stretch shadow-[0_0_15px_rgba(174,125,92,0.4)] min-h-[32px]"></div>
-              <h1 className="text-2xl sm:text-4xl font-bebas tracking-wide text-[#1E2A33] text-center md:text-left leading-none">
+          <div className="flex flex-row justify-between items-center gap-3 w-full">
+            <div className="flex items-center gap-2.5 shrink-0">
+              <div className="w-1 bg-[#AE7D5C] rounded-full min-h-[26px] self-stretch shadow-[0_0_15px_rgba(174,125,92,0.4)]"></div>
+              <h1 className="text-xl sm:text-3xl font-bebas tracking-wide text-[#1E2A33] leading-none">
                 TRANSACTIONS
               </h1>
             </div>
-            <div className="flex w-full lg:w-auto items-center justify-end">
+            <div className="flex items-center gap-2.5 shrink-0">
+              {/* Year Switcher (Segmented Control chic) */}
+              <div className="flex bg-white/60 p-0.5 rounded-lg border border-[#1E2A33]/5 gap-0.5 shadow-inner shrink-0">
+                {uniqueYears.map(y => (
+                  <button
+                    key={y}
+                    onClick={() => {
+                      setSelectedYear(y);
+                      setSelectedMonth("all");
+                    }}
+                    className={`flex items-center justify-center px-2 py-1 rounded-md text-[9px] sm:text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+                      selectedYear === y
+                        ? "bg-[#1E2A33] text-white shadow-md shadow-[#1E2A33]/20"
+                        : "text-[#1E2A33]/60 hover:text-[#1E2A33]"
+                    }`}
+                  >
+                    {y}
+                  </button>
+                ))}
+              </div>
+
               <button
                 onClick={loadData}
                 disabled={loading || isRefetching}
@@ -585,25 +605,6 @@ export default function RelevePage() {
 
           {/* Switcher & Search Bar */}
           <div className="flex flex-row flex-wrap items-center gap-2.5 bg-transparent p-0 border-none shadow-none print:hidden select-none w-full">
-            {/* Year Switcher (Segmented Control chic) */}
-          <div className="flex bg-white/60 p-1.5 rounded-2xl border border-[#1E2A33]/5 gap-1.5 shadow-inner shrink-0">
-            {uniqueYears.map(y => (
-              <button
-                key={y}
-                onClick={() => {
-                  setSelectedYear(y);
-                  setSelectedMonth("all");
-                }}
-                className={`flex items-center justify-center px-4 py-2 rounded-xl text-[10px] sm:text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
-                  selectedYear === y
-                    ? "bg-[#1E2A33] text-white shadow-md shadow-[#1E2A33]/20"
-                    : "text-[#1E2A33]/60 hover:text-[#1E2A33]"
-                }`}
-              >
-                {y}
-              </button>
-            ))}
-          </div>
 
           {/* Account Switcher */}
           <div className="flex bg-white/60 p-1.5 rounded-2xl border border-[#1E2A33]/5 gap-1.5 shadow-inner shrink-0">
