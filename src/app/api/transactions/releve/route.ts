@@ -2,6 +2,143 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/prisma";
 import * as fs from 'fs';
 import * as path from 'path';
+import pdfParse from 'pdf-parse';
+
+interface PaymentGroup {
+  dateStr: string;
+  caisse: string;
+  date: Date;
+  totalAmount: number;
+  patients: Record<string, number>;
+}
+
+function formatPatientName(rawName: string): string {
+  const words = rawName.trim().split(/\s+/);
+  return words.map((w, idx) => {
+    if (idx === 0) return w.toUpperCase();
+    return w.charAt(0).toUpperCase() + w.slice(1).toLowerCase();
+  }).join(' ');
+}
+
+async function autoEnrichCpam(allTxs: any[], allInvs: any[], detailsMap: Record<string, string>) {
+  try {
+    // 1. Trouver les relevés CPAM
+    const cpamInvoices = allInvs.filter((inv: any) => {
+      const provLower = (inv.provider || '').toLowerCase();
+      return inv.fileUrl && (provLower.includes('cpam') || provLower.includes('assurance') || provLower.includes('ameli'));
+    });
+
+    if (cpamInvoices.length === 0) return;
+
+    // 2. Identifier les crédits récents (de type CPAM) qui n'ont pas encore de détails
+    const cpamTxsToEnrich = allTxs.filter((tx: any) => {
+      const amount = parseFloat(tx.amount || '0');
+      if (amount <= 0) return false; // uniquement les rentrées d'argent
+      if (detailsMap[String(tx.id)]) return false; // déjà enrichie en base
+      
+      const labelLower = (tx.label || '').toLowerCase();
+      return labelLower.includes('cpam') || labelLower.includes('c.p.a.m.') || labelLower.includes('assurance maladie');
+    });
+
+    if (cpamTxsToEnrich.length === 0) return;
+
+    console.log(`[CPAM] ${cpamTxsToEnrich.length} transaction(s) CPAM non enrichie(s) détectée(s). Tentative d'enrichissement à la volée...`);
+
+    for (const inv of cpamInvoices) {
+      // Vérifier si cette facture couvre la période des transactions à enrichir
+      // (Pour éviter de parser inutilement les vieux PDFs)
+      const hasCloseTx = cpamTxsToEnrich.some((tx: any) => {
+        const txTime = new Date(tx.date).getTime();
+        const invTime = new Date(inv.date).getTime();
+        const thirtyFiveDaysMs = 35 * 24 * 60 * 60 * 1000;
+        return Math.abs(txTime - invTime) <= thirtyFiveDaysMs;
+      });
+
+      if (!hasCloseTx) continue;
+
+      console.log(`[CPAM] Parsing du PDF à la volée : ${inv.provider}`);
+      const pdfRes = await fetch(inv.fileUrl);
+      if (!pdfRes.ok) continue;
+      
+      const arrayBuffer = await pdfRes.arrayBuffer();
+      const pdfBuffer = Buffer.from(arrayBuffer);
+      const parsed = await pdfParse(pdfBuffer);
+      const text = parsed.text || "";
+      const lines = text.split('\n');
+
+      const groups: PaymentGroup[] = [];
+      const detailRegex = /(\d{2}\/\d{2}\/\d{4})\d{9}CPAM\s*n°\s*(\d{3})([A-Z\s\-]{3,})(\d{13,15})[A-Z]{3}\d{2}\/\d{2}\/\d{4}(?:\s*au\s*\d{2}\/\d{2}\/\d{4})?([0-9.,]+)\s*€/;
+
+      for (const line of lines) {
+        const detailMatch = line.match(detailRegex);
+        if (detailMatch) {
+          const payDateStr = detailMatch[1];
+          const caisse = detailMatch[2];
+          const rawName = detailMatch[3].trim();
+          const amount = parseFloat(detailMatch[5].replace(',', '.'));
+
+          if (!isNaN(amount) && rawName) {
+            const formattedName = formatPatientName(rawName);
+            const key = `${payDateStr}-${caisse}`;
+            
+            let group = groups.find(g => `${g.dateStr}-${g.caisse}` === key);
+            if (!group) {
+              const [d, m, y] = payDateStr.split('/');
+              const date = new Date(parseInt(y), parseInt(m) - 1, parseInt(d));
+              group = {
+                dateStr: payDateStr,
+                caisse,
+                date,
+                totalAmount: 0,
+                patients: {}
+              };
+              groups.push(group);
+            }
+            group.patients[formattedName] = (group.patients[formattedName] || 0) + amount;
+            group.totalAmount += amount;
+          }
+        }
+      }
+
+      // Faire correspondre avec nos transactions non enrichies
+      for (const group of groups) {
+        const groupAmount = group.totalAmount;
+        const groupDate = group.date;
+        const patientsList = Object.entries(group.patients).map(([name, amount]) => ({ name, amount }));
+
+        if (groupAmount <= 0 || patientsList.length === 0) continue;
+
+        // Trouver la transaction correspondante
+        const matchedTx = cpamTxsToEnrich.find((tx: any) => {
+          const txAmount = parseFloat(tx.amount || "0");
+          const amountDiff = Math.abs(txAmount - groupAmount);
+          const txTime = new Date(tx.date).getTime();
+          const groupTime = groupDate.getTime();
+          const dayMs = 24 * 60 * 60 * 1000;
+          return amountDiff < 0.05 && Math.abs(txTime - groupTime) <= 4 * dayMs;
+        });
+
+        if (matchedTx) {
+          const txId = String(matchedTx.id);
+          const descriptionValue = `CPAM_JSON:${JSON.stringify(patientsList)}`;
+
+          // Enregistrer en base
+          await prisma.$executeRawUnsafe(
+            'INSERT INTO "TransactionDetail" (id, description, "updatedAt") VALUES ($1, $2, NOW()) ON CONFLICT (id) DO UPDATE SET description = $2, "updatedAt" = NOW()',
+            txId,
+            descriptionValue
+          );
+
+          // Mettre à jour detailsMap pour la requête en cours
+          detailsMap[txId] = descriptionValue;
+          console.log(`[CPAM] ✨ Match à la volée réussi pour la transaction ${txId} (${groupAmount} €) !`);
+        }
+      }
+    }
+  } catch (err) {
+    console.error("[CPAM] Erreur lors de l'auto-enrichissement :", err);
+  }
+}
 
 export const dynamic = 'force-dynamic';
 
@@ -109,6 +246,9 @@ export async function GET() {
 
     // 3. Load Local Invoices from DB
     const allInvs = await prisma.invoice.findMany() as any[];
+
+    // Auto-enrich CPAM transactions dynamically with patient details
+    await autoEnrichCpam(allTxs, allInvs, detailsMap);
 
     // 4. Process and Classify Transactions
     let backgroundEnrichCount = 0;
