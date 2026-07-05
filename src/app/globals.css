@@ -130,7 +130,6 @@
   html,
   body {
     @apply bg-background text-foreground;
-    overflow-x: clip;
     position: relative;
     width: 100%;
     max-width: 100vw;
