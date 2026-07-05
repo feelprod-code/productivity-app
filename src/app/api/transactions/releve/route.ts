@@ -244,17 +244,14 @@ export async function GET() {
       }
     }
 
-    // Load local 2025 LCL transactions for the first half of the year
+    // Load local 2025 LCL transactions (real and virtual)
     try {
       const lcl2025Path = path.join(process.cwd(), 'src/app/api/transactions/releve/lcl_2025_transactions.json');
       if (fs.existsSync(lcl2025Path)) {
         const localTxs = JSON.parse(fs.readFileSync(lcl2025Path, 'utf8'));
-        // Filter out any overlap (Pennylane starts on 2025-06-30)
-        const pannyStartDate = new Date("2025-06-30").getTime();
-        const filteredLocal = localTxs.filter((ltx: any) => new Date(ltx.date).getTime() < pannyStartDate);
         
         // Convert local format to match Pennylane shape
-        const formattedLocal = filteredLocal.map((ltx: any) => ({
+        const formattedLocal = localTxs.map((ltx: any) => ({
           id: ltx.id,
           date: ltx.date,
           label: ltx.label,
