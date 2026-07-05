@@ -856,10 +856,190 @@ export default function RelevePage() {
                         </TableHeader>
                         <TableBody>
                           {group.transactions.map((tx) => {
-                            const badgeInfo = getCategoryBadge(tx.category);
-                            const txExpanded = expandedTxIds.has(String(tx.id));
+                             const badgeInfo = getCategoryBadge(tx.category);
+                             const txExpanded = expandedTxIds.has(String(tx.id));
 
-                            return (
+                             const displayProductDescription = tx.productDescription || (
+                               (tx.label && (tx.label.toLowerCase().includes("paris halles") || tx.label.toLowerCase().includes("sebastopol")))
+                                 ? "Restaurant"
+                                 : ""
+                             );
+
+                             const detailsContent = (
+                               <div className="px-3 sm:px-6 py-4 bg-[#FDFBEF]/30 border-l-4 border-[#AE7D5C] rounded-r-xl transition-all space-y-5 w-full overflow-hidden">
+                                 {/* Top Side: Metadata / Details */}
+                                 <div className="space-y-4 text-xs">
+                                   {/* Show patient details for SumUp / CPAM */}
+                                   {typeof tx.productDescription === 'string' && tx.productDescription && (() => {
+                                     if (tx.productDescription.startsWith("SUMUP_JSON:")) {
+                                       try {
+                                         const patients = JSON.parse(tx.productDescription.substring(11)) as { name: string, amount: number }[];
+                                         return (
+                                           <div className="space-y-3">
+                                             <h4 className="font-roboto font-bold text-[10px] uppercase tracking-wider text-emerald-700 font-bold flex items-center gap-1.5">
+                                               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                               Détail des règlements patients (SumUp)
+                                             </h4>
+                                             <div className="space-y-1.5 bg-emerald-50/10 border border-emerald-500/10 p-3.5 rounded-2xl max-h-[180px] overflow-y-auto">
+                                               {patients.map((pat, idx) => (
+                                                 <div key={idx} className="flex justify-between items-center text-xs py-1 border-b border-emerald-500/5 last:border-b-0">
+                                                   <span className="text-[#1E2A33] font-medium">{pat.name}</span>
+                                                   <span className="text-emerald-700 font-bold font-bebas tracking-wide text-sm">{pat.amount.toFixed(2)} €</span>
+                                                 </div>
+                                               ))}
+                                             </div>
+                                           </div>
+                                         );
+                                       } catch (e) {}
+                                     }
+                                     if (tx.productDescription.startsWith("CPAM_JSON:")) {
+                                       try {
+                                         const patients = JSON.parse(tx.productDescription.substring(10)) as { name: string, amount: number }[];
+                                         return (
+                                           <div className="space-y-3">
+                                             <h4 className="font-roboto font-bold text-[10px] uppercase tracking-wider text-blue-700 font-bold flex items-center gap-1.5">
+                                               <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                                               Détail des remboursements tiers-payant (CPAM)
+                                             </h4>
+                                             <div className="space-y-1.5 bg-blue-50/10 border border-blue-500/10 p-3.5 rounded-2xl max-h-[180px] overflow-y-auto">
+                                               {patients.map((pat, idx) => (
+                                                 <div key={idx} className="flex justify-between items-center text-xs py-1 border-b border-blue-500/5 last:border-b-0">
+                                                   <span className="text-[#1E2A33] font-medium">{pat.name}</span>
+                                                   <span className="text-blue-700 font-bold font-bebas tracking-wide text-sm">{pat.amount.toFixed(2)} €</span>
+                                                 </div>
+                                               ))}
+                                             </div>
+                                           </div>
+                                         );
+                                       } catch (e) {}
+                                     }
+                                     return null;
+                                   })()}
+
+                                   {/* Product details */}
+                                   {displayProductDescription && !displayProductDescription.startsWith("SUMUP_JSON:") && !displayProductDescription.startsWith("CPAM_JSON:") && (
+                                     <div className="pt-3 border-t border-[#1E2A33]/10 space-y-1">
+                                       <h4 className="font-roboto font-bold text-[10px] uppercase tracking-wider text-[#AE7D5C] font-semibold">Produit / Service acheté</h4>
+                                       <div className="bg-[#AE7D5C]/5 p-2.5 rounded-xl border border-[#AE7D5C]/10 text-[#1E2A33] font-medium leading-relaxed">
+                                         {displayProductDescription}
+                                       </div>
+                                     </div>
+                                   )}
+
+                                   {tx.matchedInvoice?.invoiceLines && tx.matchedInvoice.invoiceLines.length > 0 && (
+                                     <div className="pt-3 border-t border-[#1E2A33]/10 space-y-2">
+                                       <h4 className="font-roboto font-bold text-[10px] uppercase tracking-wider text-[#AE7D5C] font-semibold">Articles de la facture</h4>
+                                       <div className="space-y-1.5 bg-white border border-[#1E2A33]/5 p-2.5 rounded-xl max-h-[140px] overflow-y-auto">
+                                         {tx.matchedInvoice.invoiceLines.map((line, idx) => (
+                                           <div key={idx} className="flex justify-between items-start gap-4 text-[11px] py-0.5 border-b border-[#1E2A33]/5 last:border-b-0 last:pb-0">
+                                             <span className="text-[#1E2A33] font-medium leading-normal break-words">{line.label}</span>
+                                             <span className="text-[#AE7D5C] font-mono font-semibold text-[10px] shrink-0">{line.amount.toFixed(2)} €</span>
+                                           </div>
+                                         ))}
+                                       </div>
+                                     </div>
+                                   )}
+                                 </div>
+                                 {/* Bottom Side: Reconcile / Attachments manager */}
+                                 <div className="pt-4 border-t border-[#1E2A33]/10 space-y-3 flex flex-col justify-center">
+                                   <h4 className="font-roboto font-bold text-[10px] uppercase tracking-wider text-[#1E2A33]/50 mb-1">Pièce Justificative (Facture)</h4>
+                                   
+                                   {tx.matchedInvoice ? (
+                                     <div className="space-y-3">
+                                       <div className="p-3 bg-white border border-[#1E2A33]/10 rounded-xl flex items-center justify-between shadow-sm w-full max-w-md gap-3">
+                                         <div className="flex items-center gap-2 min-w-0 flex-1">
+                                           <FileText className="w-5 h-5 text-[#AE7D5C] shrink-0" />
+                                           <div className="min-w-0 flex-1">
+                                             <span className="text-xs font-semibold text-[#1E2A33] block truncate max-w-[130px] xs:max-w-[180px] sm:max-w-[260px]" title={tx.matchedInvoice.filename}>
+                                               {tx.matchedInvoice.filename}
+                                             </span>
+                                             <span className="text-[9px] text-[#1E2A33]/40 block">Identifié sur Pennylane</span>
+                                           </div>
+                                         </div>
+                                         <Button
+                                           variant="ghost"
+                                           size="icon"
+                                           className="h-8 w-8 text-[#1E2A33]/40 hover:text-rose-600 rounded-full shrink-0"
+                                           onClick={() => triggerManualUpload(null as any, tx)}
+                                           title="Remplacer le justificatif"
+                                         >
+                                           <Upload className="w-4 h-4" />
+                                         </Button>
+                                       </div>
+                                       
+                                       <div className="flex gap-2 w-full max-w-md">
+                                         <Button
+                                           variant="outline"
+                                           size="sm"
+                                           className="text-xs bg-white text-[#1E2A33] hover:bg-[#FDFBEF] rounded-xl flex-1 h-9 cursor-pointer min-w-0"
+                                           onClick={() => setPreviewUrl(tx.matchedInvoice?.publicFileUrl || null)}
+                                         >
+                                           <FileText className="w-4 h-4 mr-2 shrink-0" />
+                                           <span className="truncate">Voir la facture</span>
+                                         </Button>
+                                         
+                                         {tx.matchedInvoice.publicFileUrl && (
+                                           <a
+                                             href={tx.matchedInvoice.publicFileUrl}
+                                             target="_blank"
+                                             rel="noopener noreferrer"
+                                             className="h-9 px-3 border border-[#1E2A33]/10 text-[#1E2A33]/60 hover:text-[#1E2A33] bg-white rounded-xl flex items-center justify-center shrink-0"
+                                             title="Télécharger directement"
+                                           >
+                                             <Download className="w-4 h-4" />
+                                           </a>
+                                         )}
+                                       </div>
+                                     </div>
+                                   ) : tx.noJustificatif && !tx.label.toLowerCase().includes("sumup") && !tx.label.toLowerCase().includes("cpam") ? (
+                                     <div className="bg-slate-50/50 border border-slate-200 p-3 rounded-xl max-w-md">
+                                       <div className="flex items-center gap-2 text-slate-700 font-semibold text-xs mb-1">
+                                         <div className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                                         Opération dispensée de justificatif
+                                       </div>
+                                       <p className="text-[11px] text-slate-500 leading-relaxed font-light">
+                                         Certaines opérations (agios, commissions de compte, abonnements sans facture dédiée) sont exemptées de pièce justificative.
+                                       </p>
+                                     </div>
+                                   ) : (
+                                     <div className="space-y-2 max-w-md">
+                                       <p className="text-xs font-light text-[#1E2A33]/60 mb-2">
+                                         Aucune pièce jointe n'est liée à cette opération.
+                                       </p>
+                                       <div className="flex flex-col sm:flex-row gap-2">
+                                         <Button
+                                           onClick={() => handleReconcileAuto(tx)}
+                                           disabled={reconcilingTxId === String(tx.id)}
+                                           className="text-xs bg-[#1E2A33] hover:bg-[#1E2A33]/90 text-white rounded-xl flex-1 h-9 font-semibold shadow-sm transition-all cursor-pointer disabled:opacity-50"
+                                         >
+                                           {reconcilingTxId === String(tx.id) ? (
+                                             <>
+                                               <Loader2 className="w-3.5 h-3.5 animate-spin mr-2" />
+                                               Recherche en cours...
+                                             </>
+                                           ) : (
+                                             <>
+                                               <Sparkles className="w-3.5 h-3.5 mr-2 text-[#AE7D5C]" />
+                                               Rechercher automatique
+                                             </>
+                                           )}
+                                         </Button>
+
+                                         <Button
+                                           onClick={(e) => triggerManualUpload(e, tx)}
+                                           className="text-xs bg-white border border-[#AE7D5C]/40 text-[#AE7D5C] hover:bg-[#AE7D5C]/5 rounded-xl flex-1 h-9 font-semibold shadow-sm transition-all cursor-pointer"
+                                         >
+                                           <Upload className="w-3.5 h-3.5 mr-2" />
+                                           Uploader un fichier
+                                         </Button>
+                                       </div>
+                                     </div>
+                                   )}
+                                 </div>
+                               </div>
+                             );
+
+                             return (
                               <React.Fragment key={tx.id}>
                                 {/* Transaction Row (single line) */}
                                 <TableRow
@@ -1067,201 +1247,23 @@ export default function RelevePage() {
                                     </div>
                                   </TableCell>
                                 </TableRow>
+
                                 {/* Expanded Transaction Details */}
                                 {txExpanded && (
-                                  <TableRow className="bg-[#1E2A33]/[0.01] hover:bg-transparent">
-                                    <TableCell colSpan={7} className="p-0 border-t-0">
-                                       <div className="px-3 sm:px-6 py-4 bg-[#FDFBEF]/30 border-l-4 border-[#AE7D5C] rounded-r-xl transition-all space-y-5 w-full overflow-hidden">
-                                        {/* Top Side: Metadata / Details */}
-                                        <div className="space-y-4 text-xs">
-                                          {/* Show patient details for SumUp / CPAM */}
-                                          {typeof tx.productDescription === 'string' && tx.productDescription && (() => {
-                                            if (tx.productDescription.startsWith("SUMUP_JSON:")) {
-                                              try {
-                                                const patients = JSON.parse(tx.productDescription.substring(11)) as { name: string, amount: number }[];
-                                                return (
-                                                  <div className="space-y-3">
-                                                    <h4 className="font-roboto font-bold text-[10px] uppercase tracking-wider text-emerald-700 font-bold flex items-center gap-1.5">
-                                                      <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                                                      Détail des règlements patients (SumUp)
-                                                    </h4>
-                                                    <div className="space-y-1.5 bg-emerald-50/10 border border-emerald-500/10 p-3.5 rounded-2xl max-h-[180px] overflow-y-auto">
-                                                      {patients.map((pat, idx) => (
-                                                        <div key={idx} className="flex justify-between items-center text-xs py-1 border-b border-emerald-500/5 last:border-b-0">
-                                                          <span className="text-[#1E2A33] font-medium">{pat.name}</span>
-                                                          <span className="text-emerald-700 font-bold font-bebas tracking-wide text-sm">{pat.amount.toFixed(2)} €</span>
-                                                        </div>
-                                                      ))}
-                                                    </div>
-                                                  </div>
-                                                );
-                                              } catch (e) {}
-                                            }
-                                            if (tx.productDescription.startsWith("CPAM_JSON:")) {
-                                              try {
-                                                const patients = JSON.parse(tx.productDescription.substring(10)) as { name: string, amount: number }[];
-                                                return (
-                                                  <div className="space-y-3">
-                                                    <h4 className="font-roboto font-bold text-[10px] uppercase tracking-wider text-blue-700 font-bold flex items-center gap-1.5">
-                                                      <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                                                      Détail des remboursements tiers-payant (CPAM)
-                                                    </h4>
-                                                    <div className="space-y-1.5 bg-blue-50/10 border border-blue-500/10 p-3.5 rounded-2xl max-h-[180px] overflow-y-auto">
-                                                      {patients.map((pat, idx) => (
-                                                        <div key={idx} className="flex justify-between items-center text-xs py-1 border-b border-blue-500/5 last:border-b-0">
-                                                          <span className="text-[#1E2A33] font-medium">{pat.name}</span>
-                                                          <span className="text-blue-700 font-bold font-bebas tracking-wide text-sm">{pat.amount.toFixed(2)} €</span>
-                                                        </div>
-                                                      ))}
-                                                    </div>
-                                                  </div>
-                                                );
-                                              } catch (e) {}
-                                            }
-                                            return null;
-                                          })()}
-
-                                          {/* Show origin label if not SumUp/CPAM patient data */}
-                                          {(!tx.productDescription || (!tx.productDescription.startsWith("SUMUP_JSON:") && !tx.productDescription.startsWith("CPAM_JSON:"))) && (
-                                            <div className="space-y-1.5">
-                                              <h4 className="font-roboto font-bold text-[10px] uppercase tracking-wider text-[#1E2A33]/50">Libellé d'origine</h4>
-                                               <div className="font-mono text-[10px] text-[#1E2A33]/70 break-all bg-[#1E2A33]/5 p-2.5 rounded-xl leading-normal select-all">
-                                                 {tx.label}
-                                               </div>
-                                            </div>
-                                          )}
-
-                                          {/* Product details */}
-                                          {(() => {
-                                            const displayProductDescription = tx.productDescription || (
-                                              (tx.label && (tx.label.toLowerCase().includes("paris halles") || tx.label.toLowerCase().includes("sebastopol")))
-                                                ? "Restaurant"
-                                                : ""
-                                            );
-                                            if (!displayProductDescription || displayProductDescription.startsWith("SUMUP_JSON:") || displayProductDescription.startsWith("CPAM_JSON:")) return null;
-                                            return (
-                                              <div className="pt-3 border-t border-[#1E2A33]/10 space-y-1">
-                                                <h4 className="font-roboto font-bold text-[10px] uppercase tracking-wider text-[#AE7D5C] font-semibold">Produit / Service acheté</h4>
-                                                <div className="bg-[#AE7D5C]/5 p-2.5 rounded-xl border border-[#AE7D5C]/10 text-[#1E2A33] font-medium leading-relaxed">
-                                                  {displayProductDescription}
-                                                </div>
-                                              </div>
-                                            );
-                                          })()}
-
-                                          {tx.matchedInvoice?.invoiceLines && tx.matchedInvoice.invoiceLines.length > 0 && (
-                                            <div className="pt-3 border-t border-[#1E2A33]/10 space-y-2">
-                                              <h4 className="font-roboto font-bold text-[10px] uppercase tracking-wider text-[#AE7D5C] font-semibold">Articles de la facture</h4>
-                                              <div className="space-y-1.5 bg-white border border-[#1E2A33]/5 p-2.5 rounded-xl max-h-[140px] overflow-y-auto">
-                                                {tx.matchedInvoice.invoiceLines.map((line, idx) => (
-                                                  <div key={idx} className="flex justify-between items-start gap-4 text-[11px] py-0.5 border-b border-[#1E2A33]/5 last:border-b-0 last:pb-0">
-                                                    <span className="text-[#1E2A33] font-medium leading-normal break-words">{line.label}</span>
-                                                    <span className="text-[#AE7D5C] font-mono font-semibold text-[10px] shrink-0">{line.amount.toFixed(2)} €</span>
-                                                  </div>
-                                                ))}
-                                              </div>
-                                            </div>
-                                          )}
-                                        </div>
-                                        {/* Bottom Side: Reconcile / Attachments manager */}
-                                        <div className="pt-4 border-t border-[#1E2A33]/10 space-y-3 flex flex-col justify-center">
-                                          <h4 className="font-roboto font-bold text-[10px] uppercase tracking-wider text-[#1E2A33]/50 mb-1">Pièce Justificative (Facture)</h4>
-                                          
-                                          {tx.matchedInvoice ? (
-                                            <div className="space-y-3">
-                                              <div className="p-3 bg-white border border-[#1E2A33]/10 rounded-xl flex items-center justify-between shadow-sm w-full max-w-md gap-3">
-                                                <div className="flex items-center gap-2 min-w-0 flex-1">
-                                                  <FileText className="w-5 h-5 text-[#AE7D5C] shrink-0" />
-                                                  <div className="min-w-0 flex-1">
-                                                    <span className="text-xs font-semibold text-[#1E2A33] block truncate max-w-[130px] xs:max-w-[180px] sm:max-w-[260px]" title={tx.matchedInvoice.filename}>
-                                                      {tx.matchedInvoice.filename}
-                                                    </span>
-                                                    <span className="text-[9px] text-[#1E2A33]/40 block">Identifié sur Pennylane</span>
-                                                  </div>
-                                                </div>
-                                                <Button
-                                                  variant="ghost"
-                                                  size="icon"
-                                                  className="h-8 w-8 text-[#1E2A33]/40 hover:text-rose-600 rounded-full shrink-0"
-                                                  onClick={() => triggerManualUpload(null as any, tx)}
-                                                  title="Remplacer le justificatif"
-                                                >
-                                                  <Upload className="w-4 h-4" />
-                                                </Button>
-                                              </div>
-                                              
-                                              <div className="flex gap-2 w-full max-w-md">
-                                                <Button
-                                                  variant="outline"
-                                                  size="sm"
-                                                  className="text-xs bg-white text-[#1E2A33] hover:bg-[#FDFBEF] rounded-xl flex-1 h-9 cursor-pointer min-w-0"
-                                                  onClick={() => setPreviewUrl(tx.matchedInvoice?.publicFileUrl || null)}
-                                                >
-                                                  <FileText className="w-4 h-4 mr-2 shrink-0" />
-                                                  <span className="truncate">Voir la facture</span>
-                                                </Button>
-                                                
-                                                {tx.matchedInvoice.publicFileUrl && (
-                                                  <a
-                                                    href={tx.matchedInvoice.publicFileUrl}
-                                                    target="_blank"
-                                                    rel="noopener noreferrer"
-                                                    className="h-9 px-3 border border-[#1E2A33]/10 text-[#1E2A33]/60 hover:text-[#1E2A33] bg-white rounded-xl flex items-center justify-center shrink-0"
-                                                    title="Télécharger directement"
-                                                  >
-                                                    <Download className="w-4 h-4" />
-                                                  </a>
-                                                )}
-                                              </div>
-                                            </div>
-                                          ) : tx.noJustificatif && !tx.label.toLowerCase().includes("sumup") && !tx.label.toLowerCase().includes("cpam") ? (
-                                            <div className="bg-slate-50/50 border border-slate-200 p-3 rounded-xl max-w-md">
-                                              <div className="flex items-center gap-2 text-slate-700 font-semibold text-xs mb-1">
-                                                <div className="w-1.5 h-1.5 rounded-full bg-slate-400" />
-                                                Opération dispensée de justificatif
-                                              </div>
-                                              <p className="text-[11px] text-slate-500 leading-relaxed font-light">
-                                                Certaines opérations (agios, commissions de compte, abonnements sans facture dédiée) sont exemptées de pièce justificative.
-                                              </p>
-                                            </div>
-                                          ) : (
-                                            <div className="space-y-2 max-w-md">
-                                              <p className="text-xs font-light text-[#1E2A33]/60 mb-2">
-                                                Aucune pièce jointe n'est liée à cette opération.
-                                              </p>
-                                              <div className="flex flex-col sm:flex-row gap-2">
-                                                <Button
-                                                  onClick={() => handleReconcileAuto(tx)}
-                                                  disabled={reconcilingTxId === String(tx.id)}
-                                                  className="text-xs bg-[#1E2A33] hover:bg-[#1E2A33]/90 text-white rounded-xl flex-1 h-9 font-semibold shadow-sm transition-all cursor-pointer disabled:opacity-50"
-                                                >
-                                                  {reconcilingTxId === String(tx.id) ? (
-                                                    <>
-                                                      <Loader2 className="w-3.5 h-3.5 animate-spin mr-2" />
-                                                      Recherche en cours...
-                                                    </>
-                                                  ) : (
-                                                    <>
-                                                      <Sparkles className="w-3.5 h-3.5 mr-2 text-[#AE7D5C]" />
-                                                      Rechercher automatique
-                                                    </>
-                                                  )}
-                                                </Button>
-
-                                                <Button
-                                                  onClick={(e) => triggerManualUpload(e, tx)}
-                                                  className="text-xs bg-white border border-[#AE7D5C]/40 text-[#AE7D5C] hover:bg-[#AE7D5C]/5 rounded-xl flex-1 h-9 font-semibold shadow-sm transition-all cursor-pointer"
-                                                >
-                                                  <Upload className="w-3.5 h-3.5 mr-2" />
-                                                  Uploader un fichier
-                                                </Button>
-                                              </div>
-                                            </div>
-                                          )}
-                                        </div>
-                                      </div>
-                                    </TableCell>
-                                  </TableRow>
+                                  <>
+                                    {/* Version Desktop (7 colonnes) */}
+                                    <TableRow className="bg-[#1E2A33]/[0.01] hover:bg-transparent hidden sm:table-row">
+                                      <TableCell colSpan={7} className="p-0 border-t-0">
+                                        {detailsContent}
+                                      </TableCell>
+                                    </TableRow>
+                                    {/* Version Mobile (4 colonnes) */}
+                                    <TableRow className="bg-[#1E2A33]/[0.01] hover:bg-transparent sm:hidden table-row">
+                                      <TableCell colSpan={4} className="p-0 border-t-0">
+                                        {detailsContent}
+                                      </TableCell>
+                                    </TableRow>
+                                  </>
                                 )}
                               </React.Fragment>
                             );
