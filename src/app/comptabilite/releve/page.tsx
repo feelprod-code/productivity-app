@@ -1050,7 +1050,7 @@ export default function RelevePage() {
                                             </div>
                                           </div>
 
-                                          {tx.productDescription && (() => {
+                                          {typeof tx.productDescription === 'string' && tx.productDescription && (() => {
                                             if (tx.productDescription.startsWith("SUMUP_JSON:")) {
                                               try {
                                                 const patients = JSON.parse(tx.productDescription.substring(11)) as { name: string, amount: number }[];
@@ -1105,7 +1105,8 @@ export default function RelevePage() {
                                                 </div>
                                               </div>
                                             );
-                                          })()}
+                                           })()}
+ 
 
                                           {tx.matchedInvoice?.invoiceLines && tx.matchedInvoice.invoiceLines.length > 0 && (
                                             <div className="pt-3 border-t border-[#1E2A33]/10 space-y-2">
