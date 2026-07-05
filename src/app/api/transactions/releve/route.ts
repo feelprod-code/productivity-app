@@ -348,8 +348,10 @@ export async function GET() {
       }
 
       if (!isOverridden) {
-        // If CPAM or SumUp patient list details are found, it's absolutely Pro
-        if (productDescription && (productDescription.startsWith("CPAM_JSON:") || productDescription.startsWith("SUMUP_JSON:"))) {
+        // If it's a CPAM or SumUp transaction, it's absolutely Pro
+        if (labelLower.includes('cpam') || labelLower.includes('c.p.a.m.') || labelLower.includes('sumup') || labelLower.includes('sum up')) {
+          isPro = true;
+        } else if (productDescription && (productDescription.startsWith("CPAM_JSON:") || productDescription.startsWith("SUMUP_JSON:"))) {
           isPro = true;
         } else {
           const personalKeywords = [
@@ -357,18 +359,13 @@ export async function GET() {
             'uber', 'deliveroo', 'fnac', 'zara', 'decathlon', 'leroy', 'boulangerie', 'restau', 
             'cafe', 'darty', 'spotify', 'sncf', 'airbnb', 'booking.com', 'h&m', 'ikea', 'castorama',
             'appart', 'loyer', 'mgen', 'bouygues', 'magd', 'kaori', 'vw bank', 'volkswagen',
-            'prestations', 'assurance voiture', 'poissonnerie', 'guillaume ou mm', 'cpam 75 prestations',
-            'cpam du val d oise', 'cpam carcassonne',
+            'assurance voiture', 'poissonnerie', 'guillaume ou mm',
             'zalando', 'emma', 'fashion retail', 'apple', 'luiza', 'poste', 'theo', 'compagnie du',
             'draps'
           ];
 
           const isAlreadyExploitant = tx.categories && tx.categories.some((c: any) => c.account_number && c.account_number.startsWith('108'));
           const matchesPersonal = personalKeywords.some(k => labelLower.includes(k)) || 
-                                 (labelLower.includes('cpam') && labelLower.includes('prestation')) ||
-                                 (labelLower.includes('c.p.a.m.') && labelLower.includes('prestation')) ||
-                                 (labelLower.includes('cpam') && !labelLower.includes('tp-') && !labelLower.includes('sepa')) ||
-                                 (labelLower.includes('c.p.a.m.') && !labelLower.includes('tp-') && !labelLower.includes('sepa')) ||
                                  (realMerchantName && personalKeywords.some(k => realMerchantName.toLowerCase().includes(k)));
           
           if (isAlreadyExploitant || matchesPersonal) {
