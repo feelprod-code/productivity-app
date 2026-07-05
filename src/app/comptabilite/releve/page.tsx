@@ -544,7 +544,7 @@ export default function RelevePage() {
           <div className="flex items-center gap-4 pt-4 lg:pt-0 shrink-0 self-stretch">
             <div className="w-2 bg-[#AE7D5C] rounded-full self-stretch shadow-[0_0_15px_rgba(174,125,92,0.4)] min-h-[40px]"></div>
             <h1 className="text-3xl sm:text-5xl font-bebas tracking-wide text-[#1E2A33] text-center md:text-left leading-tight">
-              RELEVÉ BANCAIRE <span className="text-[#AE7D5C]">/ TRANSACTIONS & RAPPROCHEMENT</span>
+              TRANSACTIONS
             </h1>
           </div>
           <div className="flex w-full lg:w-auto items-center justify-end gap-4">
