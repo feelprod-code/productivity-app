@@ -192,6 +192,7 @@ export default function RelevePage() {
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
   const [activeTab, setActiveTab] = useState<"pro" | "perso">("pro");
   const [selectedMonth, setSelectedMonth] = useState<string>("all");
+  const [selectedYear, setSelectedYear] = useState<string>("all");
   const [togglingTxId, setTogglingTxId] = useState<string | null>(null);
   const [reconcilingTxId, setReconcilingTxId] = useState<string | null>(null);
   
@@ -387,6 +388,12 @@ export default function RelevePage() {
       if (activeTab === "pro" && !tx.isProAccount) return false;
       if (activeTab === "perso" && tx.isProAccount) return false;
 
+      // 1b. Year Selector
+      if (selectedYear !== "all") {
+        const txYear = tx.date.substring(0, 4);
+        if (txYear !== selectedYear) return false;
+      }
+
       // 2. Month Selector
       if (selectedMonth !== "all") {
         const txMonth = tx.date.substring(0, 7); // "2026-06"
@@ -415,7 +422,18 @@ export default function RelevePage() {
 
       return true;
     });
-  }, [transactions, activeTab, selectedMonth, filterFlow, filterCategory, filterMatched, searchQuery]);
+  }, [transactions, activeTab, selectedYear, selectedMonth, filterFlow, filterCategory, filterMatched, searchQuery]);
+
+  // Extract unique years for select dropdown
+  const uniqueYears = useMemo(() => {
+    return Array.from(
+      new Set(
+        transactions
+          .filter(tx => (activeTab === "pro" ? tx.isProAccount : !tx.isProAccount))
+          .map(tx => tx.date.substring(0, 4))
+      )
+    ).sort((a, b) => b.localeCompare(a));
+  }, [transactions, activeTab]);
 
   // Extract unique months for select dropdown
   const uniqueMonths = useMemo(() => {
@@ -423,10 +441,11 @@ export default function RelevePage() {
       new Set(
         transactions
           .filter(tx => (activeTab === "pro" ? tx.isProAccount : !tx.isProAccount))
+          .filter(tx => selectedYear === "all" || tx.date.startsWith(selectedYear))
           .map(tx => tx.date.substring(0, 7))
       )
     ).sort((a, b) => b.localeCompare(a));
-  }, [transactions, activeTab]);
+  }, [transactions, activeTab, selectedYear]);
 
   // Group by Month (sorted descending, no day sub-grouping for minimalist look)
   const groupedByMonth = useMemo(() => {
@@ -559,35 +578,71 @@ export default function RelevePage() {
 
         {/* Switcher & Search Bar */}
         <div className="flex flex-col xl:flex-row justify-between gap-4">
-          <div className="flex bg-white/60 p-1.5 rounded-2xl border border-[#1E2A33]/5 w-full sm:w-fit gap-1.5 shadow-inner">
-            <button
-              onClick={() => {
-                setActiveTab("pro");
-                setSelectedMonth("all");
-              }}
-              className={`flex items-center justify-center gap-2.5 px-6 py-2.5 rounded-xl text-xs font-bold transition-all flex-1 sm:flex-initial ${
-                activeTab === "pro"
-                  ? "bg-[#1E2A33] text-white shadow-md shadow-[#1E2A33]/20"
-                  : "text-[#1E2A33]/60 hover:text-[#1E2A33]"
-              }`}
-            >
-              <Building2 className="w-4 h-4" />
-              COMPTE PRO
-            </button>
-            <button
-              onClick={() => {
-                setActiveTab("perso");
-                setSelectedMonth("all");
-              }}
-              className={`flex items-center justify-center gap-2.5 px-6 py-2.5 rounded-xl text-xs font-bold transition-all flex-1 sm:flex-initial ${
-                activeTab === "perso"
-                  ? "bg-[#AE7D5C] text-white shadow-md shadow-[#AE7D5C]/20"
-                  : "text-[#1E2A33]/60 hover:text-[#1E2A33]"
-              }`}
-            >
-              <User2 className="w-4 h-4" />
-              COMPTE PERSO
-            </button>
+          <div className="flex flex-col sm:flex-row gap-3 items-center w-full xl:w-auto">
+            {/* Pro/Perso Switcher */}
+            <div className="flex bg-white/60 p-1.5 rounded-2xl border border-[#1E2A33]/5 w-full sm:w-fit gap-1.5 shadow-inner">
+              <button
+                onClick={() => {
+                  setActiveTab("pro");
+                  setSelectedMonth("all");
+                }}
+                className={`flex items-center justify-center gap-2.5 px-6 py-2.5 rounded-xl text-xs font-bold transition-all flex-1 sm:flex-initial ${
+                  activeTab === "pro"
+                    ? "bg-[#1E2A33] text-white shadow-md shadow-[#1E2A33]/20"
+                    : "text-[#1E2A33]/60 hover:text-[#1E2A33]"
+                }`}
+              >
+                <Building2 className="w-4 h-4" />
+                COMPTE PRO
+              </button>
+              <button
+                onClick={() => {
+                  setActiveTab("perso");
+                  setSelectedMonth("all");
+                }}
+                className={`flex items-center justify-center gap-2.5 px-6 py-2.5 rounded-xl text-xs font-bold transition-all flex-1 sm:flex-initial ${
+                  activeTab === "perso"
+                    ? "bg-[#AE7D5C] text-white shadow-md shadow-[#AE7D5C]/20"
+                    : "text-[#1E2A33]/60 hover:text-[#1E2A33]"
+                }`}
+              >
+                <User2 className="w-4 h-4" />
+                COMPTE PERSO
+              </button>
+            </div>
+
+            {/* Year Switcher */}
+            <div className="flex bg-white/60 p-1.5 rounded-2xl border border-[#1E2A33]/5 w-full sm:w-fit gap-1.5 shadow-inner">
+              <button
+                onClick={() => {
+                  setSelectedYear("all");
+                  setSelectedMonth("all");
+                }}
+                className={`flex items-center justify-center px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex-1 sm:flex-initial ${
+                  selectedYear === "all"
+                    ? "bg-[#1E2A33] text-white shadow-md shadow-[#1E2A33]/20"
+                    : "text-[#1E2A33]/60 hover:text-[#1E2A33]"
+                }`}
+              >
+                TOUT
+              </button>
+              {uniqueYears.map(y => (
+                <button
+                  key={y}
+                  onClick={() => {
+                    setSelectedYear(y);
+                    setSelectedMonth("all");
+                  }}
+                  className={`flex items-center justify-center px-6 py-2.5 rounded-xl text-xs font-bold transition-all flex-1 sm:flex-initial ${
+                    selectedYear === y
+                      ? "bg-[#AE7D5C] text-white shadow-md shadow-[#AE7D5C]/20"
+                      : "text-[#1E2A33]/60 hover:text-[#1E2A33]"
+                  }`}
+                >
+                  {y}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Search Input (Loupe) */}
