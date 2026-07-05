@@ -318,6 +318,12 @@ export async function GET() {
         if (!inv.date) return false;
         const invTime = new Date(inv.date).getTime();
         const invAmount = inv.amount || 0;
+        
+        const cleanInv = (inv.provider || '')
+          .split(' - ')[0]
+          .toLowerCase()
+          .trim();
+
         let amountMatch = Math.abs(invAmount - absAmount) < 0.01;
         if (!amountMatch) {
           const ratio = absAmount / invAmount;
@@ -330,7 +336,11 @@ export async function GET() {
             }
           }
         }
-        const closeDate = (txTime >= invTime - 2 * 24 * 60 * 60 * 1000) && (txTime - invTime <= thirtyFiveDaysMs);
+        if (!amountMatch) return false;
+
+        const isAmazon = cleanInv.includes('amazon');
+        const maxDaysMs = isAmazon ? 90 * 24 * 60 * 60 * 1000 : thirtyFiveDaysMs;
+        const closeDate = (txTime >= invTime - 5 * 24 * 60 * 60 * 1000) && (txTime - invTime <= maxDaysMs);
         if (!closeDate) return false;
 
         const cleanTx = (realMerchantName || labelLower)
@@ -338,10 +348,6 @@ export async function GET() {
           .toLowerCase()
           .trim();
         const txWords = cleanTx.split(/[^a-z0-9]/).filter((w: string) => w.length >= 3);
-        const cleanInv = (inv.provider || '')
-          .split(' - ')[0]
-          .toLowerCase()
-          .trim();
 
         let providerMatch = false;
         if (txWords.length > 0) {
@@ -349,7 +355,7 @@ export async function GET() {
         } else {
           providerMatch = cleanInv.includes(cleanTx) || cleanTx.includes(cleanInv);
         }
-        return amountMatch && providerMatch;
+        return providerMatch;
       });
 
       let productDescription = detailsMap[String(tx.id)] || null;
@@ -382,6 +388,18 @@ export async function GET() {
           productDescription = "Licence logicielle ou service en ligne (via Paddle)";
         } else if (merchantLower.includes('krotos')) {
           productDescription = "Krotos Studio Pro (Effets sonores IA)";
+        }
+      }
+
+      // Amazon heuristic product descriptions when no invoice is matched
+      const isAmazon = labelLower.includes('amazon') || labelLower.includes('amzn');
+      if (!productDescription && isAmazon) {
+        if (labelLower.includes('prime')) {
+          productDescription = "Abonnement annuel Amazon Prime (Livraison et Services)";
+        } else if (absAmount < 15.00) {
+          productDescription = "Fournitures de bureau ou petit matériel de rechange";
+        } else {
+          productDescription = "Matériel ou fournitures professionnelles (Facture manquante dans INDY)";
         }
       }
 
@@ -430,10 +448,14 @@ export async function GET() {
       ];
       const isIndigo = labelLower.includes('indigo');
       const isSmallIndigo = isIndigo && absAmount < 10.00;
+      const isAmazonPrime = labelLower.includes('amazon prime');
+      const isSmallAmazon = (labelLower.includes('amazon') || labelLower.includes('amzn')) && absAmount < 15.00;
       const noJustificatif = !isOutflow || 
                              noJustificatifKeywords.some(k => labelLower.includes(k)) || 
                              !isPro || 
-                             isSmallIndigo;
+                             isSmallIndigo ||
+                             isAmazonPrime ||
+                             isSmallAmazon;
 
       const txResult = {
         id: tx.id,
