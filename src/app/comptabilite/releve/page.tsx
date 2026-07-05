@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useMemo, useCallback, useRef } from "react";
+import { useSearchParams } from "next/navigation";
 import {
   CreditCard,
   Bot,
@@ -187,6 +188,23 @@ function cleanDisplayLabel(label: string): string {
 }
 
 export default function RelevePage() {
+  const searchParams = useSearchParams();
+  const tabParam = searchParams.get("tab");
+  const flowParam = searchParams.get("flow");
+
+  useEffect(() => {
+    if (tabParam === "pro" || tabParam === "perso") {
+      setActiveTab(tabParam);
+      setSelectedMonth("all");
+    }
+  }, [tabParam]);
+
+  useEffect(() => {
+    if (flowParam === "inflow" || flowParam === "outflow" || flowParam === "all") {
+      setFilterFlow(flowParam);
+    }
+  }, [flowParam]);
+
   const [loading, setLoading] = useState(true);
   const [isRefetching, setIsRefetching] = useState(false);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -1114,14 +1132,22 @@ export default function RelevePage() {
                                           )}
 
                                           {/* Product details */}
-                                          {typeof tx.productDescription === 'string' && tx.productDescription && !tx.productDescription.startsWith("SUMUP_JSON:") && !tx.productDescription.startsWith("CPAM_JSON:") && (
-                                            <div className="pt-3 border-t border-[#1E2A33]/10 space-y-1">
-                                              <h4 className="font-roboto font-bold text-[10px] uppercase tracking-wider text-[#AE7D5C] font-semibold">Produit / Service acheté</h4>
-                                              <div className="bg-[#AE7D5C]/5 p-2.5 rounded-xl border border-[#AE7D5C]/10 text-[#1E2A33] font-medium leading-relaxed">
-                                                {tx.productDescription}
+                                          {(() => {
+                                            const displayProductDescription = tx.productDescription || (
+                                              (tx.label && (tx.label.toLowerCase().includes("paris halles") || tx.label.toLowerCase().includes("sebastopol")))
+                                                ? "Restaurant"
+                                                : ""
+                                            );
+                                            if (!displayProductDescription || displayProductDescription.startsWith("SUMUP_JSON:") || displayProductDescription.startsWith("CPAM_JSON:")) return null;
+                                            return (
+                                              <div className="pt-3 border-t border-[#1E2A33]/10 space-y-1">
+                                                <h4 className="font-roboto font-bold text-[10px] uppercase tracking-wider text-[#AE7D5C] font-semibold">Produit / Service acheté</h4>
+                                                <div className="bg-[#AE7D5C]/5 p-2.5 rounded-xl border border-[#AE7D5C]/10 text-[#1E2A33] font-medium leading-relaxed">
+                                                  {displayProductDescription}
+                                                </div>
                                               </div>
-                                            </div>
-                                          )}
+                                            );
+                                          })()}
 
                                           {tx.matchedInvoice?.invoiceLines && tx.matchedInvoice.invoiceLines.length > 0 && (
                                             <div className="pt-3 border-t border-[#1E2A33]/10 space-y-2">
