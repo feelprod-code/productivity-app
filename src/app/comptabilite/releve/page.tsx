@@ -678,7 +678,6 @@ export default function RelevePage() {
               SORTIES
             </button>
           </div>
-        </div>
 
         {/* Secondary Filters & Search Bar */}
         <div className="flex flex-row flex-wrap items-center gap-2.5 bg-transparent p-0 border-none shadow-none print:hidden select-none w-full">
@@ -793,6 +792,7 @@ export default function RelevePage() {
             )}
           </div>
         </div>
+      </div>
       </div>
 
       {/* Main daily transactions list */}
