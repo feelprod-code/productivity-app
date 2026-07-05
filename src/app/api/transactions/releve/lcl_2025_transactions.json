@@ -1,0 +1,3518 @@
+[
+  {
+    "id": "lcl-2025-virtual-cpam-2026-06-30-304.28-751",
+    "date": "2026-06-30",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "304.2800000000001"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2026-06-30-32.34-941",
+    "date": "2026-06-30",
+    "label": "VIR SEPA CPAM 941 (Virtuel)",
+    "amount": "32.34"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2026-06-29-108.20-751",
+    "date": "2026-06-29",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "108.2"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2026-06-29-73.52-951",
+    "date": "2026-06-29",
+    "label": "VIR SEPA CPAM 951 (Virtuel)",
+    "amount": "73.52"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2026-06-29-32.25-919",
+    "date": "2026-06-29",
+    "label": "VIR SEPA CPAM 919 (Virtuel)",
+    "amount": "32.25"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2026-06-26-108.20-111",
+    "date": "2026-06-26",
+    "label": "VIR SEPA CPAM 111 (Virtuel)",
+    "amount": "108.2"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2026-06-26-319.09-751",
+    "date": "2026-06-26",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "319.09"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2026-06-26-53.70-919",
+    "date": "2026-06-26",
+    "label": "VIR SEPA CPAM 919 (Virtuel)",
+    "amount": "53.7"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2026-06-25-78.60-751",
+    "date": "2026-06-25",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "78.6"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2026-06-23-816.67-751",
+    "date": "2026-06-23",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "816.67"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2026-06-23-57.31-941",
+    "date": "2026-06-23",
+    "label": "VIR SEPA CPAM 941 (Virtuel)",
+    "amount": "57.309999999999995"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2026-06-22-206.06-751",
+    "date": "2026-06-22",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "206.05999999999997"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2026-06-19-604.07-751",
+    "date": "2026-06-19",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "604.0699999999999"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2026-06-19-123.76-931",
+    "date": "2026-06-19",
+    "label": "VIR SEPA CPAM 931 (Virtuel)",
+    "amount": "123.76"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2026-06-19-57.19-919",
+    "date": "2026-06-19",
+    "label": "VIR SEPA CPAM 919 (Virtuel)",
+    "amount": "57.19"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2026-06-18-407.97-751",
+    "date": "2026-06-18",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "407.96999999999997"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2026-06-16-64.92-111",
+    "date": "2026-06-16",
+    "label": "VIR SEPA CPAM 111 (Virtuel)",
+    "amount": "64.92"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2026-06-16-150.73-751",
+    "date": "2026-06-16",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "150.73"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2026-06-16-53.13-941",
+    "date": "2026-06-16",
+    "label": "VIR SEPA CPAM 941 (Virtuel)",
+    "amount": "53.13"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2026-06-16-46.41-919",
+    "date": "2026-06-16",
+    "label": "VIR SEPA CPAM 919 (Virtuel)",
+    "amount": "46.41"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2026-06-15-78.60-751",
+    "date": "2026-06-15",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "78.6"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2026-06-12-104.51-751",
+    "date": "2026-06-12",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "104.51"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2026-06-12-164.69-919",
+    "date": "2026-06-12",
+    "label": "VIR SEPA CPAM 919 (Virtuel)",
+    "amount": "164.69"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2026-06-11-155.50-111",
+    "date": "2026-06-11",
+    "label": "VIR SEPA CPAM 111 (Virtuel)",
+    "amount": "155.5"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2026-06-11-85.53-931",
+    "date": "2026-06-11",
+    "label": "VIR SEPA CPAM 931 (Virtuel)",
+    "amount": "85.53"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2026-06-11-61.23-951",
+    "date": "2026-06-11",
+    "label": "VIR SEPA CPAM 951 (Virtuel)",
+    "amount": "61.23"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2026-06-09-102.50-751",
+    "date": "2026-06-09",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "102.5"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2026-06-08-279.27-751",
+    "date": "2026-06-08",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "279.27"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2026-06-08-117.92-919",
+    "date": "2026-06-08",
+    "label": "VIR SEPA CPAM 919 (Virtuel)",
+    "amount": "117.92"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2026-06-05-494.31-751",
+    "date": "2026-06-05",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "494.31"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2026-06-04-271.86-751",
+    "date": "2026-06-04",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "271.86"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2026-06-02-77.93-751",
+    "date": "2026-06-02",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "77.92999999999999"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2026-06-02-111.21-941",
+    "date": "2026-06-02",
+    "label": "VIR SEPA CPAM 941 (Virtuel)",
+    "amount": "111.21000000000001"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2026-06-02-96.48-919",
+    "date": "2026-06-02",
+    "label": "VIR SEPA CPAM 919 (Virtuel)",
+    "amount": "96.48"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2026-06-01-145.11-751",
+    "date": "2026-06-01",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "145.10999999999999"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-12-31-1020.46-751",
+    "date": "2025-12-31",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "1020.4599999999998"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-12-31-455.16-921",
+    "date": "2025-12-31",
+    "label": "VIR SEPA CPAM 921 (Virtuel)",
+    "amount": "455.15999999999997"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-12-19-116.06-931",
+    "date": "2025-12-19",
+    "label": "VIR SEPA CPAM 931 (Virtuel)",
+    "amount": "116.06"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-12-18-247.61-751",
+    "date": "2025-12-18",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "247.61000000000004"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-12-16-39.73-751",
+    "date": "2025-12-16",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "39.730000000000004"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-12-16-240.63-931",
+    "date": "2025-12-16",
+    "label": "VIR SEPA CPAM 931 (Virtuel)",
+    "amount": "240.63000000000002"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-12-15-372.46-751",
+    "date": "2025-12-15",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "372.46"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-12-15-113.22-941",
+    "date": "2025-12-15",
+    "label": "VIR SEPA CPAM 941 (Virtuel)",
+    "amount": "113.22000000000001"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-12-15-265.79-919",
+    "date": "2025-12-15",
+    "label": "VIR SEPA CPAM 919 (Virtuel)",
+    "amount": "265.79"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-12-12-42.44-751",
+    "date": "2025-12-12",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "42.44"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-12-12-41.94-911",
+    "date": "2025-12-12",
+    "label": "VIR SEPA CPAM 911 (Virtuel)",
+    "amount": "41.94"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-12-12-89.67-921",
+    "date": "2025-12-12",
+    "label": "VIR SEPA CPAM 921 (Virtuel)",
+    "amount": "89.67"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-12-11-66.32-751",
+    "date": "2025-12-11",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "66.32"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-12-10-100.64-931",
+    "date": "2025-12-10",
+    "label": "VIR SEPA CPAM 931 (Virtuel)",
+    "amount": "100.64"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-12-10-35.85-919",
+    "date": "2025-12-10",
+    "label": "VIR SEPA CPAM 919 (Virtuel)",
+    "amount": "35.85"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-12-09-860.08-751",
+    "date": "2025-12-09",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "860.0799999999999"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-12-09-82.85-921",
+    "date": "2025-12-09",
+    "label": "VIR SEPA CPAM 921 (Virtuel)",
+    "amount": "82.85"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-12-08-119.28-751",
+    "date": "2025-12-08",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "119.28"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-12-08-83.88-911",
+    "date": "2025-12-08",
+    "label": "VIR SEPA CPAM 911 (Virtuel)",
+    "amount": "83.88"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-12-05-56.89-673",
+    "date": "2025-12-05",
+    "label": "VIR SEPA CPAM 673 (Virtuel)",
+    "amount": "56.89"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-12-05-338.69-751",
+    "date": "2025-12-05",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "338.69"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-12-04-59.01-673",
+    "date": "2025-12-04",
+    "label": "VIR SEPA CPAM 673 (Virtuel)",
+    "amount": "59.01"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-12-04-104.06-751",
+    "date": "2025-12-04",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "104.06"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-12-03-653.64-751",
+    "date": "2025-12-03",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "653.6399999999999"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-12-03-103.82-921",
+    "date": "2025-12-03",
+    "label": "VIR SEPA CPAM 921 (Virtuel)",
+    "amount": "103.82"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-12-03-56.81-931",
+    "date": "2025-12-03",
+    "label": "VIR SEPA CPAM 931 (Virtuel)",
+    "amount": "56.809999999999995"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-12-02-68.96-751",
+    "date": "2025-12-02",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "68.96000000000001"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-12-02-41.94-911",
+    "date": "2025-12-02",
+    "label": "VIR SEPA CPAM 911 (Virtuel)",
+    "amount": "41.94"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-12-02-84.84-941",
+    "date": "2025-12-02",
+    "label": "VIR SEPA CPAM 941 (Virtuel)",
+    "amount": "84.84"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-12-02-59.75-919",
+    "date": "2025-12-02",
+    "label": "VIR SEPA CPAM 919 (Virtuel)",
+    "amount": "59.75"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-11-28-113.23-751",
+    "date": "2025-11-28",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "113.22999999999999"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-11-27-406.87-751",
+    "date": "2025-11-27",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "406.86999999999995"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-11-27-41.94-911",
+    "date": "2025-11-27",
+    "label": "VIR SEPA CPAM 911 (Virtuel)",
+    "amount": "41.94"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-11-27-108.81-931",
+    "date": "2025-11-27",
+    "label": "VIR SEPA CPAM 931 (Virtuel)",
+    "amount": "108.80999999999999"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-11-26-19.90-751",
+    "date": "2025-11-26",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "19.9"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-11-25-38.63-111",
+    "date": "2025-11-25",
+    "label": "VIR SEPA CPAM 111 (Virtuel)",
+    "amount": "38.629999999999995"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-11-25-297.74-751",
+    "date": "2025-11-25",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "297.74"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-11-25-44.62-911",
+    "date": "2025-11-25",
+    "label": "VIR SEPA CPAM 911 (Virtuel)",
+    "amount": "44.62"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-11-25-82.85-921",
+    "date": "2025-11-25",
+    "label": "VIR SEPA CPAM 921 (Virtuel)",
+    "amount": "82.85"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-11-25-47.80-919",
+    "date": "2025-11-25",
+    "label": "VIR SEPA CPAM 919 (Virtuel)",
+    "amount": "47.8"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-11-24-77.26-111",
+    "date": "2025-11-24",
+    "label": "VIR SEPA CPAM 111 (Virtuel)",
+    "amount": "77.25999999999999"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-11-24-1010.52-751",
+    "date": "2025-11-24",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "1010.5200000000002"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-11-21-187.66-751",
+    "date": "2025-11-21",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "187.66"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-11-21-82.85-921",
+    "date": "2025-11-21",
+    "label": "VIR SEPA CPAM 921 (Virtuel)",
+    "amount": "82.85"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-11-21-62.90-931",
+    "date": "2025-11-21",
+    "label": "VIR SEPA CPAM 931 (Virtuel)",
+    "amount": "62.9"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-11-21-35.85-919",
+    "date": "2025-11-21",
+    "label": "VIR SEPA CPAM 919 (Virtuel)",
+    "amount": "35.85"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-11-20-50.32-751",
+    "date": "2025-11-20",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "50.32"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-11-19-132.71-751",
+    "date": "2025-11-19",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "132.71"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-11-19-63.94-941",
+    "date": "2025-11-19",
+    "label": "VIR SEPA CPAM 941 (Virtuel)",
+    "amount": "63.94"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-11-19-169.54-919",
+    "date": "2025-11-19",
+    "label": "VIR SEPA CPAM 919 (Virtuel)",
+    "amount": "169.54"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-11-18-62.28-111",
+    "date": "2025-11-18",
+    "label": "VIR SEPA CPAM 111 (Virtuel)",
+    "amount": "62.28"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-11-18-204.88-751",
+    "date": "2025-11-18",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "204.88"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-11-18-82.85-921",
+    "date": "2025-11-18",
+    "label": "VIR SEPA CPAM 921 (Virtuel)",
+    "amount": "82.85"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-11-18-85.16-931",
+    "date": "2025-11-18",
+    "label": "VIR SEPA CPAM 931 (Virtuel)",
+    "amount": "85.16"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-11-17-175.46-111",
+    "date": "2025-11-17",
+    "label": "VIR SEPA CPAM 111 (Virtuel)",
+    "amount": "175.46"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-11-17-385.24-751",
+    "date": "2025-11-17",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "385.24"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-11-17-42.42-941",
+    "date": "2025-11-17",
+    "label": "VIR SEPA CPAM 941 (Virtuel)",
+    "amount": "42.42"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-11-14-37.74-751",
+    "date": "2025-11-14",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "37.74"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-11-14-82.85-921",
+    "date": "2025-11-14",
+    "label": "VIR SEPA CPAM 921 (Virtuel)",
+    "amount": "82.85"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-11-13-94.92-751",
+    "date": "2025-11-13",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "94.91999999999999"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-11-12-357.27-751",
+    "date": "2025-11-12",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "357.27000000000004"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-11-12-410.74-931",
+    "date": "2025-11-12",
+    "label": "VIR SEPA CPAM 931 (Virtuel)",
+    "amount": "410.74"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-11-10-577.62-751",
+    "date": "2025-11-10",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "577.62"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-11-10-103.82-921",
+    "date": "2025-11-10",
+    "label": "VIR SEPA CPAM 921 (Virtuel)",
+    "amount": "103.82"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-11-10-42.42-941",
+    "date": "2025-11-10",
+    "label": "VIR SEPA CPAM 941 (Virtuel)",
+    "amount": "42.42"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-11-07-140.16-751",
+    "date": "2025-11-07",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "140.16"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-11-06-77.86-111",
+    "date": "2025-11-06",
+    "label": "VIR SEPA CPAM 111 (Virtuel)",
+    "amount": "77.86"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-11-06-19.90-751",
+    "date": "2025-11-06",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "19.9"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-11-06-82.85-921",
+    "date": "2025-11-06",
+    "label": "VIR SEPA CPAM 921 (Virtuel)",
+    "amount": "82.85"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-11-05-278.32-751",
+    "date": "2025-11-05",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "278.31999999999994"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-11-05-114.83-931",
+    "date": "2025-11-05",
+    "label": "VIR SEPA CPAM 931 (Virtuel)",
+    "amount": "114.83"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-11-04-75.18-111",
+    "date": "2025-11-04",
+    "label": "VIR SEPA CPAM 111 (Virtuel)",
+    "amount": "75.18"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-11-04-199.91-751",
+    "date": "2025-11-04",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "199.91"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-11-04-82.85-921",
+    "date": "2025-11-04",
+    "label": "VIR SEPA CPAM 921 (Virtuel)",
+    "amount": "82.85"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-11-04-42.42-941",
+    "date": "2025-11-04",
+    "label": "VIR SEPA CPAM 941 (Virtuel)",
+    "amount": "42.42"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-11-03-518.17-751",
+    "date": "2025-11-03",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "518.17"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-10-31-34.15-941",
+    "date": "2025-10-31",
+    "label": "VIR SEPA CPAM 941 (Virtuel)",
+    "amount": "34.15"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-10-30-75.18-111",
+    "date": "2025-10-30",
+    "label": "VIR SEPA CPAM 111 (Virtuel)",
+    "amount": "75.18"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-10-30-344.89-751",
+    "date": "2025-10-30",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "344.89000000000004"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-10-30-144.73-921",
+    "date": "2025-10-30",
+    "label": "VIR SEPA CPAM 921 (Virtuel)",
+    "amount": "144.73000000000002"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-10-28-284.10-111",
+    "date": "2025-10-28",
+    "label": "VIR SEPA CPAM 111 (Virtuel)",
+    "amount": "284.1"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-10-28-168.38-921",
+    "date": "2025-10-28",
+    "label": "VIR SEPA CPAM 921 (Virtuel)",
+    "amount": "168.38"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-10-27-139.22-751",
+    "date": "2025-10-27",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "139.22"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-10-27-42.42-941",
+    "date": "2025-10-27",
+    "label": "VIR SEPA CPAM 941 (Virtuel)",
+    "amount": "42.42"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-10-24-29.85-751",
+    "date": "2025-10-24",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "29.85"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-10-23-19.92-751",
+    "date": "2025-10-23",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "19.92"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-10-22-749.31-751",
+    "date": "2025-10-22",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "749.31"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-10-21-231.45-751",
+    "date": "2025-10-21",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "231.45000000000002"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-10-21-191.41-921",
+    "date": "2025-10-21",
+    "label": "VIR SEPA CPAM 921 (Virtuel)",
+    "amount": "191.41"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-10-20-149.98-751",
+    "date": "2025-10-20",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "149.98"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-10-20-42.42-941",
+    "date": "2025-10-20",
+    "label": "VIR SEPA CPAM 941 (Virtuel)",
+    "amount": "42.42"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-10-17-43.80-751",
+    "date": "2025-10-17",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "43.8"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-10-16-133.59-751",
+    "date": "2025-10-16",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "133.59"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-10-16-88.06-931",
+    "date": "2025-10-16",
+    "label": "VIR SEPA CPAM 931 (Virtuel)",
+    "amount": "88.06"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-10-15-83.65-751",
+    "date": "2025-10-15",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "83.65"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-10-14-226.57-751",
+    "date": "2025-10-14",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "226.57"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-10-13-734.43-751",
+    "date": "2025-10-13",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "734.4300000000001"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-10-13-42.42-941",
+    "date": "2025-10-13",
+    "label": "VIR SEPA CPAM 941 (Virtuel)",
+    "amount": "42.42"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-10-10-112.77-111",
+    "date": "2025-10-10",
+    "label": "VIR SEPA CPAM 111 (Virtuel)",
+    "amount": "112.77"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-10-10-133.71-751",
+    "date": "2025-10-10",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "133.71"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-10-10-39.92-941",
+    "date": "2025-10-10",
+    "label": "VIR SEPA CPAM 941 (Virtuel)",
+    "amount": "39.92"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-10-09-77.26-751",
+    "date": "2025-10-09",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "77.25999999999999"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-10-08-33.24-673",
+    "date": "2025-10-08",
+    "label": "VIR SEPA CPAM 673 (Virtuel)",
+    "amount": "33.24"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-10-08-29.85-941",
+    "date": "2025-10-08",
+    "label": "VIR SEPA CPAM 941 (Virtuel)",
+    "amount": "29.85"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-10-07-281.59-941",
+    "date": "2025-10-07",
+    "label": "VIR SEPA CPAM 941 (Virtuel)",
+    "amount": "281.59"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-10-06-63.94-751",
+    "date": "2025-10-06",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "63.94"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-10-03-125.80-751",
+    "date": "2025-10-03",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "125.8"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-10-03-125.82-921",
+    "date": "2025-10-03",
+    "label": "VIR SEPA CPAM 921 (Virtuel)",
+    "amount": "125.82"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-10-02-129.39-111",
+    "date": "2025-10-02",
+    "label": "VIR SEPA CPAM 111 (Virtuel)",
+    "amount": "129.39"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-10-02-317.71-751",
+    "date": "2025-10-02",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "317.71"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-10-01-682.70-751",
+    "date": "2025-10-01",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "682.6999999999999"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-09-30-879.68-751",
+    "date": "2025-09-30",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "879.6800000000002"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-09-30-204.83-931",
+    "date": "2025-09-30",
+    "label": "VIR SEPA CPAM 931 (Virtuel)",
+    "amount": "204.82999999999998"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-09-30-179.10-941",
+    "date": "2025-09-30",
+    "label": "VIR SEPA CPAM 941 (Virtuel)",
+    "amount": "179.1"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-08-12-89.37-751",
+    "date": "2025-08-12",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "89.37"
+  },
+  {
+    "id": "lcl-2025-2025-07-15-306.00-5-1",
+    "date": "2025-07-15",
+    "label": "VIR.PERMANENT RAFENNE COMPTAB",
+    "amount": "306"
+  },
+  {
+    "id": "lcl-2025-2025-07-14-856.04-3-1",
+    "date": "2025-07-14",
+    "label": "PRLV SEPA Autoroutes du Sud de la France LF015756390044098865 062025",
+    "amount": "856.04"
+  },
+  {
+    "id": "lcl-2025-2025-07-14-15.95-4-1",
+    "date": "2025-07-14",
+    "label": "PRLV SEPA URSSAF CENTRE DE GESTION PAM UR 109000006400211896 JUIL25325316421",
+    "amount": "15.95"
+  },
+  {
+    "id": "lcl-2025-2025-07-13-80.00-2-1",
+    "date": "2025-07-13",
+    "label": "PRLV SEPA MACSF-ASSU-",
+    "amount": "80"
+  },
+  {
+    "id": "lcl-2025-2025-07-11-29.49-0-1",
+    "date": "2025-07-11",
+    "label": "PRLV SEPA PayPal Europe S.a.r.l. et Cie S.C.A 1043502614437/PAYPAL",
+    "amount": "29.49"
+  },
+  {
+    "id": "lcl-2025-2025-07-11-14.99-1-1",
+    "date": "2025-07-11",
+    "label": "PRLV SEPA MACSF-ASSU-",
+    "amount": "-14.99"
+  },
+  {
+    "id": "lcl-2025-2025-07-04-5.99-2-2",
+    "date": "2025-07-04",
+    "label": "VIR SEPA ADOHA Virement-100-ADOHA/AP2500136",
+    "amount": "5.99"
+  },
+  {
+    "id": "lcl-2025-2025-07-04-48.99-3-2",
+    "date": "2025-07-04",
+    "label": "VIR SEPA ADOHA Virement-100-ADOHA/AP2500136",
+    "amount": "48.99"
+  },
+  {
+    "id": "lcl-2025-2025-07-04-6.99-4-2",
+    "date": "2025-07-04",
+    "label": "PRLV SEPA C.A.R.P.I.M.K.O M6214083 AC R M-IBAN",
+    "amount": "6.99"
+  },
+  {
+    "id": "lcl-2025-2025-07-03-699.91-1-2",
+    "date": "2025-07-03",
+    "label": "PRLV SEPA MUTUELLE MIEUX ETRE Cotisations MULTI 7951P",
+    "amount": "699.91"
+  },
+  {
+    "id": "lcl-2025-2025-07-02-3.00-0-1",
+    "date": "2025-07-02",
+    "label": "PRLV SEPA GOCARDLESS VIA SANA - PHILIPPE GUILLAUME (F20250612 918)",
+    "amount": "-3"
+  },
+  {
+    "id": "lcl-2025-2025-07-02-1897.00-0-2",
+    "date": "2025-07-02",
+    "label": "PRLV SEPA PayPal Europe S.a.r.l. et Cie S.C.A 1043341443189/PAYPAL",
+    "amount": "1897"
+  },
+  {
+    "id": "lcl-2025-2025-07-01-395.00-1-1",
+    "date": "2025-07-01",
+    "label": "PRLV SEPA PayPal Europe S.a.r.l. et Cie S.C.A 1043274218914/PAYPAL",
+    "amount": "395"
+  },
+  {
+    "id": "lcl-2025-2025-07-01-428.98-2-1",
+    "date": "2025-07-01",
+    "label": "PRLV SEPA Bouygues Telecom 01xxxxx110",
+    "amount": "428.98"
+  },
+  {
+    "id": "lcl-2025-2025-07-01-29.50-3-1",
+    "date": "2025-07-01",
+    "label": "PRLV SEPA Bouygues Telecom 07xxxxx953",
+    "amount": "-29.5"
+  },
+  {
+    "id": "lcl-2025-2025-07-01-1300.00-4-1",
+    "date": "2025-07-01",
+    "label": "PRLV SEPA CA CONSUMER FINANCE CREANCIER INITIAL:SOFINCO FNAC",
+    "amount": "1300"
+  },
+  {
+    "id": "lcl-2025-2025-07-01-33.36-5-1",
+    "date": "2025-07-01",
+    "label": "PRLV SEPA Bouygues Telecom 06xxxxx802",
+    "amount": "-33.36"
+  },
+  {
+    "id": "lcl-2025-2025-07-01-5.20-6-1",
+    "date": "2025-07-01",
+    "label": "PRLV SEPA PayPal (Europe) S.a r.l. et Cie, S.C.A. 1043335490380 PAYPAL",
+    "amount": "5.2"
+  },
+  {
+    "id": "lcl-2025-2025-07-01-7.43-7-1",
+    "date": "2025-07-01",
+    "label": "PRLV SEPA GC RE DOCTOLIB FRIN25-00797546",
+    "amount": "7.43"
+  },
+  {
+    "id": "lcl-2025-2025-07-01-13.99-8-1",
+    "date": "2025-07-01",
+    "label": "PRLV SEPA PayPal Europe S.a.r.l. et Cie S.C.A 1043355956615/PAYPAL",
+    "amount": "13.99"
+  },
+  {
+    "id": "lcl-2025-2025-06-17-29.99-5-1",
+    "date": "2025-06-17",
+    "label": "VIR SEPA URSSAF PAYS DE LOIRE CC REMBT URSSAF 1096400211896",
+    "amount": "29.99"
+  },
+  {
+    "id": "lcl-2025-2025-06-16-306.00-3-1",
+    "date": "2025-06-16",
+    "label": "PRLV SEPA PayPal Europe S.a.r.l. et Cie S.C.A 1042964206107/PAYPAL",
+    "amount": "306"
+  },
+  {
+    "id": "lcl-2025-2025-06-16-46.38-4-1",
+    "date": "2025-06-16",
+    "label": "PRLV SEPA URSSAF CENTRE DE GESTION PAM UR 109000006400211896 JUIN25325236421",
+    "amount": "46.38"
+  },
+  {
+    "id": "lcl-2025-2025-06-13-80.00-2-1",
+    "date": "2025-06-13",
+    "label": "PRLV SEPA MACSF-ASSU-",
+    "amount": "80"
+  },
+  {
+    "id": "lcl-2025-2025-06-12-856.04-0-1",
+    "date": "2025-06-12",
+    "label": "PRLV SEPA MACSF-ASSU-",
+    "amount": "856.04"
+  },
+  {
+    "id": "lcl-2025-2025-06-12-14.95-1-1",
+    "date": "2025-06-12",
+    "label": "PRLV SEPA PayPal Europe S.a.r.l. et Cie S.C.A 1042881457383/PAYPAL",
+    "amount": "14.95"
+  },
+  {
+    "id": "lcl-2025-2025-06-06-119.00-5-2",
+    "date": "2025-06-06",
+    "label": "PRLV SEPA C.A.R.P.I.M.K.O M6214083 AC R M-IBAN",
+    "amount": "119"
+  },
+  {
+    "id": "lcl-2025-2025-06-05-126.00-2-2",
+    "date": "2025-06-05",
+    "label": "PRLV SEPA PayPal Europe S.a.r.l. et Cie S.C.A 1042695449456/PAYPAL",
+    "amount": "126"
+  },
+  {
+    "id": "lcl-2025-2025-06-05-48.99-3-2",
+    "date": "2025-06-05",
+    "label": "PRLV SEPA MUTUELLE MIEUX ETRE Cotisations MULTI 7951P",
+    "amount": "48.99"
+  },
+  {
+    "id": "lcl-2025-2025-06-05-6.99-4-2",
+    "date": "2025-06-05",
+    "label": "VIR SEPA KHANOUCHE perso",
+    "amount": "6.99"
+  },
+  {
+    "id": "lcl-2025-2025-06-04-50.00-0-2",
+    "date": "2025-06-04",
+    "label": "PRLV SEPA PayPal Europe S.a.r.l. et Cie S.C.A 1042721921887/PAYPAL",
+    "amount": "50"
+  },
+  {
+    "id": "lcl-2025-2025-06-04-5.99-1-2",
+    "date": "2025-06-04",
+    "label": "PRLV SEPA Bouygues Telecom 06xxxxx802",
+    "amount": "5.99"
+  },
+  {
+    "id": "lcl-2025-2025-06-03-3.00-0-1",
+    "date": "2025-06-03",
+    "label": "VIR SEPA SOGEC GESTION SOGEC N-0041414601 GB70 Jusqu'a 50E rembou rses sur vos frais de resili",
+    "amount": "-3"
+  },
+  {
+    "id": "lcl-2025-2025-06-03-52.99-7-1",
+    "date": "2025-06-03",
+    "label": "VIR SEPA ADOHA Virement-98-ADOHA/AP2500136",
+    "amount": "52.99"
+  },
+  {
+    "id": "lcl-2025-2025-06-03-2.99-8-1",
+    "date": "2025-06-03",
+    "label": "VIR SEPA ADOHA Virement-98-ADOHA/AP2500136",
+    "amount": "2.99"
+  },
+  {
+    "id": "lcl-2025-2025-06-02-29.50-2-1",
+    "date": "2025-06-02",
+    "label": "PRLV SEPA CA CONSUMER FINANCE CREANCIER INITIAL:SOFINCO FNAC",
+    "amount": "-29.5"
+  },
+  {
+    "id": "lcl-2025-2025-06-02-7.43-3-1",
+    "date": "2025-06-02",
+    "label": "PRLV SEPA Bouygues Telecom 01xxxxx110",
+    "amount": "7.43"
+  },
+  {
+    "id": "lcl-2025-2025-06-02-5.20-4-1",
+    "date": "2025-06-02",
+    "label": "PRLV SEPA Bouygues Telecom 07xxxxx953",
+    "amount": "5.2"
+  },
+  {
+    "id": "lcl-2025-2025-06-02-17.98-5-1",
+    "date": "2025-06-02",
+    "label": "PRLV SEPA GC RE DOCTOLIB FRIN25-00631463",
+    "amount": "17.98"
+  },
+  {
+    "id": "lcl-2025-2025-06-02-428.98-6-1",
+    "date": "2025-06-02",
+    "label": "PRLV SEPA PayPal Europe S.a.r.l. et Cie S.C.A 1042687972629/PAYPAL",
+    "amount": "428.98"
+  },
+  {
+    "id": "lcl-2025-2025-06-01-1300.00-1-1",
+    "date": "2025-06-01",
+    "label": "PRLV SEPA PayPal Europe S.a.r.l. et Cie S.C.A 1042622763725/PAYPAL",
+    "amount": "1300"
+  },
+  {
+    "id": "lcl-2025-2025-05-28-210.00-5-1",
+    "date": "2025-05-28",
+    "label": "PRLV SEPA GOCARDLESS VIA SANA - PHILIPPE GUILLAUME (F20250512 220)",
+    "amount": "210"
+  },
+  {
+    "id": "lcl-2025-2025-05-27-250.00-2-1",
+    "date": "2025-05-27",
+    "label": "VIR SEPA PayPal Europe S.a.r.l. e YYW1042479263947/PAYPAL",
+    "amount": "250"
+  },
+  {
+    "id": "lcl-2025-2025-05-27-8.23-3-1",
+    "date": "2025-05-27",
+    "label": "VIR SEPA MOREL PIETREMENT LOYER MME MOREL",
+    "amount": "8.23"
+  },
+  {
+    "id": "lcl-2025-2025-05-27-8.23-4-1",
+    "date": "2025-05-27",
+    "label": "PRLV SEPA PayPal Europe S.a.r.l. et Cie S.C.A 1042503217378/PAYPAL",
+    "amount": "8.23"
+  },
+  {
+    "id": "lcl-2025-2025-05-24-680.09-1-1",
+    "date": "2025-05-24",
+    "label": "VIR SEPA PayPal Europe S.a.r.l. e YYW1042474480971/PAYPAL",
+    "amount": "-680.09"
+  },
+  {
+    "id": "lcl-2025-2025-05-23-3.99-0-1",
+    "date": "2025-05-23",
+    "label": "VIR SEPA PayPal Europe S.a.r.l. e YYW1042474480154/PAYPAL",
+    "amount": "3.99"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-05-19-449.45-931",
+    "date": "2025-05-19",
+    "label": "VIR SEPA CPAM 931 (Virtuel)",
+    "amount": "449.44999999999993"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-05-15-34.15-941",
+    "date": "2025-05-15",
+    "label": "VIR SEPA CPAM 941 (Virtuel)",
+    "amount": "34.15"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-05-13-942.16-751",
+    "date": "2025-05-13",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "942.1600000000001"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-05-12-205.44-751",
+    "date": "2025-05-12",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "205.44000000000003"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-05-09-39.68-751",
+    "date": "2025-05-09",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "39.68"
+  },
+  {
+    "id": "lcl-2025-2025-05-08-335.62-7-3",
+    "date": "2025-05-08",
+    "label": "VIR SEPA CPAM 75 PRESTATIONS 0000007570683091272201250509",
+    "amount": "335.62"
+  },
+  {
+    "id": "lcl-2025-2025-05-08-18.21-8-3",
+    "date": "2025-05-08",
+    "label": "VIR SEPA VIAMEDIS TP-20250505-VIREMENT 2340812 -757068309 -VM00100000-0E88-",
+    "amount": "18.21"
+  },
+  {
+    "id": "lcl-2025-2025-05-07-274.77-2-3",
+    "date": "2025-05-07",
+    "label": "VIR SEPA MUTUELLE GENERALE EDUCAT TP-20250505-094OWNP58667476 -757068309-009 1007941-0E88-",
+    "amount": "274.77"
+  },
+  {
+    "id": "lcl-2025-2025-05-07-59.70-3-3",
+    "date": "2025-05-07",
+    "label": "VIR SEPA BPCE MUTUELLE TP-20250507-BPCE Mutuelle -757068309 -BPCE MUT -0E88-",
+    "amount": "59.7"
+  },
+  {
+    "id": "lcl-2025-2025-05-07-4.99-4-3",
+    "date": "2025-05-07",
+    "label": "PRLV SEPA MUTUELLE MIEUX ETRE Cotisations MULTI 7951P",
+    "amount": "4.99"
+  },
+  {
+    "id": "lcl-2025-2025-05-07-0.99-5-3",
+    "date": "2025-05-07",
+    "label": "PRLV SEPA C.A.R.P.I.M.K.O M6214083 AC R M-IBAN",
+    "amount": "0.99"
+  },
+  {
+    "id": "lcl-2025-2025-05-07-493.56-6-3",
+    "date": "2025-05-07",
+    "label": "PRLV SEPA ADOHA PRLV-ADOHA-CONTRAT-PRE400615-PREVOYANCE",
+    "amount": "493.56"
+  },
+  {
+    "id": "lcl-2025-2025-05-06-78.97-6-2",
+    "date": "2025-05-06",
+    "label": "PRLV SEPA PayPal Europe S.a.r.l. et Cie S.C.A 1042025560917/PAYPAL",
+    "amount": "78.97"
+  },
+  {
+    "id": "lcl-2025-2025-05-06-113.36-7-2",
+    "date": "2025-05-06",
+    "label": "PRLV SEPA PayPal Europe S.a.r.l. et Cie S.C.A 1042040994338/PAYPAL",
+    "amount": "113.36"
+  },
+  {
+    "id": "lcl-2025-2025-05-06-470.00-8-2",
+    "date": "2025-05-06",
+    "label": "PRLV SEPA GC RE DOCTOLIB FRIN25-00492848",
+    "amount": "470"
+  },
+  {
+    "id": "lcl-2025-2025-05-06-49.80-0-3",
+    "date": "2025-05-06",
+    "label": "PRLV SEPA Bouygues Telecom 06xxxxx802",
+    "amount": "49.8"
+  },
+  {
+    "id": "lcl-2025-2025-05-06-694.43-1-3",
+    "date": "2025-05-06",
+    "label": "VIR SEPA VIAMEDIS TP-20250502-VIREMENT 2290693 -757068309 -VM00100000-0E88-",
+    "amount": "694.43"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-05-06-59.70-751",
+    "date": "2025-05-06",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "59.7"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-05-06-274.77-941",
+    "date": "2025-05-06",
+    "label": "VIR SEPA CPAM 941 (Virtuel)",
+    "amount": "274.77"
+  },
+  {
+    "id": "lcl-2025-2025-05-05-3.00-1-1",
+    "date": "2025-05-05",
+    "label": "PRLV SEPA PayPal Europe S.a.r.l. et Cie S.C.A 1041881500858/PAYPAL",
+    "amount": "-3"
+  },
+  {
+    "id": "lcl-2025-2025-05-05-7.99-0-2",
+    "date": "2025-05-05",
+    "label": "VIR SEPA CPAM 94 0000007570683091225941250505",
+    "amount": "7.99"
+  },
+  {
+    "id": "lcl-2025-2025-05-05-2.99-1-2",
+    "date": "2025-05-05",
+    "label": "VIR SEPA CPAM 75 PRESTATIONS 0000007570683091222201250505",
+    "amount": "2.99"
+  },
+  {
+    "id": "lcl-2025-2025-05-05-325.75-2-2",
+    "date": "2025-05-05",
+    "label": "VIR SEPA CPAM 94 0000007570683091225941250506",
+    "amount": "325.75"
+  },
+  {
+    "id": "lcl-2025-2025-05-05-83.44-3-2",
+    "date": "2025-05-05",
+    "label": "VIR SEPA CPAM 75 PRESTATIONS 0000007570683091252201250506",
+    "amount": "83.44"
+  },
+  {
+    "id": "lcl-2025-2025-05-05-126.00-4-2",
+    "date": "2025-05-05",
+    "label": "PRLV SEPA PayPal Europe S.a.r.l. et Cie S.C.A 1042010036899/PAYPAL",
+    "amount": "126"
+  },
+  {
+    "id": "lcl-2025-2025-05-05-1904.80-5-2",
+    "date": "2025-05-05",
+    "label": "PRLV SEPA PayPal Europe S.a.r.l. et Cie S.C.A 1042018791391/PAYPAL",
+    "amount": "1904.8"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-05-05-694.43-751",
+    "date": "2025-05-05",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "694.4300000000001"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-05-05-49.80-941",
+    "date": "2025-05-05",
+    "label": "VIR SEPA CPAM 941 (Virtuel)",
+    "amount": "49.8"
+  },
+  {
+    "id": "lcl-2025-2025-05-02-428.98-3-1",
+    "date": "2025-05-02",
+    "label": "PRLV SEPA CA CONSUMER FINANCE CREANCIER INITIAL:SOFINCO FNAC",
+    "amount": "428.98"
+  },
+  {
+    "id": "lcl-2025-2025-05-02-339.22-4-1",
+    "date": "2025-05-02",
+    "label": "PRLV SEPA GOCARDLESS VIA SANA - PHILIPPE GUILLAUME (F20250411 847)",
+    "amount": "339.22"
+  },
+  {
+    "id": "lcl-2025-2025-05-02-29.50-5-1",
+    "date": "2025-05-02",
+    "label": "VIR SEPA CETIP CETIP TP-20250506-SPSANT -757068309 -0000476776-0E88-",
+    "amount": "-29.5"
+  },
+  {
+    "id": "lcl-2025-2025-05-02-309.31-6-1",
+    "date": "2025-05-02",
+    "label": "VIR SEPA Doctolib EXT BAL SWEEP SWPE423CF2232CTF5MGH6GB4FS5M CB",
+    "amount": "309.31"
+  },
+  {
+    "id": "lcl-2025-2025-05-02-5.20-7-1",
+    "date": "2025-05-02",
+    "label": "VIR SEPA ALMERYS TP-20250505-ALMERYS TP -757068309 -0098532001-0E88-",
+    "amount": "5.2"
+  },
+  {
+    "id": "lcl-2025-2025-05-02-7.43-8-1",
+    "date": "2025-05-02",
+    "label": "PRLV SEPA PayPal Europe S.a.r.l. et Cie S.C.A 1041962061697/PAYPAL",
+    "amount": "7.43"
+  },
+  {
+    "id": "lcl-2025-2025-05-01-1300.00-2-1",
+    "date": "2025-05-01",
+    "label": "VIR SEPA ALMERYS TP-20250502-ALMERYS TP -757068309 -0098532001-0E88-",
+    "amount": "1300"
+  },
+  {
+    "id": "lcl-2025-2025-04-30-332.95-0-1",
+    "date": "2025-04-30",
+    "label": "PRLV SEPA Bouygues Telecom 07xxxxx953",
+    "amount": "332.95"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-04-30-309.31-751",
+    "date": "2025-04-30",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "309.31"
+  },
+  {
+    "id": "lcl-2025-2025-04-28-300.00-6-1",
+    "date": "2025-04-28",
+    "label": "PRLV SEPA PayPal Europe S.a.r.l. et Cie S.C.A 1041851798773/PAYPAL",
+    "amount": "300"
+  },
+  {
+    "id": "lcl-2025-2025-04-24-49.74-3-1",
+    "date": "2025-04-24",
+    "label": "VIR SEPA HARMONIE MUTUELLES TP-20250423-VIREMENT 1343726 -757068309 -VM00300000-0E88-",
+    "amount": "49.74"
+  },
+  {
+    "id": "lcl-2025-2025-04-24-92.17-4-1",
+    "date": "2025-04-24",
+    "label": "VIR SEPA BPCE MUTUELLE TP-20250428-BPCE Mutuelle -757068309 -BPCE MUT -0E88-",
+    "amount": "92.17"
+  },
+  {
+    "id": "lcl-2025-2025-04-24-680.09-5-1",
+    "date": "2025-04-24",
+    "label": "PRLV SEPA PayPal Europe S.a.r.l. et Cie S.C.A 1041844461003/PAYPAL",
+    "amount": "-680.09"
+  },
+  {
+    "id": "lcl-2025-2025-04-23-89.38-1-1",
+    "date": "2025-04-23",
+    "label": "VIR SEPA Doctolib EXT BAL SWEEP SWPE423CF22332CQ5MFHM2F78T6F WR",
+    "amount": "89.38"
+  },
+  {
+    "id": "lcl-2025-2025-04-23-23.99-2-1",
+    "date": "2025-04-23",
+    "label": "VIR SEPA ALMERYS TP-20250429-ALMERYS TP -757068309 -0098532001-0E88-",
+    "amount": "23.99"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-04-23-29.85-751",
+    "date": "2025-04-23",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "29.85"
+  },
+  {
+    "id": "lcl-2025-2025-04-22-236.91-0-1",
+    "date": "2025-04-22",
+    "label": "VIR SEPA SOGEC GESTION SOGEC N-0040685571 FZ29 Jusqu'a 80E rembou rses sur un mobile",
+    "amount": "236.91"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-04-18-708.25-751",
+    "date": "2025-04-18",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "708.25"
+  },
+  {
+    "id": "lcl-2025-2025-04-17-404.72-5-3",
+    "date": "2025-04-17",
+    "label": "VIR SEPA ALMERYS TP-20250417-ALMERYS TP -757068309 -0098532001-0E88-",
+    "amount": "404.72"
+  },
+  {
+    "id": "lcl-2025-2025-04-17-28.34-6-3",
+    "date": "2025-04-17",
+    "label": "VIR.PERMANENT RAFENNE COMPTAB",
+    "amount": "28.34"
+  },
+  {
+    "id": "lcl-2025-2025-04-17-75.29-7-3",
+    "date": "2025-04-17",
+    "label": "VIR SEPA CPAM 75 PRESTATIONS 0000007570683091062201250417",
+    "amount": "75.29"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-04-17-109.47-751",
+    "date": "2025-04-17",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "109.46999999999998"
+  },
+  {
+    "id": "lcl-2025-2025-04-16-15.21-2-3",
+    "date": "2025-04-16",
+    "label": "PRLV SEPA PayPal Europe S.a.r.l. et Cie S.C.A 1041595176862/PAYPAL",
+    "amount": "15.21"
+  },
+  {
+    "id": "lcl-2025-2025-04-16-125.82-3-3",
+    "date": "2025-04-16",
+    "label": "PRLV SEPA URSSAF CENTRE DE GESTION PAM UR 109000006400211896 AVR 25325216421",
+    "amount": "125.82"
+  },
+  {
+    "id": "lcl-2025-2025-04-16-488.53-4-3",
+    "date": "2025-04-16",
+    "label": "PRLV SEPA MACSF-ASSU-",
+    "amount": "488.53"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-04-16-42.52-751",
+    "date": "2025-04-16",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "42.519999999999996"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-04-16-133.95-941",
+    "date": "2025-04-16",
+    "label": "VIR SEPA CPAM 941 (Virtuel)",
+    "amount": "133.95000000000002"
+  },
+  {
+    "id": "lcl-2025-2025-04-15-109.47-5-2",
+    "date": "2025-04-15",
+    "label": "VIR SEPA CETIP CETIP TP-20250411-ISANTE -757068309 -0000476776-0E88-",
+    "amount": "109.47"
+  },
+  {
+    "id": "lcl-2025-2025-04-15-42.42-6-2",
+    "date": "2025-04-15",
+    "label": "VIR SEPA CPAM 75 PRESTATIONS 0000007570683091052201250416",
+    "amount": "42.42"
+  },
+  {
+    "id": "lcl-2025-2025-04-15-40.23-7-2",
+    "date": "2025-04-15",
+    "label": "VIR SEPA CPAM 94 0000007570683091055941250416",
+    "amount": "40.23"
+  },
+  {
+    "id": "lcl-2025-2025-04-15-103.63-8-2",
+    "date": "2025-04-15",
+    "label": "VIR SEPA CETIP CETIP TP-20250414-SPSANT -757068309 -0000476776-0E88-",
+    "amount": "-103.63"
+  },
+  {
+    "id": "lcl-2025-2025-04-15-306.00-9-2",
+    "date": "2025-04-15",
+    "label": "VIR SEPA HARMONIE MUTUELLES TP-20250411-VIREMENT 1252891 -757068309 -VM00300000-0E88-",
+    "amount": "306"
+  },
+  {
+    "id": "lcl-2025-2025-04-15-4.99-0-3",
+    "date": "2025-04-15",
+    "label": "VIR SEPA CPAM 75 PRESTATIONS 0000007570683091072201250418",
+    "amount": "4.99"
+  },
+  {
+    "id": "lcl-2025-2025-04-15-29.99-1-3",
+    "date": "2025-04-15",
+    "label": "VIR SEPA Doctolib EXT BAL SWEEP SWPE423LL2232C665MDJ3L37MW6D",
+    "amount": "29.99"
+  },
+  {
+    "id": "lcl-2025-2025-04-14-37.15-5-1",
+    "date": "2025-04-14",
+    "label": "VIR SEPA CPAM 75 PRESTATIONS 0000007570683091012201250414",
+    "amount": "37.15"
+  },
+  {
+    "id": "lcl-2025-2025-04-14-14.95-6-1",
+    "date": "2025-04-14",
+    "label": "VIR SEPA CPAM 94 0000007570683091015941250414",
+    "amount": "14.95"
+  },
+  {
+    "id": "lcl-2025-2025-04-14-856.04-7-1",
+    "date": "2025-04-14",
+    "label": "VIR SEPA CAISSE PREVOYANCE ET RET CP MANDAT 20250409 75706830",
+    "amount": "856.04"
+  },
+  {
+    "id": "lcl-2025-2025-04-14-33.15-0-2",
+    "date": "2025-04-14",
+    "label": "PRLV SEPA PayPal Europe S.a.r.l. et Cie S.C.A 1041510794021/PAYPAL",
+    "amount": "33.15"
+  },
+  {
+    "id": "lcl-2025-2025-04-14-28.26-1-2",
+    "date": "2025-04-14",
+    "label": "PRLV SEPA PayPal Europe S.a.r.l. et Cie S.C.A 1041541205136/PAYPAL",
+    "amount": "28.26"
+  },
+  {
+    "id": "lcl-2025-2025-04-14-100.68-2-2",
+    "date": "2025-04-14",
+    "label": "PRLV SEPA MACSF-ASSU-",
+    "amount": "100.68"
+  },
+  {
+    "id": "lcl-2025-2025-04-14-16.60-3-2",
+    "date": "2025-04-14",
+    "label": "VIR SEPA MUTUELLE GENERALE EDUCAT TP-20250411-075OWNP57285319 -757068309-009 1007751-0E88-",
+    "amount": "16.6"
+  },
+  {
+    "id": "lcl-2025-2025-04-14-140.05-4-2",
+    "date": "2025-04-14",
+    "label": "VIR SEPA CETIP CETIP TP-20250417-SPSANT -757068309 -0000476776-0E88-",
+    "amount": "140.05"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-04-14-109.47-751",
+    "date": "2025-04-14",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "109.46999999999998"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-04-14-42.42-941",
+    "date": "2025-04-14",
+    "label": "VIR SEPA CPAM 941 (Virtuel)",
+    "amount": "42.42"
+  },
+  {
+    "id": "lcl-2025-2025-04-13-80.00-4-1",
+    "date": "2025-04-13",
+    "label": "VIR SEPA CPAM 75 PRESTATIONS 0000007570683091002201250411",
+    "amount": "80"
+  },
+  {
+    "id": "lcl-2025-2025-04-11-325.74-1-1",
+    "date": "2025-04-11",
+    "label": "VIR SEPA ALMERYS TP-20250411-ALMERYS TP -757068309 -0098532001-0E88-",
+    "amount": "325.74"
+  },
+  {
+    "id": "lcl-2025-2025-04-11-112.94-2-1",
+    "date": "2025-04-11",
+    "label": "VIR SEPA VIAMEDIS TP-20250408-VIREMENT 1614902 -757068309 -VM00100000-0E88-",
+    "amount": "112.94"
+  },
+  {
+    "id": "lcl-2025-2025-04-11-49.75-3-1",
+    "date": "2025-04-11",
+    "label": "VIR SEPA CPAM 93 0000007570683091001113250411",
+    "amount": "49.75"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-04-11-140.05-751",
+    "date": "2025-04-11",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "140.04999999999998"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-04-11-16.60-931",
+    "date": "2025-04-11",
+    "label": "VIR SEPA CPAM 931 (Virtuel)",
+    "amount": "16.6"
+  },
+  {
+    "id": "lcl-2025-2025-04-10-251.55-0-1",
+    "date": "2025-04-10",
+    "label": "VIR SEPA HARMONIE MUTUELLES TP-20250407-VIREMENT 1199634 -757068309 -VM00300000-0E88-",
+    "amount": "251.55"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-04-10-49.75-751",
+    "date": "2025-04-10",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "49.75"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-04-10-112.94-931",
+    "date": "2025-04-10",
+    "label": "VIR SEPA CPAM 931 (Virtuel)",
+    "amount": "112.94"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-04-09-109.47-751",
+    "date": "2025-04-09",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "109.46999999999998"
+  },
+  {
+    "id": "lcl-2025-2025-04-08-25.58-6-4",
+    "date": "2025-04-08",
+    "label": "VIR SEPA HENNER GMC TP-20250404-HENNER-757068309 -0075949776-0 E88-",
+    "amount": "25.58"
+  },
+  {
+    "id": "lcl-2025-2025-04-08-797.30-7-4",
+    "date": "2025-04-08",
+    "label": "VIR SEPA ALMERYS TP-20250409-ALMERYS TP -757068309 -0098532001-0E88-",
+    "amount": "797.3"
+  },
+  {
+    "id": "lcl-2025-2025-04-08-464.87-8-4",
+    "date": "2025-04-08",
+    "label": "PRLV SEPA MUTUELLE MIEUX ETRE Cotisations MULTI 7951P",
+    "amount": "464.87"
+  },
+  {
+    "id": "lcl-2025-2025-04-08-157.94-9-4",
+    "date": "2025-04-08",
+    "label": "PRLV SEPA C.A.R.P.I.M.K.O M6214083 AC R M-IBAN",
+    "amount": "157.94"
+  },
+  {
+    "id": "lcl-2025-2025-04-08-119.00-0-5",
+    "date": "2025-04-08",
+    "label": "PRLV SEPA C.A.R.P.I.M.K.O M6214083 AA R M-IBAN",
+    "amount": "119"
+  },
+  {
+    "id": "lcl-2025-2025-04-08-18.21-1-5",
+    "date": "2025-04-08",
+    "label": "VIR SEPA CPAM 75 PRESTATIONS 0000007570683090982201250409",
+    "amount": "18.21"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-04-08-306.31-751",
+    "date": "2025-04-08",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "306.31"
+  },
+  {
+    "id": "lcl-2025-2025-04-07-176.45-0-4",
+    "date": "2025-04-07",
+    "label": "PRLV SEPA GC RE DOCTOLIB FRIN25-00382833",
+    "amount": "176.45"
+  },
+  {
+    "id": "lcl-2025-2025-04-07-16.60-1-4",
+    "date": "2025-04-07",
+    "label": "PRLV SEPA PayPal Europe S.a.r.l. et Cie S.C.A 1041379421923/PAYPAL",
+    "amount": "16.6"
+  },
+  {
+    "id": "lcl-2025-2025-04-07-141.91-2-4",
+    "date": "2025-04-07",
+    "label": "PRLV SEPA PayPal Europe S.a.r.l. et Cie S.C.A 1041394286622/PAYPAL",
+    "amount": "141.91"
+  },
+  {
+    "id": "lcl-2025-2025-04-07-41.94-3-4",
+    "date": "2025-04-07",
+    "label": "VIR SEPA CPAM 94 0000007570683090945941250407",
+    "amount": "41.94"
+  },
+  {
+    "id": "lcl-2025-2025-04-07-49.89-4-4",
+    "date": "2025-04-07",
+    "label": "VIR SEPA CPAM 75 PRESTATIONS 0000007570683090975935250407",
+    "amount": "49.89"
+  },
+  {
+    "id": "lcl-2025-2025-04-07-126.00-5-4",
+    "date": "2025-04-07",
+    "label": "VIR SEPA CPAM 75 PRESTATIONS 0000007570683090972201250408",
+    "amount": "126"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-04-07-49.75-751",
+    "date": "2025-04-07",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "49.75"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-04-07-74.89-941",
+    "date": "2025-04-07",
+    "label": "VIR SEPA CPAM 941 (Virtuel)",
+    "amount": "74.89"
+  },
+  {
+    "id": "lcl-2025-2025-04-04-30.08-7-3",
+    "date": "2025-04-04",
+    "label": "VIR SEPA Doctolib EXT BAL SWEEP SWPE423LL22339LQ5MBJXQ96BP26 QD",
+    "amount": "30.08"
+  },
+  {
+    "id": "lcl-2025-2025-04-04-42.51-8-3",
+    "date": "2025-04-04",
+    "label": "PRLV SEPA PayPal Europe S.a.r.l. et Cie S.C.A 1041373363370/PAYPAL",
+    "amount": "42.51"
+  },
+  {
+    "id": "lcl-2025-2025-04-04-100.27-9-3",
+    "date": "2025-04-04",
+    "label": "PRLV SEPA PayPal Europe S.a.r.l. et Cie S.C.A 1041374448902/PAYPAL",
+    "amount": "100.27"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-04-04-176.45-751",
+    "date": "2025-04-04",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "176.45"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-04-04-16.60-931",
+    "date": "2025-04-04",
+    "label": "VIR SEPA CPAM 931 (Virtuel)",
+    "amount": "16.6"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-04-04-41.94-941",
+    "date": "2025-04-04",
+    "label": "VIR SEPA CPAM 941 (Virtuel)",
+    "amount": "41.94"
+  },
+  {
+    "id": "lcl-2025-2025-04-03-113.22-2-3",
+    "date": "2025-04-03",
+    "label": "VIR SEPA HENNER GMC TP-20250402-HENNER-757068309 -0075949776-0 E88-",
+    "amount": "113.22"
+  },
+  {
+    "id": "lcl-2025-2025-04-03-72.98-3-3",
+    "date": "2025-04-03",
+    "label": "VIR SEPA CPAM 94 0000007570683090935941250404",
+    "amount": "72.98"
+  },
+  {
+    "id": "lcl-2025-2025-04-03-156.02-4-3",
+    "date": "2025-04-03",
+    "label": "VIR SEPA ALMERYS TP-20250404-ALMERYS TP -757068309 -0098532001-0E88-",
+    "amount": "156.02"
+  },
+  {
+    "id": "lcl-2025-2025-04-03-107.53-5-3",
+    "date": "2025-04-03",
+    "label": "PRLV SEPA CA CONSUMER FINANCE CREANCIER INITIAL:SOFINCO FNAC",
+    "amount": "107.53"
+  },
+  {
+    "id": "lcl-2025-2025-04-03-22.72-6-3",
+    "date": "2025-04-03",
+    "label": "PRLV SEPA Bouygues Telecom 06xxxxx802",
+    "amount": "22.72"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-04-03-100.27-751",
+    "date": "2025-04-03",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "100.26999999999998"
+  },
+  {
+    "id": "lcl-2025-2025-04-02-3.00-1-1",
+    "date": "2025-04-02",
+    "label": "PRLV SEPA PayPal Europe S.a.r.l. et Cie S.C.A 1041218938723/PAYPAL",
+    "amount": "-3"
+  },
+  {
+    "id": "lcl-2025-2025-04-02-79.99-8-2",
+    "date": "2025-04-02",
+    "label": "VIR SEPA CPAM 75 PRESTATIONS 0000007570683090922201250403",
+    "amount": "79.99"
+  },
+  {
+    "id": "lcl-2025-2025-04-02-1911.53-9-2",
+    "date": "2025-04-02",
+    "label": "VIR SEPA ALMERYS TP-20250403-ALMERYS TP -757068309 -0098532001-0E88-",
+    "amount": "1911.53"
+  },
+  {
+    "id": "lcl-2025-2025-04-02-102.07-10-2",
+    "date": "2025-04-02",
+    "label": "VIR SEPA BPCE MUTUELLE TP-20250403-BPCE Mutuelle -757068309 -BPCE MUT -0E88-",
+    "amount": "102.07"
+  },
+  {
+    "id": "lcl-2025-2025-04-02-355.55-0-3",
+    "date": "2025-04-02",
+    "label": "VIR SEPA CPAM 75 PRESTATIONS 0000007570683090932201250404",
+    "amount": "355.55"
+  },
+  {
+    "id": "lcl-2025-2025-04-02-63.94-1-3",
+    "date": "2025-04-02",
+    "label": "VIR SEPA CPAM 93 0000007570683090931113250404",
+    "amount": "63.94"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-04-02-72.98-751",
+    "date": "2025-04-02",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "72.97999999999999"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-04-02-14.19-931",
+    "date": "2025-04-02",
+    "label": "VIR SEPA CPAM 931 (Virtuel)",
+    "amount": "14.19"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-04-02-113.22-941",
+    "date": "2025-04-02",
+    "label": "VIR SEPA CPAM 941 (Virtuel)",
+    "amount": "113.22"
+  },
+  {
+    "id": "lcl-2025-2025-04-01-39.46-2-1",
+    "date": "2025-04-01",
+    "label": "PRLV SEPA PayPal Europe S.a.r.l. et Cie S.C.A 1041189201590/PAYPAL",
+    "amount": "39.46"
+  },
+  {
+    "id": "lcl-2025-2025-04-01-90.00-3-1",
+    "date": "2025-04-01",
+    "label": "VIR SEPA M PHILIPPE GUILLAUME appart",
+    "amount": "90"
+  },
+  {
+    "id": "lcl-2025-2025-04-01-428.98-4-1",
+    "date": "2025-04-01",
+    "label": "VIR.PERMANENT M GUILLAUME OU MM",
+    "amount": "428.98"
+  },
+  {
+    "id": "lcl-2025-2025-04-01-236.91-5-1",
+    "date": "2025-04-01",
+    "label": "VIR SEPA CPAM 75 PRESTATIONS 0000007570683090872201250331",
+    "amount": "236.91"
+  },
+  {
+    "id": "lcl-2025-2025-04-01-29.50-6-1",
+    "date": "2025-04-01",
+    "label": "VIR SEPA CETIP CETIP TP-20250401-SPSANT -757068309 -0000476776-0E88-",
+    "amount": "-29.5"
+  },
+  {
+    "id": "lcl-2025-2025-04-01-5.20-7-1",
+    "date": "2025-04-01",
+    "label": "PRLV SEPA PayPal Europe S.a.r.l. et Cie S.C.A 1041258496801/PAYPAL",
+    "amount": "5.2"
+  },
+  {
+    "id": "lcl-2025-2025-04-01-7.43-8-1",
+    "date": "2025-04-01",
+    "label": "PRLV SEPA GOCARDLESS VIA SANA - PHILIPPE GUILLAUME (F20250311 387)",
+    "amount": "7.43"
+  },
+  {
+    "id": "lcl-2025-2025-04-01-13.99-9-1",
+    "date": "2025-04-01",
+    "label": "VIR SEPA FILIA CBP TP SWISSLIFE TP-20250401-SWISSLIFE CBP 00192- 757068309-98532203 -0E88-",
+    "amount": "13.99"
+  },
+  {
+    "id": "lcl-2025-2025-04-01-17.98-0-2",
+    "date": "2025-04-01",
+    "label": "VIR SEPA CPAM 93 0000007570683090901113250401",
+    "amount": "17.98"
+  },
+  {
+    "id": "lcl-2025-2025-04-01-2.99-1-2",
+    "date": "2025-04-01",
+    "label": "VIR SEPA CPAM 94 0000007570683090905941250401",
+    "amount": "2.99"
+  },
+  {
+    "id": "lcl-2025-2025-04-01-4.99-2-2",
+    "date": "2025-04-01",
+    "label": "VIR SEPA CPAM 94 0000007570683090905941250402",
+    "amount": "4.99"
+  },
+  {
+    "id": "lcl-2025-2025-04-01-530.00-3-2",
+    "date": "2025-04-01",
+    "label": "VIR SEPA CPAM 75 PRESTATIONS 0000007570683090912201250402",
+    "amount": "530"
+  },
+  {
+    "id": "lcl-2025-2025-04-01-1300.00-4-2",
+    "date": "2025-04-01",
+    "label": "VIR SEPA MUTUELLE GENERALE EDUCAT TP-20250331-075OWNP56325339 -757068309-009 1007751-0E88-",
+    "amount": "1300"
+  },
+  {
+    "id": "lcl-2025-2025-04-01-20.13-5-2",
+    "date": "2025-04-01",
+    "label": "VIR SEPA HARMONIE MUTUELLES TP-20250327-VIREMENT 1093397 -757068309 -VM00300000-0E88-",
+    "amount": "-20.13"
+  },
+  {
+    "id": "lcl-2025-2025-04-01-72.98-6-2",
+    "date": "2025-04-01",
+    "label": "VIR SEPA VIAMEDIS TP-20250331-VIREMENT 1352978 -757068309 -VM00100000-0E88-",
+    "amount": "72.98"
+  },
+  {
+    "id": "lcl-2025-2025-04-01-51.97-7-2",
+    "date": "2025-04-01",
+    "label": "VIR SEPA CETIP CETIP TP-20250404-SPSANT -757068309 -0000476776-0E88-",
+    "amount": "51.97"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-04-01-389.47-751",
+    "date": "2025-04-01",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "389.47"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-04-01-355.55-931",
+    "date": "2025-04-01",
+    "label": "VIR SEPA CPAM 931 (Virtuel)",
+    "amount": "355.55"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-04-01-63.94-941",
+    "date": "2025-04-01",
+    "label": "VIR SEPA CPAM 941 (Virtuel)",
+    "amount": "63.94"
+  },
+  {
+    "id": "lcl-2025-2025-03-31-362.56-0-1",
+    "date": "2025-03-31",
+    "label": "PRLV SEPA PayPal Europe S.a.r.l. et Cie S.C.A 1041201675376/PAYPAL",
+    "amount": "362.56"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-03-31-72.98-751",
+    "date": "2025-03-31",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "72.97999999999999"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-03-28-34.09-751",
+    "date": "2025-03-28",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "34.089999999999996"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-03-28-40.50-931",
+    "date": "2025-03-28",
+    "label": "VIR SEPA CPAM 931 (Virtuel)",
+    "amount": "40.5"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-03-26-397.76-751",
+    "date": "2025-03-26",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "397.76"
+  },
+  {
+    "id": "lcl-2025-2025-03-25-78.97-7-1",
+    "date": "2025-03-25",
+    "label": "VIR SEPA CPAM 93 0000007570683090831113250325",
+    "amount": "78.97"
+  },
+  {
+    "id": "lcl-2025-2025-03-25-13.99-0-2",
+    "date": "2025-03-25",
+    "label": "VIR SEPA CETIP CETIP TP-20250328-ISANTE -757068309 -0000476776-0E88-",
+    "amount": "13.99"
+  },
+  {
+    "id": "lcl-2025-2025-03-25-28.78-1-2",
+    "date": "2025-03-25",
+    "label": "VIR SEPA MOREL PIETREMENT LOYER MME MOREL",
+    "amount": "28.78"
+  },
+  {
+    "id": "lcl-2025-2025-03-25-283.65-2-2",
+    "date": "2025-03-25",
+    "label": "PRLV SEPA PayPal Europe S.a.r.l. et Cie S.C.A 1041132293168/PAYPAL",
+    "amount": "283.65"
+  },
+  {
+    "id": "lcl-2025-2025-03-25-26.77-3-2",
+    "date": "2025-03-25",
+    "label": "VIR SEPA CPAM 93 0000007570683090861113250328",
+    "amount": "26.77"
+  },
+  {
+    "id": "lcl-2025-2025-03-25-113.70-4-2",
+    "date": "2025-03-25",
+    "label": "VIR SEPA CPAM 75 PRESTATIONS 0000007570683090862201250328",
+    "amount": "113.7"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-03-25-246.10-751",
+    "date": "2025-03-25",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "246.1"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-03-25-82.72-931",
+    "date": "2025-03-25",
+    "label": "VIR SEPA CPAM 931 (Virtuel)",
+    "amount": "82.72"
+  },
+  {
+    "id": "lcl-2025-2025-03-24-42.51-3-1",
+    "date": "2025-03-24",
+    "label": "VIR SEPA CPAM ESSONNE 0000007570683090801831250324",
+    "amount": "42.51"
+  },
+  {
+    "id": "lcl-2025-2025-03-24-264.17-4-1",
+    "date": "2025-03-24",
+    "label": "VIR SEPA CPAM 75 PRESTATIONS 0000007570683090802201250324",
+    "amount": "264.17"
+  },
+  {
+    "id": "lcl-2025-2025-03-24-680.09-5-1",
+    "date": "2025-03-24",
+    "label": "VIR SEPA CPAM 93 0000007570683090801113250324",
+    "amount": "-680.09"
+  },
+  {
+    "id": "lcl-2025-2025-03-24-520.51-6-1",
+    "date": "2025-03-24",
+    "label": "VIR SEPA ALMERYS TP-20250325-ALMERYS TP -757068309 -0098532001-0E88-",
+    "amount": "520.51"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-03-24-113.70-751",
+    "date": "2025-03-24",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "113.69999999999999"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-03-24-26.77-911",
+    "date": "2025-03-24",
+    "label": "VIR SEPA CPAM 911 (Virtuel)",
+    "amount": "26.77"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-03-24-210.04-931",
+    "date": "2025-03-24",
+    "label": "VIR SEPA CPAM 931 (Virtuel)",
+    "amount": "210.04"
+  },
+  {
+    "id": "lcl-2025-2025-03-21-338.98-1-1",
+    "date": "2025-03-21",
+    "label": "PRLV SEPA PayPal Europe S.a.r.l. et Cie S.C.A 1041052908974/PAYPAL",
+    "amount": "338.98"
+  },
+  {
+    "id": "lcl-2025-2025-03-21-30.08-2-1",
+    "date": "2025-03-21",
+    "label": "VIR SEPA Doctolib EXT BAL SWEEP SWPE423FJ2232NS85M8L2H2DHX6G MZ",
+    "amount": "30.08"
+  },
+  {
+    "id": "lcl-2025-2025-03-20-474.33-0-1",
+    "date": "2025-03-20",
+    "label": "PRLV SEPA PayPal Europe S.a.r.l. et Cie S.C.A 1041072568964/PAYPAL",
+    "amount": "474.33"
+  },
+  {
+    "id": "lcl-2025-2025-03-18-29.90-1-3",
+    "date": "2025-03-18",
+    "label": "VIR SEPA MUTUELLE GENERALE EDUCAT TP-20250314-075OWNP55289280 -757068309-009 1007751-0E88-",
+    "amount": "29.9"
+  },
+  {
+    "id": "lcl-2025-2025-03-18-51.54-2-3",
+    "date": "2025-03-18",
+    "label": "VIR SEPA CPAM 94 0000007570683090765941250318",
+    "amount": "51.54"
+  },
+  {
+    "id": "lcl-2025-2025-03-18-11.99-3-3",
+    "date": "2025-03-18",
+    "label": "VIR SEPA CPAM 75 PRESTATIONS 0000007570683090762201250318",
+    "amount": "11.99"
+  },
+  {
+    "id": "lcl-2025-2025-03-18-160.00-4-3",
+    "date": "2025-03-18",
+    "label": "PRLV SEPA MACSF-ASSU-",
+    "amount": "160"
+  },
+  {
+    "id": "lcl-2025-2025-03-18-99.19-5-3",
+    "date": "2025-03-18",
+    "label": "PRLV SEPA PayPal Europe S.a.r.l. et Cie S.C.A 1040981334715/PAYPAL",
+    "amount": "99.19"
+  },
+  {
+    "id": "lcl-2025-2025-03-18-37.74-6-3",
+    "date": "2025-03-18",
+    "label": "PRLV SEPA URSSAF CENTRE DE GESTION PAM UR 109000006400211896 MARS25325136421",
+    "amount": "37.74"
+  },
+  {
+    "id": "lcl-2025-2025-03-18-113.69-7-3",
+    "date": "2025-03-18",
+    "label": "PRLV SEPA Autoroutes du Sud de la France LB014286280044098865 022025",
+    "amount": "113.69"
+  },
+  {
+    "id": "lcl-2025-2025-03-18-218.10-8-3",
+    "date": "2025-03-18",
+    "label": "VIR.PERMANENT RAFENNE COMPTAB",
+    "amount": "218.1"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-03-18-318.98-751",
+    "date": "2025-03-18",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "318.97999999999996"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-03-18-16.60-931",
+    "date": "2025-03-18",
+    "label": "VIR SEPA CPAM 931 (Virtuel)",
+    "amount": "16.6"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-03-18-327.16-941",
+    "date": "2025-03-18",
+    "label": "VIR SEPA CPAM 941 (Virtuel)",
+    "amount": "327.16"
+  },
+  {
+    "id": "lcl-2025-2025-03-17-324.01-7-2",
+    "date": "2025-03-17",
+    "label": "VIR SEPA CPAM 75 PRESTATIONS 0000007570683090765935250317",
+    "amount": "324.01"
+  },
+  {
+    "id": "lcl-2025-2025-03-17-306.00-8-2",
+    "date": "2025-03-17",
+    "label": "VIR SEPA ALMERYS TP-20250315-ALMERYS TP -757068309 -0098532001-0E88-",
+    "amount": "306"
+  },
+  {
+    "id": "lcl-2025-2025-03-17-29.99-0-3",
+    "date": "2025-03-17",
+    "label": "VIR SEPA CPAM 93 0000007570683090761113250318",
+    "amount": "29.99"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-03-17-561.84-751",
+    "date": "2025-03-17",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "561.84"
+  },
+  {
+    "id": "lcl-2025-2025-03-15-103.52-6-2",
+    "date": "2025-03-15",
+    "label": "VIR SEPA MUTUELLE GENERALE EDUCAT TP-20250313-093OWNP55192266 -757068309-009 1007931-0E88-",
+    "amount": "-103.52"
+  },
+  {
+    "id": "lcl-2025-2025-03-14-405.78-3-2",
+    "date": "2025-03-14",
+    "label": "PRLV SEPA PayPal Europe S.a.r.l. et Cie S.C.A 1040925561598/PAYPAL",
+    "amount": "405.78"
+  },
+  {
+    "id": "lcl-2025-2025-03-14-194.88-4-2",
+    "date": "2025-03-14",
+    "label": "VIR SEPA Doctolib EXT BAL SWEEP SWPE423CD2232Z8D5M7LH343KC2F C7",
+    "amount": "194.88"
+  },
+  {
+    "id": "lcl-2025-2025-03-14-78.97-5-2",
+    "date": "2025-03-14",
+    "label": "VIR SEPA CETIP CETIP TP-20250318-SPSANT -757068309 -0000476776-0E88-",
+    "amount": "78.97"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-03-14-115.78-931",
+    "date": "2025-03-14",
+    "label": "VIR SEPA CPAM 931 (Virtuel)",
+    "amount": "115.78"
+  },
+  {
+    "id": "lcl-2025-2025-03-13-14.95-0-2",
+    "date": "2025-03-13",
+    "label": "PRLV SEPA PayPal Europe S.a.r.l. et Cie S.C.A 1040872093894/PAYPAL",
+    "amount": "14.95"
+  },
+  {
+    "id": "lcl-2025-2025-03-13-474.75-1-2",
+    "date": "2025-03-13",
+    "label": "PRLV SEPA PayPal Europe S.a.r.l. et Cie S.C.A 1040880415861/PAYPAL",
+    "amount": "474.75"
+  },
+  {
+    "id": "lcl-2025-2025-03-13-80.00-2-2",
+    "date": "2025-03-13",
+    "label": "PRLV SEPA PayPal Europe S.a.r.l. et Cie S.C.A 1040888229575/PAYPAL",
+    "amount": "80"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-03-13-405.78-751",
+    "date": "2025-03-13",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "405.78"
+  },
+  {
+    "id": "lcl-2025-2025-03-12-40.25-5-1",
+    "date": "2025-03-12",
+    "label": "VIR SEPA GIP AGENCE NATIONALE DU",
+    "amount": "40.25"
+  },
+  {
+    "id": "lcl-2025-2025-03-12-141.64-6-1",
+    "date": "2025-03-12",
+    "label": "VIR SEPA ALMERYS TP-20250314-ALMERYS TP -757068309 -0098532001-0E88-",
+    "amount": "141.64"
+  },
+  {
+    "id": "lcl-2025-2025-03-12-711.42-7-1",
+    "date": "2025-03-12",
+    "label": "VIR SEPA CPAM 93 0000007570683090721113250314",
+    "amount": "711.42"
+  },
+  {
+    "id": "lcl-2025-2025-03-12-856.04-8-1",
+    "date": "2025-03-12",
+    "label": "PRLV SEPA MACSF-ASSU-",
+    "amount": "856.04"
+  },
+  {
+    "id": "lcl-2025-2025-03-11-88.84-1-1",
+    "date": "2025-03-11",
+    "label": "VIR.PERMANENT M THEO GUILLAUME",
+    "amount": "88.84"
+  },
+  {
+    "id": "lcl-2025-2025-03-11-240.00-2-1",
+    "date": "2025-03-11",
+    "label": "VIR SEPA CPAM 75 PRESTATIONS 0000007570683090712201250313",
+    "amount": "240"
+  },
+  {
+    "id": "lcl-2025-2025-03-11-518.32-3-1",
+    "date": "2025-03-11",
+    "label": "VIR SEPA VIAMEDIS TP-20250310-VIREMENT 703401 -757068309 -VM00100000-0E88-",
+    "amount": "518.32"
+  },
+  {
+    "id": "lcl-2025-2025-03-11-40.00-4-1",
+    "date": "2025-03-11",
+    "label": "PRLV SEPA DIRECTION GENERALE DES FINANCES PUBLIQUE S CREANCIER INITIAL:D.G.F.I.P. IMPOT PAS",
+    "amount": "40"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-03-11-141.64-751",
+    "date": "2025-03-11",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "141.64000000000001"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-03-11-40.25-931",
+    "date": "2025-03-11",
+    "label": "VIR SEPA CPAM 931 (Virtuel)",
+    "amount": "40.25"
+  },
+  {
+    "id": "lcl-2025-2025-03-10-314.14-0-1",
+    "date": "2025-03-10",
+    "label": "PRLV SEPA ROOLE-IDENTICAR Prelevement ROOLE-IDENTICAR",
+    "amount": "314.14"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-03-10-518.32-751",
+    "date": "2025-03-10",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "518.3199999999999"
+  },
+  {
+    "id": "lcl-2025-2025-03-07-507.03-10-2",
+    "date": "2025-03-07",
+    "label": "VIR SEPA M PHILIPPE GUILLAUME",
+    "amount": "507.03"
+  },
+  {
+    "id": "lcl-2025-2025-03-07-0.99-0-3",
+    "date": "2025-03-07",
+    "label": "VIR SEPA CPAM 93 0000007570683090651113250307",
+    "amount": "0.99"
+  },
+  {
+    "id": "lcl-2025-2025-03-07-42.51-1-3",
+    "date": "2025-03-07",
+    "label": "VIR SEPA VIAMEDIS TP-20250304-VIREMENT 540291 -757068309 -VM00100000-0E88-",
+    "amount": "42.51"
+  },
+  {
+    "id": "lcl-2025-2025-03-07-30.08-2-3",
+    "date": "2025-03-07",
+    "label": "VIR SEPA CPAM 75 PRESTATIONS 0000007570683090652201250307",
+    "amount": "30.08"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-03-07-186.61-751",
+    "date": "2025-03-07",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "186.60999999999999"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-03-07-243.04-931",
+    "date": "2025-03-07",
+    "label": "VIR SEPA CPAM 931 (Virtuel)",
+    "amount": "243.04"
+  },
+  {
+    "id": "lcl-2025-2025-03-06-88.84-9-2",
+    "date": "2025-03-06",
+    "label": "PRLV SEPA C.A.R.P.I.M.K.O M6214083 AA R M-IBAN",
+    "amount": "88.84"
+  },
+  {
+    "id": "lcl-2025-2025-03-05-126.00-5-2",
+    "date": "2025-03-05",
+    "label": "PRLV SEPA PayPal Europe S.a.r.l. et Cie S.C.A 1040727557763/PAYPAL",
+    "amount": "126"
+  },
+  {
+    "id": "lcl-2025-2025-03-05-212.67-6-2",
+    "date": "2025-03-05",
+    "label": "PRLV SEPA GC RE DOCTOLIB FRIN25-00299146",
+    "amount": "212.67"
+  },
+  {
+    "id": "lcl-2025-2025-03-05-37.74-7-2",
+    "date": "2025-03-05",
+    "label": "PRLV SEPA C.A.R.P.I.M.K.O M6214083 AC R M-IBAN",
+    "amount": "37.74"
+  },
+  {
+    "id": "lcl-2025-2025-03-05-532.65-8-2",
+    "date": "2025-03-05",
+    "label": "PRLV SEPA MUTUELLE MIEUX ETRE Cotisations MULTI 7951P",
+    "amount": "532.65"
+  },
+  {
+    "id": "lcl-2025-2025-03-04-3.00-0-1",
+    "date": "2025-03-04",
+    "label": "VIR SEPA Doctolib EXT BAL SWEEP SWPE423FJ2233FM55M5MD6RBJD5D D4",
+    "amount": "-3"
+  },
+  {
+    "id": "lcl-2025-2025-03-04-88.84-8-1",
+    "date": "2025-03-04",
+    "label": "VIR SEPA GIP AGENCE NATIONALE DU",
+    "amount": "88.84"
+  },
+  {
+    "id": "lcl-2025-2025-03-04-220.00-0-2",
+    "date": "2025-03-04",
+    "label": "PRLV SEPA PayPal Europe S.a.r.l. et Cie S.C.A 1040705785892/PAYPAL",
+    "amount": "220"
+  },
+  {
+    "id": "lcl-2025-2025-03-04-42.61-1-2",
+    "date": "2025-03-04",
+    "label": "VIR SEPA CETIP CETIP TP-20250307-SPSANT -757068309 -0000476776-0E88-",
+    "amount": "42.61"
+  },
+  {
+    "id": "lcl-2025-2025-03-04-13.99-2-2",
+    "date": "2025-03-04",
+    "label": "VIR SEPA VIAMEDIS TP-20250303-VIREMENT 484713 -757068309 -VM00100000-0E88-",
+    "amount": "13.99"
+  },
+  {
+    "id": "lcl-2025-2025-03-04-1897.00-3-2",
+    "date": "2025-03-04",
+    "label": "PRLV SEPA Bouygues Telecom 06xxxxx802",
+    "amount": "1897"
+  },
+  {
+    "id": "lcl-2025-2025-03-04-2.99-4-2",
+    "date": "2025-03-04",
+    "label": "PRLV SEPA PayPal Europe S.a.r.l. et Cie S.C.A 1040711405965/PAYPAL",
+    "amount": "2.99"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-03-04-212.67-751",
+    "date": "2025-03-04",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "212.67000000000002"
+  },
+  {
+    "id": "lcl-2025-2025-03-03-29.50-2-1",
+    "date": "2025-03-03",
+    "label": "PRLV SEPA PayPal Europe S.a.r.l. et Cie S.C.A 1040587994772/PAYPAL",
+    "amount": "-29.5"
+  },
+  {
+    "id": "lcl-2025-2025-03-03-25.17-3-1",
+    "date": "2025-03-03",
+    "label": "PRLV SEPA GOCARDLESS VIA SANA - PHILIPPE GUILLAUME (F20250210 906)",
+    "amount": "25.17"
+  },
+  {
+    "id": "lcl-2025-2025-03-03-5.20-4-1",
+    "date": "2025-03-03",
+    "label": "PRLV SEPA PayPal Europe S.a.r.l. et Cie S.C.A 1040568258467/PAYPAL",
+    "amount": "5.2"
+  },
+  {
+    "id": "lcl-2025-2025-03-03-7.43-5-1",
+    "date": "2025-03-03",
+    "label": "PRLV SEPA CA CONSUMER FINANCE CREANCIER INITIAL:SOFINCO FNAC",
+    "amount": "7.43"
+  },
+  {
+    "id": "lcl-2025-2025-03-03-428.98-6-1",
+    "date": "2025-03-03",
+    "label": "VIR SEPA CPAM 75 PRESTATIONS 0000007570683090622201250304",
+    "amount": "428.98"
+  },
+  {
+    "id": "lcl-2025-2025-03-03-88.84-7-1",
+    "date": "2025-03-03",
+    "label": "VIR SEPA MUTUELLE GENERALE EDUCAT TP-20250228-093OWNP54252219 -757068309-009 1007931-0E88-",
+    "amount": "88.84"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-03-03-102.09-751",
+    "date": "2025-03-03",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "102.09"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-03-03-65.59-941",
+    "date": "2025-03-03",
+    "label": "VIR SEPA CPAM 941 (Virtuel)",
+    "amount": "65.59"
+  },
+  {
+    "id": "lcl-2025-2025-03-01-1300.00-1-1",
+    "date": "2025-03-01",
+    "label": "VIR SEPA HARMONIE MUTUELLES TP-20250225-VIREMENT 792935 -757068309 -VM00300000-0E88-",
+    "amount": "1300"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-02-26-66.44-751",
+    "date": "2025-02-26",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "66.44"
+  },
+  {
+    "id": "lcl-2025-2025-02-25-25.17-1-2",
+    "date": "2025-02-25",
+    "label": "VIR SEPA MOREL PIETREMENT LOYER MME MOREL",
+    "amount": "25.17"
+  },
+  {
+    "id": "lcl-2025-2025-02-25-620.00-2-2",
+    "date": "2025-02-25",
+    "label": "PRLV SEPA PayPal (Europe) S.a r.l. et Cie, S.C.A. 1040534042779 PAYPAL",
+    "amount": "620"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-02-25-63.94-751",
+    "date": "2025-02-25",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "63.94"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-02-25-66.12-931",
+    "date": "2025-02-25",
+    "label": "VIR SEPA CPAM 931 (Virtuel)",
+    "amount": "66.12"
+  },
+  {
+    "id": "lcl-2025-2025-02-24-157.94-4-1",
+    "date": "2025-02-24",
+    "label": "VIR SEPA CPAM 94 0000007570683090525941250224",
+    "amount": "157.94"
+  },
+  {
+    "id": "lcl-2025-2025-02-24-757.63-5-1",
+    "date": "2025-02-24",
+    "label": "VIR SEPA MUTUELLE GENERALE EDUCAT TP-20250221-093OWNP53719570 -757068309-009 1007931-0E88-",
+    "amount": "757.63"
+  },
+  {
+    "id": "lcl-2025-2025-02-24-29.94-6-1",
+    "date": "2025-02-24",
+    "label": "VIR SEPA CPAM 75 PRESTATIONS 0000007570683090552201250225",
+    "amount": "29.94"
+  },
+  {
+    "id": "lcl-2025-2025-02-24-680.09-0-2",
+    "date": "2025-02-24",
+    "label": "VIR INST Sumup Limited SUMUP PID999365 PAYOUT 280225",
+    "amount": "-680.09"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-02-24-117.10-751",
+    "date": "2025-02-24",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "117.1"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-02-24-233.75-941",
+    "date": "2025-02-24",
+    "label": "VIR SEPA CPAM 941 (Virtuel)",
+    "amount": "233.75"
+  },
+  {
+    "id": "lcl-2025-2025-02-21-54.21-0-1",
+    "date": "2025-02-21",
+    "label": "VIR SEPA ALMERYS TP-20250222-ALMERYS TP -757068309 -0098532001-0E88-",
+    "amount": "54.21"
+  },
+  {
+    "id": "lcl-2025-2025-02-21-109.65-1-1",
+    "date": "2025-02-21",
+    "label": "VIR SEPA Doctolib EXT BAL SWEEP SWPE423C82232XJR5M4MSQK7V23T 8M",
+    "amount": "109.65"
+  },
+  {
+    "id": "lcl-2025-2025-02-21-56.68-2-1",
+    "date": "2025-02-21",
+    "label": "VIR SEPA MUTUELLE GENERALE EDUCAT TP-20250220-075OWNP53636042 -757068309-009 1007751-0E88-",
+    "amount": "56.68"
+  },
+  {
+    "id": "lcl-2025-2025-02-21-167.81-3-1",
+    "date": "2025-02-21",
+    "label": "VIR SEPA CPAM 75 PRESTATIONS 0000007570683090522201250224",
+    "amount": "167.81"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-02-21-757.63-751",
+    "date": "2025-02-21",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "757.63"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-02-21-29.94-931",
+    "date": "2025-02-21",
+    "label": "VIR SEPA CPAM 931 (Virtuel)",
+    "amount": "29.94"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-02-20-54.21-111",
+    "date": "2025-02-20",
+    "label": "VIR SEPA CPAM 111 (Virtuel)",
+    "amount": "54.21"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-02-20-109.65-751",
+    "date": "2025-02-20",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "109.65"
+  },
+  {
+    "id": "lcl-2025-2025-02-18-11.99-4-3",
+    "date": "2025-02-18",
+    "label": "PRLV SEPA PayPal Europe S.a.r.l. et Cie S.C.A 1040377348558/PAYPAL",
+    "amount": "11.99"
+  },
+  {
+    "id": "lcl-2025-2025-02-18-189.00-5-3",
+    "date": "2025-02-18",
+    "label": "PRLV SEPA Autoroutes du Sud de la France LA014326950044098865 012025",
+    "amount": "189"
+  },
+  {
+    "id": "lcl-2025-2025-02-18-77.09-6-3",
+    "date": "2025-02-18",
+    "label": "VIR SEPA VIAMEDIS TP-20250214-VIREMENT 19892 -757068309 -VM00100000-0E88-",
+    "amount": "77.09"
+  },
+  {
+    "id": "lcl-2025-2025-02-18-210.00-7-3",
+    "date": "2025-02-18",
+    "label": "VIR.PERMANENT RAFENNE COMPTAB",
+    "amount": "210"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-02-18-75.18-111",
+    "date": "2025-02-18",
+    "label": "VIR SEPA CPAM 111 (Virtuel)",
+    "amount": "75.18"
+  },
+  {
+    "id": "lcl-2025-2025-02-17-228.68-0-3",
+    "date": "2025-02-17",
+    "label": "VIR INST Sumup Limited SUMUP PID982253 PAYOUT 190225",
+    "amount": "228.68"
+  },
+  {
+    "id": "lcl-2025-2025-02-17-88.84-1-3",
+    "date": "2025-02-17",
+    "label": "VIR SEPA VW Bank France VWFINANCE8901523795 R060809110",
+    "amount": "88.84"
+  },
+  {
+    "id": "lcl-2025-2025-02-17-29.99-2-3",
+    "date": "2025-02-17",
+    "label": "VIR SEPA MUTUELLE GENERALE EDUCAT TP-20250214-075OWNP53290724 -757068309-009 1007751-0E88-",
+    "amount": "29.99"
+  },
+  {
+    "id": "lcl-2025-2025-02-17-15.20-3-3",
+    "date": "2025-02-17",
+    "label": "PRLV SEPA URSSAF CENTRE DE GESTION PAM UR 109000006400211896 FEV 25325126421",
+    "amount": "15.2"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-02-17-169.27-931",
+    "date": "2025-02-17",
+    "label": "VIR SEPA CPAM 931 (Virtuel)",
+    "amount": "169.27"
+  },
+  {
+    "id": "lcl-2025-2025-02-14-66.44-6-2",
+    "date": "2025-02-14",
+    "label": "VIR SEPA Doctolib EXT BAL SWEEP SWPE423CD22334GC5M3N9BK8FR4W WX",
+    "amount": "66.44"
+  },
+  {
+    "id": "lcl-2025-2025-02-14-51.41-7-2",
+    "date": "2025-02-14",
+    "label": "VIR SEPA CPAM 93 0000007570683090451113250217",
+    "amount": "51.41"
+  },
+  {
+    "id": "lcl-2025-2025-02-14-54.11-8-2",
+    "date": "2025-02-14",
+    "label": "VIR SEPA ALMERYS TP-20250215-ALMERYS TP -757068309 -0098532001-0E88-",
+    "amount": "54.11"
+  },
+  {
+    "id": "lcl-2025-2025-02-14-75.18-9-2",
+    "date": "2025-02-14",
+    "label": "VIR SEPA C.P.A.M. CARCASSONNE 0000007570683090489670250218",
+    "amount": "75.18"
+  },
+  {
+    "id": "lcl-2025-2025-02-14-157.94-10-2",
+    "date": "2025-02-14",
+    "label": "PRLV SEPA MACSF-ASSU-",
+    "amount": "157.94"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-02-14-228.68-751",
+    "date": "2025-02-14",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "228.67999999999998"
+  },
+  {
+    "id": "lcl-2025-2025-02-13-128.32-4-2",
+    "date": "2025-02-13",
+    "label": "PRLV SEPA PayPal Europe S.a.r.l. et Cie S.C.A 1040319673309/PAYPAL",
+    "amount": "128.32"
+  },
+  {
+    "id": "lcl-2025-2025-02-13-80.00-5-2",
+    "date": "2025-02-13",
+    "label": "VIR SEPA MUTUELLE GENERALE EDUCAT TP-20250213-093OWNP53179173 -757068309-009 1007931-0E88-",
+    "amount": "80"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-02-13-75.18-111",
+    "date": "2025-02-13",
+    "label": "VIR SEPA CPAM 111 (Virtuel)",
+    "amount": "75.18"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-02-13-66.44-751",
+    "date": "2025-02-13",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "66.44"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-02-13-54.11-931",
+    "date": "2025-02-13",
+    "label": "VIR SEPA CPAM 931 (Virtuel)",
+    "amount": "54.11"
+  },
+  {
+    "id": "lcl-2025-2025-02-12-856.04-4-1",
+    "date": "2025-02-12",
+    "label": "VIR.PERMANENT M THEO GUILLAUME",
+    "amount": "856.04"
+  },
+  {
+    "id": "lcl-2025-2025-02-12-14.95-5-1",
+    "date": "2025-02-12",
+    "label": "VIR SEPA CPAM 75 PRESTATIONS 0000007570683090432201250213",
+    "amount": "14.95"
+  },
+  {
+    "id": "lcl-2025-2025-02-12-33.06-6-1",
+    "date": "2025-02-12",
+    "label": "VIR SEPA ALMERYS TP-20250213-ALMERYS TP -757068309 -0098532001-0E88-",
+    "amount": "33.06"
+  },
+  {
+    "id": "lcl-2025-2025-02-12-70.01-0-2",
+    "date": "2025-02-12",
+    "label": "VIR SEPA CPAM 75 PRESTATIONS 0000007570683090442201250214",
+    "amount": "70.01"
+  },
+  {
+    "id": "lcl-2025-2025-02-12-44.62-1-2",
+    "date": "2025-02-12",
+    "label": "PRLV SEPA PayPal Europe S.a.r.l. et Cie S.C.A 1040272237782/PAYPAL",
+    "amount": "44.62"
+  },
+  {
+    "id": "lcl-2025-2025-02-12-246.06-2-2",
+    "date": "2025-02-12",
+    "label": "PRLV SEPA MACSF-ASSU-",
+    "amount": "246.06"
+  },
+  {
+    "id": "lcl-2025-2025-02-12-44.62-3-2",
+    "date": "2025-02-12",
+    "label": "PRLV SEPA PayPal Europe S.a.r.l. et Cie S.C.A 1040324315703/PAYPAL",
+    "amount": "44.62"
+  },
+  {
+    "id": "lcl-2025-2025-02-11-174.03-1-1",
+    "date": "2025-02-11",
+    "label": "VIR SEPA CPAM HAUTS DE SEINE SEPA 0000007570683090419281250211",
+    "amount": "174.03"
+  },
+  {
+    "id": "lcl-2025-2025-02-11-423.65-2-1",
+    "date": "2025-02-11",
+    "label": "VIR SEPA CPAM 75 PRESTATIONS 0000007570683090425935250211",
+    "amount": "423.65"
+  },
+  {
+    "id": "lcl-2025-2025-02-11-119.00-3-1",
+    "date": "2025-02-11",
+    "label": "VIR SEPA CPAM VAR 0000007570683090413121250211",
+    "amount": "119"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-02-11-336.11-751",
+    "date": "2025-02-11",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "336.11"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-02-11-44.62-831",
+    "date": "2025-02-11",
+    "label": "VIR SEPA CPAM 831 (Virtuel)",
+    "amount": "44.62"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-02-11-44.62-921",
+    "date": "2025-02-11",
+    "label": "VIR SEPA CPAM 921 (Virtuel)",
+    "amount": "44.62"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-02-11-33.06-931",
+    "date": "2025-02-11",
+    "label": "VIR SEPA CPAM 931 (Virtuel)",
+    "amount": "33.06"
+  },
+  {
+    "id": "lcl-2025-2025-02-10-490.13-0-1",
+    "date": "2025-02-10",
+    "label": "VIR SEPA CETIP CETIP TP-20250212-SPSANT -757068309 -0000476776-0E88-",
+    "amount": "490.13"
+  },
+  {
+    "id": "lcl-2025-2025-02-07-102.31-10-2",
+    "date": "2025-02-07",
+    "label": "PRLV SEPA PayPal Europe S.a.r.l. et Cie S.C.A 1040126476756/PAYPAL",
+    "amount": "102.31"
+  },
+  {
+    "id": "lcl-2025-2025-02-07-200.00-11-2",
+    "date": "2025-02-07",
+    "label": "VIR SEPA CPAM 75 PRESTATIONS 0000007570683090372201250207",
+    "amount": "200"
+  },
+  {
+    "id": "lcl-2025-2025-02-07-261.10-0-3",
+    "date": "2025-02-07",
+    "label": "PRLV SEPA MUTUELLE MIEUX ETRE Cotisations MULTI 7951P",
+    "amount": "261.1"
+  },
+  {
+    "id": "lcl-2025-2025-02-07-26.24-1-3",
+    "date": "2025-02-07",
+    "label": "PRLV SEPA C.A.R.P.I.M.K.O M6214083 AC R M-IBAN",
+    "amount": "26.24"
+  },
+  {
+    "id": "lcl-2025-2025-02-07-75.18-2-3",
+    "date": "2025-02-07",
+    "label": "PRLV SEPA C.A.R.P.I.M.K.O M6214083 AA R M-IBAN",
+    "amount": "75.18"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-02-07-75.18-111",
+    "date": "2025-02-07",
+    "label": "VIR SEPA CPAM 111 (Virtuel)",
+    "amount": "75.18"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-02-07-237.81-751",
+    "date": "2025-02-07",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "237.81"
+  },
+  {
+    "id": "lcl-2025-2025-02-06-25.17-8-2",
+    "date": "2025-02-06",
+    "label": "VIR SEPA BPCE MUTUELLE 550147072325 - Decaissement n. 2500001L7np de 132.31 EUR du 06/02/2025 - Tiers payant - Cont rat S10111900003",
+    "amount": "25.17"
+  },
+  {
+    "id": "lcl-2025-2025-02-06-151.67-9-2",
+    "date": "2025-02-06",
+    "label": "PRLV SEPA PayPal Europe S.a.r.l. et Cie S.C.A 1040110205590/PAYPAL",
+    "amount": "151.67"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-02-06-75.18-111",
+    "date": "2025-02-06",
+    "label": "VIR SEPA CPAM 111 (Virtuel)",
+    "amount": "75.18"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-02-06-261.10-331",
+    "date": "2025-02-06",
+    "label": "VIR SEPA CPAM 331 (Virtuel)",
+    "amount": "261.1"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-02-06-49.86-751",
+    "date": "2025-02-06",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "49.86"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-02-06-37.74-931",
+    "date": "2025-02-06",
+    "label": "VIR SEPA CPAM 931 (Virtuel)",
+    "amount": "37.74"
+  },
+  {
+    "id": "lcl-2025-2025-02-05-84.89-4-2",
+    "date": "2025-02-05",
+    "label": "VIR SEPA CPAM 75 PRESTATIONS 0000007570683090362201250206",
+    "amount": "84.89"
+  },
+  {
+    "id": "lcl-2025-2025-02-05-126.00-5-2",
+    "date": "2025-02-05",
+    "label": "VIR SEPA HENNER GMC TP-20250205-HENNER-757068309 -0075949776-0 E88-",
+    "amount": "126"
+  },
+  {
+    "id": "lcl-2025-2025-02-05-230.64-6-2",
+    "date": "2025-02-05",
+    "label": "PRLV SEPA Bouygues Telecom 06xxxxx802",
+    "amount": "230.64"
+  },
+  {
+    "id": "lcl-2025-2025-02-05-190.91-7-2",
+    "date": "2025-02-05",
+    "label": "VIR SEPA C.P.A.M. CARCASSONNE 0000007570683090379670250207",
+    "amount": "190.91"
+  },
+  {
+    "id": "lcl-2025-2025-02-04-3.00-1-1",
+    "date": "2025-02-04",
+    "label": "VIR SEPA CETIP CETIP TP-20250203-SPSANT -757068309 -0000476776-0E88-",
+    "amount": "-3"
+  },
+  {
+    "id": "lcl-2025-2025-02-04-2.99-2-2",
+    "date": "2025-02-04",
+    "label": "VIR SEPA C.P.A.M. CARCASSONNE 0000007570683090369670250206",
+    "amount": "2.99"
+  },
+  {
+    "id": "lcl-2025-2025-02-04-240.00-3-2",
+    "date": "2025-02-04",
+    "label": "VIR SEPA CPAM 93 0000007570683090361113250206",
+    "amount": "240"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-02-04-84.89-111",
+    "date": "2025-02-04",
+    "label": "VIR SEPA CPAM 111 (Virtuel)",
+    "amount": "84.88999999999999"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-02-04-202.86-751",
+    "date": "2025-02-04",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "202.86"
+  },
+  {
+    "id": "lcl-2025-2025-02-03-29.50-3-1",
+    "date": "2025-02-03",
+    "label": "VIR SEPA Doctolib EXT BAL SWEEP SWPE423LL22338RS5LZP6G67P256 WS",
+    "amount": "-29.5"
+  },
+  {
+    "id": "lcl-2025-2025-02-03-7.43-4-1",
+    "date": "2025-02-03",
+    "label": "VIR SEPA C.P.A.M. CARCASSONNE 0000007570683090349670250204",
+    "amount": "7.43"
+  },
+  {
+    "id": "lcl-2025-2025-02-03-5.20-5-1",
+    "date": "2025-02-03",
+    "label": "PRLV SEPA CA CONSUMER FINANCE CREANCIER INITIAL:SOFINCO FNAC",
+    "amount": "5.2"
+  },
+  {
+    "id": "lcl-2025-2025-02-03-428.98-6-1",
+    "date": "2025-02-03",
+    "label": "VIR SEPA CPAM 75 PRESTATIONS 0000007570683090355935250204",
+    "amount": "428.98"
+  },
+  {
+    "id": "lcl-2025-2025-02-03-2.99-7-1",
+    "date": "2025-02-03",
+    "label": "VIR SEPA ALMERYS TP-20250205-ALMERYS TP -757068309 -0098532001-0E88-",
+    "amount": "2.99"
+  },
+  {
+    "id": "lcl-2025-2025-02-03-1897.00-8-1",
+    "date": "2025-02-03",
+    "label": "VIR SEPA M PHILIPPE GUILLAUME",
+    "amount": "1897"
+  },
+  {
+    "id": "lcl-2025-2025-02-03-33.06-9-1",
+    "date": "2025-02-03",
+    "label": "PRLV SEPA PayPal Europe S.a.r.l. et Cie S.C.A 1040104710715/PAYPAL",
+    "amount": "33.06"
+  },
+  {
+    "id": "lcl-2025-2025-02-03-538.80-0-2",
+    "date": "2025-02-03",
+    "label": "VIR SEPA C.P.A.M. BORDEAUX 0000007570683090360702250206",
+    "amount": "538.8"
+  },
+  {
+    "id": "lcl-2025-2025-02-03-61.84-1-2",
+    "date": "2025-02-03",
+    "label": "VIR SEPA ALMERYS TP-20250206-ALMERYS TP -757068309 -0098532001-0E88-",
+    "amount": "61.84"
+  },
+  {
+    "id": "lcl-2025-2025-02-01-1300.00-2-1",
+    "date": "2025-02-01",
+    "label": "PRLV SEPA PayPal Europe S.a.r.l. et Cie S.C.A 1040042967373/PAYPAL",
+    "amount": "1300"
+  },
+  {
+    "id": "lcl-2025-2025-01-31-329.35-0-1",
+    "date": "2025-01-31",
+    "label": "VIR SEPA CPAM 75 PRESTATIONS 0000007570683090302201250131",
+    "amount": "329.35"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-01-31-538.80-751",
+    "date": "2025-01-31",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "538.8"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-01-31-33.06-931",
+    "date": "2025-01-31",
+    "label": "VIR SEPA CPAM 931 (Virtuel)",
+    "amount": "33.06"
+  },
+  {
+    "id": "lcl-2025-2025-01-30-134.91-0-3",
+    "date": "2025-01-30",
+    "label": "VIR SEPA CPAM 94 0000007570683090295941250130",
+    "amount": "134.91"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-01-30-36.55-751",
+    "date": "2025-01-30",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "36.55"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-01-30-293.24-931",
+    "date": "2025-01-30",
+    "label": "VIR SEPA CPAM 931 (Virtuel)",
+    "amount": "293.24"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-01-30-139.44-941",
+    "date": "2025-01-30",
+    "label": "VIR SEPA CPAM 941 (Virtuel)",
+    "amount": "139.44"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-01-29-136.51-751",
+    "date": "2025-01-29",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "136.51"
+  },
+  {
+    "id": "lcl-2025-2025-01-28-490.00-7-2",
+    "date": "2025-01-28",
+    "label": "PRLV SEPA PayPal Europe S.a.r.l. et Cie S.C.A 1039931006206/PAYPAL",
+    "amount": "490"
+  },
+  {
+    "id": "lcl-2025-2025-01-28-53.13-8-2",
+    "date": "2025-01-28",
+    "label": "VIR SEPA ALMERYS TP-20250130-ALMERYS TP -757068309 -0098532001-0E88-",
+    "amount": "53.13"
+  },
+  {
+    "id": "lcl-2025-2025-01-28-300.00-9-2",
+    "date": "2025-01-28",
+    "label": "VIR SEPA CPAM 93 0000007570683090291113250130",
+    "amount": "300"
+  },
+  {
+    "id": "lcl-2025-2025-01-28-88.84-10-2",
+    "date": "2025-01-28",
+    "label": "VIR SEPA CPAM 75 PRESTATIONS 0000007570683090292201250130",
+    "amount": "88.84"
+  },
+  {
+    "id": "lcl-2025-2025-01-27-256.65-5-2",
+    "date": "2025-01-27",
+    "label": "PRLV SEPA PayPal Europe S.a.r.l. et Cie S.C.A 1039930469638/PAYPAL",
+    "amount": "256.65"
+  },
+  {
+    "id": "lcl-2025-2025-01-27-98.26-6-2",
+    "date": "2025-01-27",
+    "label": "PRLV SEPA PayPal Europe S.a.r.l. et Cie S.C.A 1039930884887/PAYPAL",
+    "amount": "98.26"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-01-27-53.13-751",
+    "date": "2025-01-27",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "53.129999999999995"
+  },
+  {
+    "id": "lcl-2025-2025-01-24-133.10-3-2",
+    "date": "2025-01-24",
+    "label": "PRLV SEPA PayPal Europe S.a.r.l. et Cie S.C.A 1039930406017/PAYPAL",
+    "amount": "133.1"
+  },
+  {
+    "id": "lcl-2025-2025-01-24-680.09-4-2",
+    "date": "2025-01-24",
+    "label": "PRLV SEPA PayPal Europe S.a.r.l. et Cie S.C.A 1039931033006/PAYPAL",
+    "amount": "-680.09"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-01-24-98.26-751",
+    "date": "2025-01-24",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "98.25999999999999"
+  },
+  {
+    "id": "lcl-2025-2025-01-23-88.84-1-2",
+    "date": "2025-01-23",
+    "label": "VIR SEPA CPAM 75 PRESTATIONS 0000007570683090282201250129",
+    "amount": "88.84"
+  },
+  {
+    "id": "lcl-2025-2025-01-23-69.57-2-2",
+    "date": "2025-01-23",
+    "label": "PRLV SEPA PayPal Europe S.a.r.l. et Cie S.C.A 1039922859998/PAYPAL",
+    "amount": "69.57"
+  },
+  {
+    "id": "lcl-2025-2025-01-22-46.38-4-1",
+    "date": "2025-01-22",
+    "label": "VIR SEPA Doctolib EXT BAL SWEEP SWPE423CD22327335LXPLZTFBC46 L4",
+    "amount": "46.38"
+  },
+  {
+    "id": "lcl-2025-2025-01-22-56.71-5-1",
+    "date": "2025-01-22",
+    "label": "VIR SEPA CPAM 75 PRESTATIONS 0000007570683090242201250127",
+    "amount": "56.71"
+  },
+  {
+    "id": "lcl-2025-2025-01-22-275.29-0-2",
+    "date": "2025-01-22",
+    "label": "VIR SEPA ALMERYS TP-20250129-ALMERYS TP -757068309 -0098532001-0E88-",
+    "amount": "275.29"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-01-22-69.57-751",
+    "date": "2025-01-22",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "69.57000000000001"
+  },
+  {
+    "id": "lcl-2025-2025-01-21-181.28-0-1",
+    "date": "2025-01-21",
+    "label": "VIR SEPA MUTUELLE GENERALE EDUCAT TP-20250117-075OWNP51296242 -757068309-009 1007751-0E88-",
+    "amount": "181.28"
+  },
+  {
+    "id": "lcl-2025-2025-01-21-117.01-1-1",
+    "date": "2025-01-21",
+    "label": "VIR SEPA Sumup Limited SUMUP PID934135 PAYOUT 230125",
+    "amount": "117.01"
+  },
+  {
+    "id": "lcl-2025-2025-01-21-303.65-2-1",
+    "date": "2025-01-21",
+    "label": "VIR SEPA CPAM 75 PRESTATIONS 0000007570683090212201250122",
+    "amount": "303.65"
+  },
+  {
+    "id": "lcl-2025-2025-01-21-23.99-3-1",
+    "date": "2025-01-21",
+    "label": "VIR SEPA CPAM 75 PRESTATIONS 0000007570683090232201250124",
+    "amount": "23.99"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-01-21-56.71-931",
+    "date": "2025-01-21",
+    "label": "VIR SEPA CPAM 931 (Virtuel)",
+    "amount": "56.71"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-01-20-117.01-751",
+    "date": "2025-01-20",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "117.00999999999999"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-01-17-25.16-751",
+    "date": "2025-01-17",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "25.16"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-01-17-102.25-931",
+    "date": "2025-01-17",
+    "label": "VIR SEPA CPAM 931 (Virtuel)",
+    "amount": "102.25"
+  },
+  {
+    "id": "lcl-2025-2025-01-16-39.48-7-2",
+    "date": "2025-01-16",
+    "label": "VIR SEPA CPAM 93 0000007570683090161113250117",
+    "amount": "39.48"
+  },
+  {
+    "id": "lcl-2025-2025-01-16-185.75-8-2",
+    "date": "2025-01-16",
+    "label": "VIR.PERMANENT RAFENNE COMPTAB",
+    "amount": "185.75"
+  },
+  {
+    "id": "lcl-2025-2025-01-15-306.00-1-2",
+    "date": "2025-01-15",
+    "label": "PRLV SEPA URSSAF CENTRE DE GESTION PAM UR 109000006400211896 JANV25325116421",
+    "amount": "306"
+  },
+  {
+    "id": "lcl-2025-2025-01-15-103.52-2-2",
+    "date": "2025-01-15",
+    "label": "PRLV SEPA PayPal Europe S.a.r.l. et Cie S.C.A 1039665252135/PAYPAL",
+    "amount": "-103.52"
+  },
+  {
+    "id": "lcl-2025-2025-01-15-15.20-3-2",
+    "date": "2025-01-15",
+    "label": "PRLV SEPA PayPal Europe S.a.r.l. et Cie S.C.A 1039678555587/PAYPAL",
+    "amount": "15.2"
+  },
+  {
+    "id": "lcl-2025-2025-01-15-29.99-4-2",
+    "date": "2025-01-15",
+    "label": "PRLV SEPA Autoroutes du Sud de la France KL015363660044098865 122024",
+    "amount": "29.99"
+  },
+  {
+    "id": "lcl-2025-2025-01-15-30.92-5-2",
+    "date": "2025-01-15",
+    "label": "VIR SEPA CPAM 75 PRESTATIONS 0000007570683090162201250117",
+    "amount": "30.92"
+  },
+  {
+    "id": "lcl-2025-2025-01-15-62.83-6-2",
+    "date": "2025-01-15",
+    "label": "VIR SEPA Sumup Limited SUMUP PID928638 PAYOUT 200125",
+    "amount": "62.83"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-01-15-185.75-751",
+    "date": "2025-01-15",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "185.75"
+  },
+  {
+    "id": "lcl-2025-2025-01-14-33.15-5-1",
+    "date": "2025-01-14",
+    "label": "VIR SEPA Sumup Limited SUMUP PID920038 PAYOUT 150125",
+    "amount": "33.15"
+  },
+  {
+    "id": "lcl-2025-2025-01-14-167.81-6-1",
+    "date": "2025-01-14",
+    "label": "VIR SEPA Sumup Limited SUMUP PID921865 PAYOUT 160125",
+    "amount": "167.81"
+  },
+  {
+    "id": "lcl-2025-2025-01-14-410.00-7-1",
+    "date": "2025-01-14",
+    "label": "VIR SEPA CPAM 75 PRESTATIONS 0000007570683090142201250115",
+    "amount": "410"
+  },
+  {
+    "id": "lcl-2025-2025-01-14-356.49-8-1",
+    "date": "2025-01-14",
+    "label": "VIR SEPA ALMERYS TP-20250116-ALMERYS TP -757068309 -0098532001-0E88-",
+    "amount": "356.49"
+  },
+  {
+    "id": "lcl-2025-2025-01-14-14.95-0-2",
+    "date": "2025-01-14",
+    "label": "PRLV SEPA MACSF-ASSU-",
+    "amount": "14.95"
+  },
+  {
+    "id": "lcl-2025-2025-01-13-856.04-0-1",
+    "date": "2025-01-13",
+    "label": "PRLV SEPA ROOLE-IDENTICAR Prelevement ROOLE-IDENTICAR",
+    "amount": "856.04"
+  },
+  {
+    "id": "lcl-2025-2025-01-13-80.00-1-1",
+    "date": "2025-01-13",
+    "label": "PRLV SEPA DIRECTION GENERALE DES FINANCES PUBLIQUE S CREANCIER INITIAL:D.G.F.I.P. IMPOT PAS",
+    "amount": "80"
+  },
+  {
+    "id": "lcl-2025-2025-01-13-123.13-2-1",
+    "date": "2025-01-13",
+    "label": "PRLV SEPA MACSF-ASSU-",
+    "amount": "123.13"
+  },
+  {
+    "id": "lcl-2025-2025-01-13-78.97-3-1",
+    "date": "2025-01-13",
+    "label": "PRLV SEPA PayPal Europe S.a.r.l. et Cie S.C.A 1039614070711/PAYPAL",
+    "amount": "78.97"
+  },
+  {
+    "id": "lcl-2025-2025-01-13-30.92-4-1",
+    "date": "2025-01-13",
+    "label": "VIR SEPA CETIP CETIP TP-20250115-SPSANT -757068309 -0000476776-0E88-",
+    "amount": "30.92"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-01-13-356.49-751",
+    "date": "2025-01-13",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "356.49"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-01-10-259.56-751",
+    "date": "2025-01-10",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "259.56"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-01-09-59.73-751",
+    "date": "2025-01-09",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "59.73"
+  },
+  {
+    "id": "lcl-2025-2025-01-08-26.37-0-3",
+    "date": "2025-01-08",
+    "label": "PRLV SEPA C.A.R.P.I.M.K.O M6214083 AA R M-IBAN",
+    "amount": "26.37"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-01-08-53.11-751",
+    "date": "2025-01-08",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "53.11"
+  },
+  {
+    "id": "lcl-2025-2025-01-07-0.99-7-2",
+    "date": "2025-01-07",
+    "label": "PRLV SEPA MUTUELLE MIEUX ETRE Cotisations MULTI 7951P",
+    "amount": "0.99"
+  },
+  {
+    "id": "lcl-2025-2025-01-07-250.00-8-2",
+    "date": "2025-01-07",
+    "label": "PRLV SEPA ADOHA PRLV-ADOHA-CONTRAT-RCP00022-R-RC",
+    "amount": "250"
+  },
+  {
+    "id": "lcl-2025-2025-01-07-78.97-9-2",
+    "date": "2025-01-07",
+    "label": "PRLV SEPA GC RE DOCTOLIB FRIN25-00032872",
+    "amount": "78.97"
+  },
+  {
+    "id": "lcl-2025-2025-01-07-1059.96-10-2",
+    "date": "2025-01-07",
+    "label": "PRLV SEPA C.A.R.P.I.M.K.O M6214083 AC R M-IBAN",
+    "amount": "1059.96"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-01-07-49.75-751",
+    "date": "2025-01-07",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "49.75"
+  },
+  {
+    "id": "lcl-2025-2025-01-06-167.81-3-2",
+    "date": "2025-01-06",
+    "label": "VIR SEPA CPAM 75 PRESTATIONS 0000007570683090072201250108",
+    "amount": "167.81"
+  },
+  {
+    "id": "lcl-2025-2025-01-06-92.76-4-2",
+    "date": "2025-01-06",
+    "label": "VIR SEPA Sumup Limited SUMUP PID909872 PAYOUT 090125",
+    "amount": "92.76"
+  },
+  {
+    "id": "lcl-2025-2025-01-06-1197.55-5-2",
+    "date": "2025-01-06",
+    "label": "VIR SEPA LBC France SAS leboncoin payout",
+    "amount": "1197.55"
+  },
+  {
+    "id": "lcl-2025-2025-01-06-126.00-6-2",
+    "date": "2025-01-06",
+    "label": "VIR SEPA CPAM 75 PRESTATIONS 0000007570683090082201250109",
+    "amount": "126"
+  },
+  {
+    "id": "lcl-2025-virtual-cpam-2025-01-06-1086.75-751",
+    "date": "2025-01-06",
+    "label": "VIR SEPA CPAM 751 (Virtuel)",
+    "amount": "1086.75"
+  },
+  {
+    "id": "lcl-2025-2025-01-03-3.00-1-1",
+    "date": "2025-01-03",
+    "label": "ABONNEMENT LCL AVERTIS",
+    "amount": "-3"
+  },
+  {
+    "id": "lcl-2025-2025-01-02-29.50-3-1",
+    "date": "2025-01-02",
+    "label": "VIR SEPA Sumup Limited SUMUP PID904458 PAYOUT 060125",
+    "amount": "-29.5"
+  },
+  {
+    "id": "lcl-2025-2025-01-02-170.49-4-1",
+    "date": "2025-01-02",
+    "label": "VIR SEPA CETIP CETIP TP-20250106-SPSANT -757068309 -0000476776-0E88-",
+    "amount": "170.49"
+  },
+  {
+    "id": "lcl-2025-2025-01-02-25.17-5-1",
+    "date": "2025-01-02",
+    "label": "PRLV SEPA PayPal Europe S.a.r.l. et Cie S.C.A 1039378766493/PAYPAL",
+    "amount": "25.17"
+  },
+  {
+    "id": "lcl-2025-2025-01-02-150.96-6-1",
+    "date": "2025-01-02",
+    "label": "PRLV SEPA CA CONSUMER FINANCE CREANCIER INITIAL:SOFINCO FNAC",
+    "amount": "150.96"
+  },
+  {
+    "id": "lcl-2025-2025-01-02-100.68-7-1",
+    "date": "2025-01-02",
+    "label": "PRLV SEPA PayPal Europe S.a.r.l. et Cie S.C.A 1039445441715/PAYPAL",
+    "amount": "100.68"
+  },
+  {
+    "id": "lcl-2025-2025-01-02-1892.10-8-1",
+    "date": "2025-01-02",
+    "label": "VIR SEPA Doctolib EXT BAL SWEEP SWPE423C92232GJR5LTQXNS4S63N",
+    "amount": "1892.1"
+  },
+  {
+    "id": "lcl-2025-2025-01-02-2.99-0-2",
+    "date": "2025-01-02",
+    "label": "PRLV SEPA Bouygues Telecom 06xxxxx802",
+    "amount": "2.99"
+  },
+  {
+    "id": "lcl-2025-2025-01-02-5.20-1-2",
+    "date": "2025-01-02",
+    "label": "PRLV SEPA PayPal (Europe) S.a r.l. et Cie, S.C.A. 1039450920296 PAYPAL",
+    "amount": "5.2"
+  },
+  {
+    "id": "lcl-2025-2025-01-02-7.23-2-2",
+    "date": "2025-01-02",
+    "label": "PRLV SEPA PayPal Europe S.a.r.l. et Cie S.C.A 1039467245535/PAYPAL",
+    "amount": "7.23"
+  },
+  {
+    "id": "lcl-2025-2025-01-01-21.81-0-1",
+    "date": "2025-01-01",
+    "label": "PRLV SEPA PayPal Europe S.a.r.l. et Cie S.C.A 1039294462227/PAYPAL",
+    "amount": "-21.81"
+  },
+  {
+    "id": "lcl-2025-2025-01-01-1300.00-2-1",
+    "date": "2025-01-01",
+    "label": "ABON LCL ACCESS 007,23EUR",
+    "amount": "1300"
+  }
+]

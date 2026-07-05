@@ -1,0 +1,105 @@
+{
+  "cookies": [
+    {
+      "name": "session",
+      "value": "kmptsJbhsFxRSkqmb57YCw.bFDoEFo2BRgD_VLvsIthMEC6TZLKDqwbNGgL0CyDbNvslHYaI2dIAIstA8zjzZzzpur8h8UHRrdBTw7h6r0GZJsO68-gCHtBx0549nsAxaS7U6L_wib3JAfNVyz4tMvPzQ5xl92LC0zcwq7A7cyLIZk7jyR3INsAJarUelMLWdThCoF4qR5FZGyF-7pkwoNsjRiF9gvBOX3RQwsVLpX3FmT_9JvyvcIEPqRsTe8-WwutmFikfpbfOtUyaq3-93Kmore2LP1VI1DXuzp1NA721V8Jf2PNVfH2BcBYj3wvwEMXf0UKj0Zo7qNr-BUe2Y8Ryy-lwfdgrmaHpj7TsAX_tWEkLGZjztrRpNb3OwRLuPKWw-gMkJHIlCOKhmTDxyySXQqFqQOB2F8Xr2aoAXWYvTGMw2up-eMugrFbHYsr2N4pqmaDwcEfMiliNsH2ZBJtvINGvj3LvQpNDa1WTnROLWFuObP8WOZX_bC3p0D3PNCDqOTJilSXm-5aI0oBlqXWH8QQbLg-WUN3W8fhd_7YsD0LFC_slixCEH-55w0lqlH_cROEG5UvhlGgVM1rEKh_XoSEcxTlAXvfCrL0204o_Ndo821fjv2lgP6DGpeHZ78QXoBt_94mxlHTLTT7iizeocE3UAzNHGNFg765fQguKRI3Gasnp_PjWMe2UhVQ4NJOZXgBmBsBMC9NPEylHDcnKsxe7roXz4pgODgLV2wnOMQm8SJ3M52-b8Ybn8ZHsTB4trlT-i2rSbHVsNq6nnhInJIaKQrwi-P78EBVKd7eFG16ium4l1A2DEScZY31hmid247FXAC8NK5cqbmQitUVb96jzm8mRDXj00NFHR9jxA.1783195348205.86400000.NcC1LMFC0Md3oFb7lGUXjpGilikwNJUq_cB3fXU_Wpk",
+      "domain": "admin.gandi.net",
+      "path": "/dashboard",
+      "expires": -1,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "atuserid",
+      "value": "%7B%22name%22%3A%22atuserid%22%2C%22val%22%3A%22dd9b1078-5f0b-432a-b8b4-8e51b96a2740%22%2C%22options%22%3A%7B%22end%22%3A%222027-08-05T20%3A02%3A04.071Z%22%2C%22path%22%3A%22%2F%22%7D%7D",
+      "domain": ".gandi.net",
+      "path": "/",
+      "expires": 1817496124,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "device_token",
+      "value": "502OHr7M_7Ejcw9GF-m2dDW1cBot9MBt7rhVQzo-4t01zWWdFZmMEIRC3BxWhPdUJrSaKH8rWDIa5zqwZ6ZpUd1kLi6kCVdGPqbHBZUESwRYrQwWO262uKvD",
+      "domain": ".id.gandi.net",
+      "path": "/",
+      "expires": 1817755328.283923,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "Strict"
+    },
+    {
+      "name": "locale",
+      "value": "en",
+      "domain": ".id.gandi.net",
+      "path": "/",
+      "expires": 1814731328.284031,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "atauthority",
+      "value": "%7B%22name%22%3A%22atauthority%22%2C%22val%22%3A%7B%22authority_name%22%3A%22cnil%22%2C%22visitor_mode%22%3A%22exempt%22%7D%2C%22options%22%3A%7B%22end%22%3A%222027-08-05T20%3A02%3A08.392Z%22%2C%22path%22%3A%22%2F%22%7D%7D",
+      "domain": ".gandi.net",
+      "path": "/",
+      "expires": 1817496128,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "session",
+      "value": "7SiTY1qdb0t9tx-mc9NzelK4fC-9qBHWuaMagPHpJjBBZRnNdc8MpEoecn87Id3wRMQQpgPbiLtJEL0KvhgJGlsxNzgzMTk1MzQ4LCAxNzgzMTk1MzIzLjE4OTgzNjMsIHsiX2NzcmZ0XyI6ICI2ODNjMzM2ODU0Zjk0ZDVhMTYwMmNmNTM4MTE1ODFmZDI0OWZjMzA0IiwgIm1mYV9wcm9jZXNzX3NsdWciOiAibEpVX29Tak1mT3JlZ2xrbGF2RTE0Q0VYMU94Vzk2ODlLNWNUeTNZNzd5TjcwT3UwYmV3dWcwNVIiLCAic2Vzc2lvbi5jcmVhdGVkX2F0IjogIjIwMjYtMDctMDRUMjA6MDI6MDguMjk2NjgyKzAwOjAwIiwgInVzZXIudXNlcm5hbWUiOiAiRkVFTFBST0QiLCAidXNlci51dWlkIjogIjIzYThmMjM4LTdjZTQtMTFlNy05YmZlLTAwMTYzZTYxZWYzMSIsICJ1c2VyLmxhbmciOiAiZnIiLCAidXNlci5hdXRobl90b2tlbiI6ICIzYzU3MGFmMDc3ZTMxMWYxOWNlMTAwMTYzZThhMDFhNyIsICJ1c2VyLnRydXN0ZWRfZGV2aWNlIjogZmFsc2UsICJ1c2VyLnNhbWxfdXNlciI6IGZhbHNlLCAidXNlci5mZWF0dXJlX2ZsYWdzIjogeyJtZmFfZW1haWwiOiB0cnVlfX1d",
+      "domain": "id.gandi.net",
+      "path": "/",
+      "expires": 1798747348.723446,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None"
+    },
+    {
+      "name": "_pcid",
+      "value": "%7B%22browserId%22%3A%22dd9b1078-5f0b-432a-b8b4-8e51b96a2740%22%2C%22_t%22%3A%22n6v7eewc%7Cmr6sgxkc%22%7D",
+      "domain": ".gandi.net",
+      "path": "/",
+      "expires": 1817323349,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "pa_privacy",
+      "value": "%22exempt%22",
+      "domain": "admin.gandi.net",
+      "path": "/",
+      "expires": 1817323349,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "_pctx",
+      "value": "%7Bu%7DN4IgrgzgpgThIC4B2YA2qA05owMoBcBDfSREQpAeyRCwgEt8oBJAE0RXSwH18ykAbADcA7FCgBPegB8AtjAEQA5gA9Z9EAF8gA",
+      "domain": ".gandi.net",
+      "path": "/",
+      "expires": 1817323349,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "Lax"
+    }
+  ],
+  "origins": [
+    {
+      "origin": "https://id.gandi.net",
+      "localStorage": [
+        {
+          "name": "device_token",
+          "value": "502OHr7M_7Ejcw9GF-m2dDW1cBot9MBt7rhVQzo-4t01zWWdFZmMEIRC3BxWhPdUJrSaKH8rWDIa5zqwZ6ZpUd1kLi6kCVdGPqbHBZUESwRYrQwWO262uKvD"
+        }
+      ]
+    }
+  ]
+}

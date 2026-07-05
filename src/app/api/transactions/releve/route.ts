@@ -210,19 +210,19 @@ export async function GET() {
       };
     });
 
-    // 2. Fetch Transactions (fetch up to 12 pages from 2026-01-01 to cover full year history)
+    // 2. Fetch Transactions (fetch up to 12 pages from 2025-06-30 to cover full history)
     let txCursor: string | null = null;
     const allTxs: any[] = [];
     const filterObj = [
       {
         field: "date",
         operator: "gteq",
-        value: "2026-01-01"
+        value: "2025-06-30"
       }
     ];
     const filterStr = encodeURIComponent(JSON.stringify(filterObj));
 
-    for (let page = 1; page <= 12; page++) {
+    for (let page = 1; page <= 15; page++) {
       const fetchUrl: string = `${BASE_URL}/transactions?filter=${filterStr}&limit=100` + (txCursor ? `&cursor=${txCursor}` : '');
       const res = await fetch(fetchUrl, {
         headers: {
@@ -242,6 +242,30 @@ export async function GET() {
       } else {
         break;
       }
+    }
+
+    // Load local 2025 LCL transactions for the first half of the year
+    try {
+      const lcl2025Path = path.join(process.cwd(), 'src/app/api/transactions/releve/lcl_2025_transactions.json');
+      if (fs.existsSync(lcl2025Path)) {
+        const localTxs = JSON.parse(fs.readFileSync(lcl2025Path, 'utf8'));
+        // Filter out any overlap (Pennylane starts on 2025-06-30)
+        const pannyStartDate = new Date("2025-06-30").getTime();
+        const filteredLocal = localTxs.filter((ltx: any) => new Date(ltx.date).getTime() < pannyStartDate);
+        
+        // Convert local format to match Pennylane shape
+        const formattedLocal = filteredLocal.map((ltx: any) => ({
+          id: ltx.id,
+          date: ltx.date,
+          label: ltx.label,
+          amount: ltx.amount,
+          bank_account: { id: 13829443584 } // Mock as main pro account
+        }));
+        
+        allTxs.push(...formattedLocal);
+      }
+    } catch (err) {
+      console.error("Failed to load local LCL 2025 transactions:", err);
     }
 
     // 3. Load Local Invoices from DB
