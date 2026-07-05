@@ -384,7 +384,8 @@ export async function GET() {
       ];
       const isIndigo = labelLower.includes('indigo');
       const isSmallIndigo = isIndigo && absAmount < 10.00;
-      const noJustificatif = noJustificatifKeywords.some(k => labelLower.includes(k)) || 
+      const noJustificatif = !isOutflow || 
+                             noJustificatifKeywords.some(k => labelLower.includes(k)) || 
                              !isPro || 
                              isSmallIndigo;
 

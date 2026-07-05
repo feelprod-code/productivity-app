@@ -891,10 +891,17 @@ export default function RelevePage() {
                                                 </Badge>
                                               </button>
                                             ) : tx.noJustificatif ? (
-                                              <Badge variant="outline" className="border-slate-300 text-slate-600 bg-slate-100/50 font-roboto font-normal text-[8px] px-1.5 py-0 flex items-center gap-0.5">
-                                                <span className="w-1 h-1 rounded-full bg-slate-400" />
-                                                <span>Sans justificatif</span>
-                                              </Badge>
+                                              tx.amount > 0 ? (
+                                                <Badge variant="outline" className="border-emerald-500/20 text-emerald-700 bg-emerald-50/40 font-roboto font-medium text-[8px] px-1.5 py-0 flex items-center gap-0.5">
+                                                  <span className="w-1 h-1 rounded-full bg-emerald-500" />
+                                                  <span>Recette Validée</span>
+                                                </Badge>
+                                              ) : (
+                                                <Badge variant="outline" className="border-slate-300 text-slate-600 bg-slate-100/50 font-roboto font-normal text-[8px] px-1.5 py-0 flex items-center gap-0.5">
+                                                  <span className="w-1 h-1 rounded-full bg-slate-400" />
+                                                  <span>Sans justificatif</span>
+                                                </Badge>
+                                              )
                                             ) : (
                                               <button
                                                 onClick={() => handleReconcileAuto(tx)}
@@ -972,10 +979,17 @@ export default function RelevePage() {
                                           </Badge>
                                         </button>
                                       ) : tx.noJustificatif ? (
-                                        <Badge variant="outline" className="border-slate-300 text-slate-600 bg-slate-100/50 font-roboto font-normal text-[10px] px-2 py-0.5 flex items-center gap-1">
-                                          <span className="w-1 h-1 rounded-full bg-slate-400" />
-                                          <span>Sans justificatif</span>
-                                        </Badge>
+                                         tx.amount > 0 ? (
+                                           <Badge variant="outline" className="border-emerald-500/20 text-emerald-700 bg-emerald-50/40 font-roboto font-medium text-[10px] px-2 py-0.5 flex items-center gap-1.5">
+                                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                             <span>Recette Validée</span>
+                                           </Badge>
+                                         ) : (
+                                           <Badge variant="outline" className="border-slate-300 text-slate-600 bg-slate-100/50 font-roboto font-normal text-[10px] px-2 py-0.5 flex items-center gap-1">
+                                             <span className="w-1 h-1 rounded-full bg-slate-400" />
+                                             <span>Sans justificatif</span>
+                                           </Badge>
+                                         )
                                       ) : (
                                         <button
                                           onClick={() => handleReconcileAuto(tx)}
@@ -1178,6 +1192,28 @@ export default function RelevePage() {
                                             <p className="text-xs font-light text-[#1E2A33]/40 italic">
                                               Les transactions personnelles ne requièrent pas de justificatifs pro.
                                             </p>
+                                          ) : tx.noJustificatif ? (
+                                            tx.amount > 0 ? (
+                                              <div className="bg-emerald-50/40 border border-emerald-500/10 p-3 rounded-xl">
+                                                <div className="flex items-center gap-2 text-emerald-800 font-semibold text-xs mb-1">
+                                                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                                                  Recette validée sans justificatif requis
+                                                </div>
+                                                <p className="text-[11px] text-emerald-700/80 leading-relaxed font-light">
+                                                  Les entrées et encaissements de trésorerie professionnelle ne nécessitent aucun justificatif d'achat.
+                                                </p>
+                                              </div>
+                                            ) : (
+                                              <div className="bg-slate-50/50 border border-slate-200 p-3 rounded-xl">
+                                                <div className="flex items-center gap-2 text-slate-700 font-semibold text-xs mb-1">
+                                                  <div className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                                                  Opération dispensée de justificatif
+                                                </div>
+                                                <p className="text-[11px] text-slate-500 leading-relaxed font-light">
+                                                  Certaines opérations (agios, commissions de compte, abonnements sans facture dédiée) sont exemptées de pièce justificative.
+                                                </p>
+                                              </div>
+                                            )
                                           ) : (
                                             <div className="space-y-2">
                                               <p className="text-xs font-light text-[#1E2A33]/60 mb-2">
