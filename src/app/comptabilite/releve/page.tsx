@@ -584,7 +584,7 @@ export default function RelevePage() {
           <div className="flex flex-row justify-between items-center gap-3 w-full mb-3.5">
             <div className="flex items-center gap-2 shrink-0">
               <div className="w-1 bg-[#AE7D5C] rounded-full min-h-[22px] sm:min-h-[32px] self-stretch shadow-[0_0_15px_rgba(174,125,92,0.4)]"></div>
-              <h1 className="text-lg xs:text-xl sm:text-4xl font-bebas tracking-wide text-[#1E2A33] leading-none">
+              <h1 className="text-2xl xs:text-3xl sm:text-4xl font-bebas tracking-wide text-[#1E2A33] leading-none">
                 TRANSACTIONS
               </h1>
             </div>
@@ -598,7 +598,7 @@ export default function RelevePage() {
                       setSelectedYear(y);
                       setSelectedMonth("all");
                     }}
-                    className={`flex items-center justify-center px-2.5 py-1 sm:px-5 sm:py-2.5 rounded-md sm:rounded-xl text-[10px] sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer ${
+                    className={`flex items-center justify-center px-3.5 py-1.5 sm:px-5 sm:py-2.5 rounded-md sm:rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer ${
                       selectedYear === y
                         ? "bg-[#1E2A33] text-white shadow-md shadow-[#1E2A33]/20"
                         : "text-[#1E2A33]/60 hover:text-[#1E2A33]"
