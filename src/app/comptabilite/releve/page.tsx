@@ -563,17 +563,16 @@ export default function RelevePage() {
       <div className="relative z-10 max-w-6xl mx-auto space-y-4">
         {/* Sticky Header & Filters Container */}
         <div className="sticky top-0 bg-[#FDFBEF]/95 backdrop-blur-md z-40 -mt-4 pt-10 pb-3 sm:-mt-6 sm:pt-14 lg:-mt-8 lg:pt-16 border-b border-[#1E2A33]/10 space-y-3 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
-          {/* Header */}
           <div className="flex flex-row justify-between items-center gap-3 w-full mb-3.5">
-            <div className="flex items-center gap-2.5 shrink-0">
-              <div className="w-1 bg-[#AE7D5C] rounded-full min-h-[32px] self-stretch shadow-[0_0_15px_rgba(174,125,92,0.4)]"></div>
-              <h1 className="text-2xl sm:text-4xl font-bebas tracking-wide text-[#1E2A33] leading-none">
+            <div className="flex items-center gap-2 shrink-0">
+              <div className="w-1 bg-[#AE7D5C] rounded-full min-h-[22px] sm:min-h-[32px] self-stretch shadow-[0_0_15px_rgba(174,125,92,0.4)]"></div>
+              <h1 className="text-lg xs:text-xl sm:text-4xl font-bebas tracking-wide text-[#1E2A33] leading-none">
                 TRANSACTIONS
               </h1>
             </div>
-            <div className="flex items-center gap-3 shrink-0">
+            <div className="flex items-center gap-2 shrink-0">
               {/* Year Switcher (Segmented Control chic) */}
-              <div className="flex bg-white/60 p-1.5 rounded-2xl border border-[#1E2A33]/5 gap-1.5 shadow-inner shrink-0">
+              <div className="flex bg-white/60 p-0.5 sm:p-1.5 rounded-lg sm:rounded-2xl border border-[#1E2A33]/5 gap-0.5 sm:gap-1.5 shadow-inner shrink-0">
                 {uniqueYears.map(y => (
                   <button
                     key={y}
@@ -581,7 +580,7 @@ export default function RelevePage() {
                       setSelectedYear(y);
                       setSelectedMonth("all");
                     }}
-                    className={`flex items-center justify-center px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer ${
+                    className={`flex items-center justify-center px-2.5 py-1 sm:px-5 sm:py-2.5 rounded-md sm:rounded-xl text-[10px] sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer ${
                       selectedYear === y
                         ? "bg-[#1E2A33] text-white shadow-md shadow-[#1E2A33]/20"
                         : "text-[#1E2A33]/60 hover:text-[#1E2A33]"
@@ -595,10 +594,10 @@ export default function RelevePage() {
               <button
                 onClick={loadData}
                 disabled={loading || isRefetching}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-[#1E2A33]/50 hover:text-[#1E2A33] transition-colors rounded-lg cursor-pointer disabled:opacity-75"
+                className="flex items-center gap-1 px-2 py-1.5 sm:px-3 sm:py-1.5 text-xs text-[#1E2A33]/50 hover:text-[#1E2A33] transition-colors rounded-lg cursor-pointer disabled:opacity-75"
               >
-                <RefreshCcw className={`w-3 h-3 ${loading || isRefetching ? "animate-spin" : ""}`} />
-                Actualiser
+                <RefreshCcw className={`w-3.5 h-3.5 ${loading || isRefetching ? "animate-spin" : ""}`} />
+                <span className="hidden sm:inline">Actualiser</span>
               </button>
             </div>
           </div>
@@ -607,42 +606,42 @@ export default function RelevePage() {
           <div className="flex flex-row flex-wrap justify-center items-center gap-3 bg-transparent p-0 border-none shadow-none print:hidden select-none w-full">
 
           {/* Account Switcher */}
-          <div className="flex bg-white/60 p-1.5 rounded-2xl border border-[#1E2A33]/5 gap-1.5 shadow-inner shrink-0">
+          <div className="flex bg-white/60 p-1 sm:p-1.5 rounded-xl sm:rounded-2xl border border-[#1E2A33]/5 gap-1 sm:gap-1.5 shadow-inner shrink-0">
             <button
               onClick={() => {
                 setActiveTab("pro");
                 setSelectedMonth("all");
               }}
-              className={`flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl text-[10px] sm:text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+              className={`flex items-center justify-center gap-1 px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-[9px] sm:text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
                 activeTab === "pro"
                   ? "bg-[#1E2A33] text-white shadow-md shadow-[#1E2A33]/20"
                   : "text-[#1E2A33]/60 hover:text-[#1E2A33]"
               }`}
             >
-              <Building2 className="w-3.5 h-3.5" />
-              COMPTE PRO
+              <Building2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+              <span className="hidden sm:inline">COMPTE </span>PRO
             </button>
             <button
               onClick={() => {
                 setActiveTab("perso");
                 setSelectedMonth("all");
               }}
-              className={`flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl text-[10px] sm:text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+              className={`flex items-center justify-center gap-1 px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-[9px] sm:text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
                 activeTab === "perso"
                   ? "bg-[#1E2A33] text-white shadow-md shadow-[#1E2A33]/20"
                   : "text-[#1E2A33]/60 hover:text-[#1E2A33]"
               }`}
             >
-              <User2 className="w-3.5 h-3.5" />
-              COMPTE PERSO
+              <User2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+              <span className="hidden sm:inline">COMPTE </span>PERSO
             </button>
           </div>
 
           {/* Flow Filter (Entrées/Sorties sobre) */}
-          <div className="flex bg-white/60 p-1.5 rounded-2xl border border-[#1E2A33]/5 gap-1.5 shadow-inner shrink-0">
+          <div className="flex bg-white/60 p-1 sm:p-1.5 rounded-xl sm:rounded-2xl border border-[#1E2A33]/5 gap-1 sm:gap-1.5 shadow-inner shrink-0">
             <button
               onClick={() => setFilterFlow(filterFlow === "inflow" ? "all" : "inflow")}
-              className={`flex items-center justify-center px-4 py-2 rounded-xl text-[10px] sm:text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+              className={`flex items-center justify-center px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-[9px] sm:text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
                 filterFlow === "inflow"
                   ? "bg-[#1E2A33] text-white shadow-md shadow-[#1E2A33]/20"
                   : "text-[#1E2A33]/60 hover:text-[#1E2A33]"
@@ -652,7 +651,7 @@ export default function RelevePage() {
             </button>
             <button
               onClick={() => setFilterFlow(filterFlow === "outflow" ? "all" : "outflow")}
-              className={`flex items-center justify-center px-4 py-2 rounded-xl text-[10px] sm:text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+              className={`flex items-center justify-center px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-[9px] sm:text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
                 filterFlow === "outflow"
                   ? "bg-[#1E2A33] text-white shadow-md shadow-[#1E2A33]/20"
                   : "text-[#1E2A33]/60 hover:text-[#1E2A33]"
@@ -724,10 +723,10 @@ export default function RelevePage() {
           </div>
 
           {/* Matched Filter (Segmented Control avec "Tout") */}
-          <div className="flex bg-white/60 p-1.5 rounded-2xl border border-[#1E2A33]/5 gap-1.5 shadow-inner shrink-0">
+          <div className="flex bg-white/60 p-1 sm:p-1.5 rounded-xl sm:rounded-2xl border border-[#1E2A33]/5 gap-1 sm:gap-1.5 shadow-inner shrink-0">
             <button
               onClick={() => setFilterMatched("all")}
-              className={`flex items-center justify-center px-3.5 py-2 rounded-xl text-[10px] sm:text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+              className={`flex items-center justify-center px-2.5 py-1.5 sm:px-3.5 sm:py-2 rounded-lg sm:rounded-xl text-[9px] sm:text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
                 filterMatched === "all"
                   ? "bg-[#1E2A33] text-white shadow-md shadow-[#1E2A33]/20"
                   : "text-[#1E2A33]/60 hover:text-[#1E2A33]"
@@ -737,23 +736,25 @@ export default function RelevePage() {
             </button>
             <button
               onClick={() => setFilterMatched("unmatched")}
-              className={`flex items-center justify-center px-3.5 py-2 rounded-xl text-[10px] sm:text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+              className={`flex items-center justify-center px-2.5 py-1.5 sm:px-3.5 sm:py-2 rounded-lg sm:rounded-xl text-[9px] sm:text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
                 filterMatched === "unmatched"
                   ? "bg-[#1E2A33] text-white shadow-md shadow-[#1E2A33]/20"
                   : "text-[#1E2A33]/60 hover:text-[#1E2A33]"
               }`}
             >
-              À rapprocher
+              <span className="hidden xs:inline">À rapprocher</span>
+              <span className="xs:hidden">À rappr.</span>
             </button>
             <button
               onClick={() => setFilterMatched("matched")}
-              className={`flex items-center justify-center px-3.5 py-2 rounded-xl text-[10px] sm:text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+              className={`flex items-center justify-center px-2.5 py-1.5 sm:px-3.5 sm:py-2 rounded-lg sm:rounded-xl text-[9px] sm:text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
                 filterMatched === "matched"
                   ? "bg-[#1E2A33] text-white shadow-md shadow-[#1E2A33]/20"
                   : "text-[#1E2A33]/60 hover:text-[#1E2A33]"
               }`}
             >
-              Rapprochés
+              <span className="hidden xs:inline">Rapprochés</span>
+              <span className="xs:hidden">Rapproch.</span>
             </button>
           </div>
 
