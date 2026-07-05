@@ -624,7 +624,7 @@ export default function RelevePage() {
           <div className="flex flex-row flex-wrap justify-center items-center gap-3 bg-transparent p-0 border-none shadow-none print:hidden select-none w-full">
 
           {/* Account Switcher */}
-          <div className="flex bg-white/60 p-1 sm:p-1.5 rounded-xl sm:rounded-2xl border border-[#1E2A33]/5 gap-1 sm:gap-1.5 shadow-inner shrink-0">
+          <div className="hidden md:flex bg-white/60 p-1 sm:p-1.5 rounded-xl sm:rounded-2xl border border-[#1E2A33]/5 gap-1 sm:gap-1.5 shadow-inner shrink-0">
             <button
               onClick={() => {
                 setActiveTab("pro");
@@ -656,7 +656,7 @@ export default function RelevePage() {
           </div>
 
           {/* Flow Filter (Entrées/Sorties sobre) */}
-          <div className="flex bg-white/60 p-1 sm:p-1.5 rounded-xl sm:rounded-2xl border border-[#1E2A33]/5 gap-1 sm:gap-1.5 shadow-inner shrink-0">
+          <div className="hidden md:flex bg-white/60 p-1 sm:p-1.5 rounded-xl sm:rounded-2xl border border-[#1E2A33]/5 gap-1 sm:gap-1.5 shadow-inner shrink-0">
             <button
               onClick={() => setFilterFlow(filterFlow === "inflow" ? "all" : "inflow")}
               className={`flex items-center justify-center px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-[9px] sm:text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
