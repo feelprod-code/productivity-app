@@ -217,7 +217,7 @@ export async function GET() {
       {
         field: "date",
         operator: "gteq",
-        value: "2025-06-30"
+        value: "2025-01-01"
       }
     ];
     const filterStr = encodeURIComponent(JSON.stringify(filterObj));
@@ -265,13 +265,24 @@ export async function GET() {
       console.error("Failed to load local LCL 2025 transactions:", err);
     }
 
-    // 3. Load Local Invoices from DB
     const allInvs = await prisma.invoice.findMany() as any[];
+    const sortedInvs = [...allInvs].sort((a: any, b: any) => {
+      const aLower = (a.provider || '').toLowerCase();
+      const bLower = (b.provider || '').toLowerCase();
+      const aIsSummary = aLower.includes('récapitulatif') || aLower.includes('articles divers');
+      const bIsSummary = bLower.includes('récapitulatif') || bLower.includes('articles divers');
+      if (aIsSummary && !bIsSummary) return 1;
+      if (!aIsSummary && bIsSummary) return -1;
+      return 0;
+    });
+
+    console.log("allInvs loaded in API:", allInvs.length, "Halles:", allInvs.filter(i => (i.provider || '').toLowerCase().includes('halles')).length);
 
     // Auto-enrich CPAM transactions dynamically with patient details
-    await autoEnrichCpam(allTxs, allInvs, detailsMap);
+    await autoEnrichCpam(allTxs, sortedInvs, detailsMap);
 
     // 4. Process and Classify Transactions
+    const usedInvoiceIds = new Set<string>();
     let backgroundEnrichCount = 0;
     const processedTransactions = allTxs.map((tx: any) => {
       const amount = parseFloat(tx.amount || '0');
@@ -314,49 +325,177 @@ export async function GET() {
       // Match with Supplier Invoice locally
       const txTime = new Date(tx.date).getTime();
       const thirtyFiveDaysMs = 35 * 24 * 60 * 60 * 1000;
-      const matchedInvoice = allInvs.find((inv: any) => {
-        if (!inv.date) return false;
-        const invTime = new Date(inv.date).getTime();
-        const invAmount = inv.amount || 0;
-        
-        const cleanInv = (inv.provider || '')
-          .split(' - ')[0]
-          .toLowerCase()
-          .trim();
+      
+      let matchedInvoice: any = null;
 
-        let amountMatch = Math.abs(invAmount - absAmount) < 0.01;
-        if (!amountMatch) {
-          const ratio = absAmount / invAmount;
-          if (ratio >= 0.80 && ratio <= 1.15) {
-            amountMatch = true;
-          } else {
-            const invRatio = invAmount / absAmount;
-            if (invRatio >= 0.80 && invRatio <= 1.15) {
-              amountMatch = true;
-            }
+      if (isOutflow) {
+        const txDesc = (detailsMap[String(tx.id)] || '').toLowerCase();
+        
+        // Etape 1 : Matching prioritaire par partage de mots clés de la description du produit (évite les mauvais croisements)
+        if (txDesc) {
+          const cleanDescWords = txDesc.split(/[^a-z0-9]/).filter((w: string) => w.length >= 4);
+          const genericWords = ['avec', 'pour', 'dans', 'sans', 'noir', 'bleu', 'vert', 'rose', 'gris', 'blanc', 'taille', 'lot', 'pack', 'compatible', 'original', 'remplacement', 'rechange', 'recharge', 'produit', 'articles', 'divers'];
+          const filteredWords = cleanDescWords.filter(w => !genericWords.includes(w));
+
+          const candidates = sortedInvs
+            .map((inv: any) => {
+              if (usedInvoiceIds.has(inv.id)) return null;
+              if (!inv.date) return null;
+
+              const invTime = new Date(inv.date).getTime();
+              const invAmount = inv.amount || 0;
+              const cleanInv = (inv.provider || '').split(' - ')[0].toLowerCase().trim();
+              const isTxAmazon = labelLower.includes('amazon') || !!(realMerchantName && realMerchantName.toLowerCase().includes('amazon'));
+              const isInvAmazon = cleanInv.includes('amazon') || (inv.fileUrl && inv.fileUrl.toLowerCase().includes('amazon'));
+
+              const isAmazonOrRelated = isTxAmazon && (isInvAmazon || 
+                                                      cleanInv.includes('sportano') || 
+                                                      cleanInv.includes('regatta') || 
+                                                      cleanInv.includes('erima'));
+              if (!isAmazonOrRelated) return null;
+
+              const dateDiffDays = Math.abs(txTime - invTime) / (24 * 60 * 60 * 1000);
+              if (dateDiffDays > 90) return null;
+
+              const ratio = absAmount / invAmount;
+              const amountMatch = ratio >= 0.70 && ratio <= 1.30;
+              if (!amountMatch) return null;
+
+              const cleanInvProv = (inv.provider || '').toLowerCase();
+              const sharedCount = filteredWords.filter((word: string) => cleanInvProv.includes(word)).length;
+              
+              if (sharedCount === 0) return null;
+              
+              return { inv, sharedCount, dateDiffDays };
+            })
+            .filter(Boolean) as any[];
+
+          if (candidates.length > 0) {
+            candidates.sort((a, b) => {
+              if (b.sharedCount !== a.sharedCount) {
+                return b.sharedCount - a.sharedCount;
+              }
+              return a.dateDiffDays - b.dateDiffDays;
+            });
+            matchedInvoice = candidates[0].inv;
           }
         }
-        if (!amountMatch) return false;
 
-        const isAmazon = cleanInv.includes('amazon');
-        const maxDaysMs = isAmazon ? 90 * 24 * 60 * 60 * 1000 : thirtyFiveDaysMs;
-        const closeDate = (txTime >= invTime - 5 * 24 * 60 * 60 * 1000) && (txTime - invTime <= maxDaysMs);
-        if (!closeDate) return false;
+        // Etape 2 : Repli sur le matching standard (si pas de match par mot-clé trouvé)
+        if (!matchedInvoice) {
+          matchedInvoice = sortedInvs.find((inv: any) => {
+            if (usedInvoiceIds.has(inv.id)) return false;
+            if (!inv.date) return false;
+            const invTime = new Date(inv.date).getTime();
+            const invAmount = inv.amount || 0;
+            
+            const cleanInv = (inv.provider || '')
+              .split(' - ')[0]
+              .toLowerCase()
+              .trim();
 
-        const cleanTx = (realMerchantName || labelLower)
-          .replace(/(virement|prlv|sepa|carte|cb|facture|achat|payments|digital|sarl|gmbh|inc|sas|eu)/gi, '')
-          .toLowerCase()
-          .trim();
-        const txWords = cleanTx.split(/[^a-z0-9]/).filter((w: string) => w.length >= 3);
+            const isTxAmazon = labelLower.includes('amazon') || !!(realMerchantName && realMerchantName.toLowerCase().includes('amazon'));
+            const isInvAmazon = cleanInv.includes('amazon') || (inv.fileUrl && inv.fileUrl.toLowerCase().includes('amazon'));
 
-        let providerMatch = false;
-        if (txWords.length > 0) {
-          providerMatch = txWords.some((word: string) => cleanInv.includes(word) || word.includes(cleanInv));
-        } else {
-          providerMatch = cleanInv.includes(cleanTx) || cleanTx.includes(cleanInv);
+            const txDesc = (detailsMap[String(tx.id)] || '').toLowerCase();
+            const cleanInvProv = (inv.provider || '').toLowerCase();
+
+            let isAmazonMarketplaceMatch = false;
+            if (isTxAmazon && txDesc) {
+              const isInvAmazonOrRelated = isInvAmazon || 
+                                           cleanInv.includes('sportano') ||
+                                           cleanInv.includes('regatta') ||
+                                           cleanInv.includes('erima');
+              
+              if (isInvAmazonOrRelated) {
+                const descWords = txDesc.split(/[^a-z0-9]/).filter((w: string) => w.length >= 4);
+                const hasSharedWords = descWords.length > 0 && descWords.some((word: string) => cleanInvProv.includes(word));
+                
+                if (hasSharedWords) {
+                  const ratio = absAmount / invAmount;
+                  const dateDiffDays = Math.abs(txTime - invTime) / (24 * 60 * 60 * 1000);
+                  if (ratio >= 0.70 && ratio <= 1.30 && dateDiffDays <= 90) {
+                    isAmazonMarketplaceMatch = true;
+                  }
+                }
+              }
+            }
+
+            let amountMatch = Math.abs(invAmount - absAmount) < 0.01 || isAmazonMarketplaceMatch;
+            
+            if (!amountMatch && !cleanInv.includes('amazon')) {
+              const ratio = absAmount / invAmount;
+              if (ratio >= 0.80 && ratio <= 1.15) {
+                amountMatch = true;
+              } else {
+                const invRatio = invAmount / absAmount;
+                if (invRatio >= 0.80 && invRatio <= 1.15) {
+                  amountMatch = true;
+                }
+              }
+            }
+            if (!amountMatch) return false;
+
+            const isAmazon = cleanInv.includes('amazon') || cleanInv.includes('sportano') || cleanInv.includes('regatta');
+            const maxDaysMs = isAmazon ? 90 * 24 * 60 * 60 * 1000 : thirtyFiveDaysMs;
+            const closeDate = (txTime >= invTime - 5 * 24 * 60 * 60 * 1000) && (txTime - invTime <= maxDaysMs);
+            if (!closeDate) return false;
+
+            if (isTxAmazon !== isInvAmazon && !isAmazonMarketplaceMatch) return false;
+
+            const isTxOpenrouter = labelLower.includes('openrouter') || !!(realMerchantName && realMerchantName.toLowerCase().includes('openrouter'));
+            const isInvOpenrouter = cleanInv.includes('openrouter');
+            if (isTxOpenrouter !== isInvOpenrouter) return false;
+
+            const cleanTx = (realMerchantName || labelLower)
+              .replace(/(virement|prlv|sepa|carte|cb|facture|achat|payments|digital|sarl|gmbh|inc|sas|eu)/gi, '')
+              .toLowerCase()
+              .trim();
+            const txWords = cleanTx.split(/[^a-z0-9]/).filter((w: string) => w.length >= 3);
+
+            let providerMatch = false;
+            if (isAmazonMarketplaceMatch) {
+              providerMatch = true;
+            } else if (txWords.length > 0) {
+              providerMatch = txWords.some((word: string) => cleanInv.includes(word) || word.includes(cleanInv));
+            } else {
+              providerMatch = cleanInv.includes(cleanTx) || cleanTx.includes(cleanInv);
+            }
+
+            return providerMatch;
+          }) || null;
         }
-        return providerMatch;
-      });
+
+        if (matchedInvoice) {
+          usedInvoiceIds.add(matchedInvoice.id);
+        }
+      } else {
+        // Inflow matching (CPAM, SumUp)
+        const isTxCpam = labelLower.includes('cpam') || labelLower.includes('c.p.a.m.') || labelLower.includes('assurance maladie') || labelLower.includes('ameli');
+        const isTxSumup = labelLower.includes('sumup') || labelLower.includes('sum up');
+        if (isTxCpam) {
+          matchedInvoice = allInvs.find((inv: any) => {
+            const provLower = (inv.provider || '').toLowerCase();
+             const isInvCpam = provLower.includes('cpam') || 
+                               provLower.includes('assurance maladie') || 
+                               provLower.includes('caisse d\'assurance') || 
+                               provLower.includes('ameli');
+             if (!isInvCpam) return false;
+            
+            const invTime = new Date(inv.date).getTime();
+            return Math.abs(txTime - invTime) <= thirtyFiveDaysMs;
+          }) || null;
+        } else if (isTxSumup) {
+          matchedInvoice = allInvs.find((inv: any) => {
+            const provLower = (inv.provider || '').toLowerCase();
+            const isInvSumup = provLower.includes('sumup') || provLower.includes('sum up');
+            if (!isInvSumup) return false;
+            
+            const invTime = new Date(inv.date).getTime();
+            return Math.abs(txTime - invTime) <= 15 * 24 * 60 * 60 * 1000;
+          }) || null;
+        }
+      }
 
       let productDescription = detailsMap[String(tx.id)] || null;
       if (!productDescription && matchedInvoice && matchedInvoice.provider.includes(' - ')) {
@@ -415,8 +554,8 @@ export async function GET() {
       }
 
       if (!isOverridden) {
-        // If it's a CPAM or SumUp transaction, it's absolutely Pro
-        if (labelLower.includes('cpam') || labelLower.includes('c.p.a.m.') || labelLower.includes('sumup') || labelLower.includes('sum up')) {
+        // If it's a CPAM, SumUp or Amazon transaction, it's absolutely Pro
+        if (labelLower.includes('cpam') || labelLower.includes('c.p.a.m.') || labelLower.includes('sumup') || labelLower.includes('sum up') || labelLower.includes('amazon') || labelLower.includes('amzn')) {
           isPro = true;
         } else if (productDescription && (productDescription.startsWith("CPAM_JSON:") || productDescription.startsWith("SUMUP_JSON:"))) {
           isPro = true;
@@ -449,13 +588,10 @@ export async function GET() {
       const isIndigo = labelLower.includes('indigo');
       const isSmallIndigo = isIndigo && absAmount < 10.00;
       const isAmazonPrime = labelLower.includes('amazon prime');
-      const isSmallAmazon = (labelLower.includes('amazon') || labelLower.includes('amzn')) && absAmount < 15.00;
       const noJustificatif = !isOutflow || 
                              noJustificatifKeywords.some(k => labelLower.includes(k)) || 
-                             !isPro || 
                              isSmallIndigo ||
-                             isAmazonPrime ||
-                             isSmallAmazon;
+                             isAmazonPrime;
 
       const txResult = {
         id: tx.id,

@@ -188,11 +188,12 @@ function cleanDisplayLabel(label: string): string {
 
 export default function RelevePage() {
   const [loading, setLoading] = useState(true);
+  const [isRefetching, setIsRefetching] = useState(false);
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
   const [activeTab, setActiveTab] = useState<"pro" | "perso">("pro");
   const [selectedMonth, setSelectedMonth] = useState<string>("all");
-  const [selectedYear, setSelectedYear] = useState<string>("all");
+  const [selectedYear, setSelectedYear] = useState<string>("2025");
   const [togglingTxId, setTogglingTxId] = useState<string | null>(null);
   const [reconcilingTxId, setReconcilingTxId] = useState<string | null>(null);
   
@@ -210,10 +211,11 @@ export default function RelevePage() {
   // Filters
   const [filterFlow, setFilterFlow] = useState<"all" | "inflow" | "outflow">("all");
   const [filterCategory, setFilterCategory] = useState<string>("all");
-  const [filterMatched, setFilterMatched] = useState<"all" | "matched" | "unmatched">("all");
+  const [filterMatched, setFilterMatched] = useState<"all" | "matched" | "unmatched">("unmatched");
   const [searchQuery, setSearchQuery] = useState<string>("");
 
   const [expandedMonths, setExpandedMonths] = useState<Record<string, boolean>>({});
+  const [isMonthDropdownOpen, setIsMonthDropdownOpen] = useState(false);
 
   const handleTogglePro = useCallback(async (transactionId: string | number, currentIsPro: boolean) => {
     const newIsPro = !currentIsPro;
@@ -362,7 +364,12 @@ export default function RelevePage() {
   };
 
   const loadData = async () => {
-    setLoading(true);
+    const silent = transactions.length > 0;
+    if (silent) {
+      setIsRefetching(true);
+    } else {
+      setLoading(true);
+    }
     try {
       const res = await fetch("/api/transactions/releve?t=" + Date.now());
       if (res.ok) {
@@ -374,6 +381,7 @@ export default function RelevePage() {
       console.error("Failed to fetch statement data:", err);
     } finally {
       setLoading(false);
+      setIsRefetching(false);
     }
   };
 
@@ -400,6 +408,8 @@ export default function RelevePage() {
         if (txMonth !== selectedMonth) return false;
       }
 
+      const isSearching = searchQuery.trim() !== "";
+
       // 3. Flow (Inflow / Outflow)
       if (filterFlow === "inflow" && tx.isOutflow) return false;
       if (filterFlow === "outflow" && !tx.isOutflow) return false;
@@ -408,8 +418,15 @@ export default function RelevePage() {
       if (filterCategory !== "all" && tx.category !== filterCategory) return false;
 
       // 5. Matched invoice status
-      if (filterMatched === "matched" && !tx.matchedInvoice) return false;
-      if (filterMatched === "unmatched" && (tx.matchedInvoice || tx.noJustificatif)) return false;
+      if (filterMatched === "matched") {
+        // Les rentrées (inflows) sont considérées comme rapprochées par défaut car elles ne nécessitent pas de facture fournisseur
+        if (tx.isOutflow && !tx.matchedInvoice) return false;
+      }
+      if (filterMatched === "unmatched") {
+        // Seules les dépenses (sorties) peuvent être en attente de rapprochement
+        if (!tx.isOutflow) return false;
+        if (tx.matchedInvoice || tx.noJustificatif) return false;
+      }
 
       // 6. Search query
       if (searchQuery.trim() !== "") {
@@ -424,15 +441,20 @@ export default function RelevePage() {
     });
   }, [transactions, activeTab, selectedYear, selectedMonth, filterFlow, filterCategory, filterMatched, searchQuery]);
 
-  // Extract unique years for select dropdown
+  // Extract unique years for select
   const uniqueYears = useMemo(() => {
-    return Array.from(
+    const years = Array.from(
       new Set(
         transactions
           .filter(tx => (activeTab === "pro" ? tx.isProAccount : !tx.isProAccount))
           .map(tx => tx.date.substring(0, 4))
       )
     ).sort((a, b) => b.localeCompare(a));
+
+    if (years.length === 0) {
+      return ["2026", "2025"];
+    }
+    return years;
   }, [transactions, activeTab]);
 
   // Extract unique months for select dropdown
@@ -538,115 +560,200 @@ export default function RelevePage() {
       {/* TDT Grid Background Effect */}
       <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))] opacity-5 z-0"></div>
 
-      <div className="relative z-10 max-w-6xl mx-auto space-y-6">
-        {/* Header */}
-        <div className="flex flex-col lg:flex-row justify-between items-center gap-6 mb-6 pb-4 border-b border-[#1E2A33]/10">
-          <div className="flex items-center gap-4 pt-4 lg:pt-0 shrink-0 self-stretch">
-            <div className="w-2 bg-[#AE7D5C] rounded-full self-stretch shadow-[0_0_15px_rgba(174,125,92,0.4)] min-h-[40px]"></div>
-            <h1 className="text-3xl sm:text-5xl font-bebas tracking-wide text-[#1E2A33] text-center md:text-left leading-tight">
-              TRANSACTIONS
-            </h1>
+      <div className="relative z-10 max-w-6xl mx-auto space-y-4">
+        {/* Sticky Header & Filters Container */}
+        <div className="sticky top-0 bg-[#FDFBEF]/95 backdrop-blur-md z-40 pt-4 pb-3 border-b border-[#1E2A33]/10 space-y-3 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
+          {/* Header */}
+          <div className="flex flex-col lg:flex-row justify-between items-center gap-4">
+            <div className="flex items-center gap-3 pt-2 lg:pt-0 shrink-0 self-stretch">
+              <div className="w-1.5 bg-[#AE7D5C] rounded-full self-stretch shadow-[0_0_15px_rgba(174,125,92,0.4)] min-h-[32px]"></div>
+              <h1 className="text-2xl sm:text-4xl font-bebas tracking-wide text-[#1E2A33] text-center md:text-left leading-none">
+                TRANSACTIONS
+              </h1>
+            </div>
+            <div className="flex w-full lg:w-auto items-center justify-end">
+              <button
+                onClick={loadData}
+                disabled={loading || isRefetching}
+                className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-[#1E2A33]/50 hover:text-[#1E2A33] transition-colors rounded-lg cursor-pointer disabled:opacity-75"
+              >
+                <RefreshCcw className={`w-3 h-3 ${loading || isRefetching ? "animate-spin" : ""}`} />
+                Actualiser
+              </button>
+            </div>
           </div>
-          <div className="flex w-full lg:w-auto items-center justify-end gap-4">
+
+          {/* Switcher & Search Bar */}
+          <div className="flex flex-row flex-wrap items-center gap-2.5 bg-transparent p-0 border-none shadow-none print:hidden select-none w-full">
+            {/* Year Switcher (Segmented Control chic) */}
+          <div className="flex bg-white/60 p-1.5 rounded-2xl border border-[#1E2A33]/5 gap-1.5 shadow-inner shrink-0">
+            {uniqueYears.map(y => (
+              <button
+                key={y}
+                onClick={() => {
+                  setSelectedYear(y);
+                  setSelectedMonth("all");
+                }}
+                className={`flex items-center justify-center px-4 py-2 rounded-xl text-[10px] sm:text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+                  selectedYear === y
+                    ? "bg-[#1E2A33] text-white shadow-md shadow-[#1E2A33]/20"
+                    : "text-[#1E2A33]/60 hover:text-[#1E2A33]"
+                }`}
+              >
+                {y}
+              </button>
+            ))}
+          </div>
+
+          {/* Account Switcher */}
+          <div className="flex bg-white/60 p-1.5 rounded-2xl border border-[#1E2A33]/5 gap-1.5 shadow-inner shrink-0">
             <button
-              onClick={loadData}
-              disabled={loading}
-              className="flex items-center gap-2 px-4 py-2.5 bg-white ring-1 ring-[#1E2A33]/5 hover:bg-[#FDFBEF] rounded-xl text-xs font-semibold shadow-sm transition-all shrink-0 cursor-pointer"
+              onClick={() => {
+                setActiveTab("pro");
+                setSelectedMonth("all");
+              }}
+              className={`flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl text-[10px] sm:text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+                activeTab === "pro"
+                  ? "bg-[#1E2A33] text-white shadow-md shadow-[#1E2A33]/20"
+                  : "text-[#1E2A33]/60 hover:text-[#1E2A33]"
+              }`}
             >
-              <RefreshCcw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
-              Actualiser
+              <Building2 className="w-3.5 h-3.5" />
+              COMPTE PRO
+            </button>
+            <button
+              onClick={() => {
+                setActiveTab("perso");
+                setSelectedMonth("all");
+              }}
+              className={`flex items-center justify-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl text-[10px] sm:text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+                activeTab === "perso"
+                  ? "bg-[#1E2A33] text-white shadow-md shadow-[#1E2A33]/20"
+                  : "text-[#1E2A33]/60 hover:text-[#1E2A33]"
+              }`}
+            >
+              <User2 className="w-3.5 h-3.5" />
+              COMPTE PERSO
             </button>
           </div>
-        </div>
 
-        {/* Bank Balances Bar */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 bg-white/40 backdrop-blur-sm p-3 rounded-2xl border border-[#1E2A33]/5">
-          {bankAccounts
-            .filter(acc => (activeTab === "pro" ? acc.isPro : !acc.isPro))
-            .slice(0, 4)
-            .map((acc, idx) => (
-              <div key={idx} className="bg-white p-3 rounded-xl border border-[#1E2A33]/5 shadow-sm">
-                <span className="text-[10px] uppercase font-bold text-[#1E2A33]/50 block truncate">
-                  {acc.name}
-                </span>
-                <span className="text-lg font-bebas tracking-wider text-[#1E2A33] block mt-0.5">
-                  {formatAmount(acc.balance)}
-                </span>
-              </div>
-            ))}
-        </div>
+          {/* Flow Filter (Entrées/Sorties sobre) */}
+          <div className="flex bg-white/60 p-1.5 rounded-2xl border border-[#1E2A33]/5 gap-1.5 shadow-inner shrink-0">
+            <button
+              onClick={() => setFilterFlow(filterFlow === "inflow" ? "all" : "inflow")}
+              className={`flex items-center justify-center px-4 py-2 rounded-xl text-[10px] sm:text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+                filterFlow === "inflow"
+                  ? "bg-[#1E2A33] text-white shadow-md shadow-[#1E2A33]/20"
+                  : "text-[#1E2A33]/60 hover:text-[#1E2A33]"
+              }`}
+            >
+              ENTRÉES
+            </button>
+            <button
+              onClick={() => setFilterFlow(filterFlow === "outflow" ? "all" : "outflow")}
+              className={`flex items-center justify-center px-4 py-2 rounded-xl text-[10px] sm:text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+                filterFlow === "outflow"
+                  ? "bg-[#1E2A33] text-white shadow-md shadow-[#1E2A33]/20"
+                  : "text-[#1E2A33]/60 hover:text-[#1E2A33]"
+              }`}
+            >
+              SORTIES
+            </button>
+          </div>
 
-        {/* Switcher & Search Bar */}
-        <div className="flex flex-col xl:flex-row justify-between gap-4">
-          <div className="flex flex-col sm:flex-row gap-3 items-center w-full xl:w-auto">
-            {/* Pro/Perso Switcher */}
-            <div className="flex bg-white/60 p-1.5 rounded-2xl border border-[#1E2A33]/5 w-full sm:w-fit gap-1.5 shadow-inner">
-              <button
-                onClick={() => {
-                  setActiveTab("pro");
-                  setSelectedMonth("all");
-                }}
-                className={`flex items-center justify-center gap-2.5 px-6 py-2.5 rounded-xl text-xs font-bold transition-all flex-1 sm:flex-initial ${
-                  activeTab === "pro"
-                    ? "bg-[#1E2A33] text-white shadow-md shadow-[#1E2A33]/20"
-                    : "text-[#1E2A33]/60 hover:text-[#1E2A33]"
-                }`}
-              >
-                <Building2 className="w-4 h-4" />
-                COMPTE PRO
-              </button>
-              <button
-                onClick={() => {
-                  setActiveTab("perso");
-                  setSelectedMonth("all");
-                }}
-                className={`flex items-center justify-center gap-2.5 px-6 py-2.5 rounded-xl text-xs font-bold transition-all flex-1 sm:flex-initial ${
-                  activeTab === "perso"
-                    ? "bg-[#AE7D5C] text-white shadow-md shadow-[#AE7D5C]/20"
-                    : "text-[#1E2A33]/60 hover:text-[#1E2A33]"
-                }`}
-              >
-                <User2 className="w-4 h-4" />
-                COMPTE PERSO
-              </button>
-            </div>
+          {/* Month Filter Dropdown Premium */}
+          <div className="relative shrink-0 z-30">
+            <button
+              onClick={() => setIsMonthDropdownOpen(!isMonthDropdownOpen)}
+              className="flex bg-white/60 p-1.5 py-2 rounded-2xl border border-[#1E2A33]/5 gap-2 shadow-inner items-center px-3 transition-all hover:bg-white hover:border-[#1E2A33]/10 cursor-pointer min-w-[150px] justify-between text-[10px] sm:text-xs font-bold text-[#1E2A33] whitespace-nowrap"
+            >
+              <span className="flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5 text-[#1E2A33]/50 shrink-0" />
+                {selectedMonth === "all"
+                  ? "Tous les mois"
+                  : new Date(`${selectedMonth}-02`).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
+              </span>
+              <ChevronDown className={`w-3.5 h-3.5 text-[#1E2A33]/40 shrink-0 transition-transform duration-200 ${isMonthDropdownOpen ? 'rotate-180' : ''}`} />
+            </button>
 
-            {/* Year Switcher */}
-            <div className="flex bg-white/60 p-1.5 rounded-2xl border border-[#1E2A33]/5 w-full sm:w-fit gap-1.5 shadow-inner">
-              <button
-                onClick={() => {
-                  setSelectedYear("all");
-                  setSelectedMonth("all");
-                }}
-                className={`flex items-center justify-center px-4 py-2.5 rounded-xl text-xs font-bold transition-all flex-1 sm:flex-initial ${
-                  selectedYear === "all"
-                    ? "bg-[#1E2A33] text-white shadow-md shadow-[#1E2A33]/20"
-                    : "text-[#1E2A33]/60 hover:text-[#1E2A33]"
-                }`}
-              >
-                TOUT
-              </button>
-              {uniqueYears.map(y => (
-                <button
-                  key={y}
-                  onClick={() => {
-                    setSelectedYear(y);
-                    setSelectedMonth("all");
-                  }}
-                  className={`flex items-center justify-center px-6 py-2.5 rounded-xl text-xs font-bold transition-all flex-1 sm:flex-initial ${
-                    selectedYear === y
-                      ? "bg-[#AE7D5C] text-white shadow-md shadow-[#AE7D5C]/20"
-                      : "text-[#1E2A33]/60 hover:text-[#1E2A33]"
-                  }`}
-                >
-                  {y}
-                </button>
-              ))}
-            </div>
+            {isMonthDropdownOpen && (
+              <>
+                {/* Backdrop invisible pour clore au clic extérieur */}
+                <div className="fixed inset-0 z-40" onClick={() => setIsMonthDropdownOpen(false)} />
+                
+                {/* Liste des mois déroulante */}
+                <div className="absolute left-0 mt-2 w-56 bg-white/95 backdrop-blur-md rounded-2xl border border-[#1E2A33]/10 shadow-2xl p-1.5 z-50 overflow-hidden max-h-[300px] overflow-y-auto">
+                  <button
+                    onClick={() => {
+                      setSelectedMonth("all");
+                      setIsMonthDropdownOpen(false);
+                    }}
+                    className={`w-full text-left px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      selectedMonth === "all"
+                        ? "bg-[#1E2A33] text-white shadow-sm"
+                        : "text-[#1E2A33]/70 hover:bg-[#AE7D5C]/10 hover:text-[#1E2A33]"
+                    }`}
+                  >
+                    Tous les mois
+                  </button>
+                  <div className="h-px bg-[#1E2A33]/5 my-1" />
+                  {uniqueMonths.map(m => (
+                    <button
+                      key={m}
+                      onClick={() => {
+                        setSelectedMonth(m);
+                        setIsMonthDropdownOpen(false);
+                      }}
+                      className={`w-full text-left px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                        selectedMonth === m
+                          ? "bg-[#1E2A33] text-white shadow-sm"
+                          : "text-[#1E2A33]/70 hover:bg-[#AE7D5C]/10 hover:text-[#1E2A33]"
+                      }`}
+                    >
+                      {new Date(`${m}-02`).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+
+          {/* Matched Filter (Segmented Control avec "Tout") */}
+          <div className="flex bg-white/60 p-1.5 rounded-2xl border border-[#1E2A33]/5 gap-1.5 shadow-inner shrink-0">
+            <button
+              onClick={() => setFilterMatched("all")}
+              className={`flex items-center justify-center px-3.5 py-2 rounded-xl text-[10px] sm:text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+                filterMatched === "all"
+                  ? "bg-[#1E2A33] text-white shadow-md shadow-[#1E2A33]/20"
+                  : "text-[#1E2A33]/60 hover:text-[#1E2A33]"
+              }`}
+            >
+              Tout
+            </button>
+            <button
+              onClick={() => setFilterMatched("unmatched")}
+              className={`flex items-center justify-center px-3.5 py-2 rounded-xl text-[10px] sm:text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+                filterMatched === "unmatched"
+                  ? "bg-[#1E2A33] text-white shadow-md shadow-[#1E2A33]/20"
+                  : "text-[#1E2A33]/60 hover:text-[#1E2A33]"
+              }`}
+            >
+              À rapprocher
+            </button>
+            <button
+              onClick={() => setFilterMatched("matched")}
+              className={`flex items-center justify-center px-3.5 py-2 rounded-xl text-[10px] sm:text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+                filterMatched === "matched"
+                  ? "bg-[#1E2A33] text-white shadow-md shadow-[#1E2A33]/20"
+                  : "text-[#1E2A33]/60 hover:text-[#1E2A33]"
+              }`}
+            >
+              Rapprochés
+            </button>
           </div>
 
           {/* Search Input (Loupe) */}
-          <div className="flex items-center gap-2 bg-[#FDFBEF] border border-[#1E2A33]/10 rounded-xl px-3 py-2 w-full xl:w-64">
+          <div className="flex items-center gap-2 bg-[#FDFBEF] border border-[#1E2A33]/10 rounded-xl px-3 py-2 w-full xl:w-64 xl:ml-auto">
             <Search className="w-4 h-4 text-[#1E2A33]/50 shrink-0" />
             <input
               type="text"
@@ -662,150 +769,10 @@ export default function RelevePage() {
             )}
           </div>
         </div>
+      </div>
 
-        {/* Synthese Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Card: Entrées */}
-          <div className="bg-white p-4 sm:p-5 rounded-2xl border border-emerald-100 shadow-sm relative overflow-hidden group hover:border-emerald-300 transition-all flex justify-between items-start">
-            <div className="space-y-1">
-              <span className="text-[10px] uppercase font-bold text-[#1E2A33]/50 block">Entrées (Crédit)</span>
-              <span className="text-xl sm:text-2xl lg:text-3xl font-bebas tracking-wider text-emerald-600 block">
-                + {formatAmount(totalInflows)}
-              </span>
-            </div>
-            <div className="w-8 h-8 rounded-full bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0 border border-emerald-100">
-              <ArrowUpRight className="w-4 h-4" />
-            </div>
-          </div>
-
-          {/* Card: Sorties */}
-          <div className="bg-white p-4 sm:p-5 rounded-2xl border border-rose-100 shadow-sm relative overflow-hidden group hover:border-rose-300 transition-all flex justify-between items-start">
-            <div className="space-y-1">
-              <span className="text-[10px] uppercase font-bold text-[#1E2A33]/50 block">Sorties (Débit)</span>
-              <span className="text-xl sm:text-2xl lg:text-3xl font-bebas tracking-wider text-rose-600 block">
-                - {formatAmount(totalOutflows)}
-              </span>
-            </div>
-            <div className="w-8 h-8 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center shrink-0 border border-rose-100">
-              <ArrowDownLeft className="w-4 h-4" />
-            </div>
-          </div>
-
-          {/* Card: Solde Net */}
-          <div className="bg-white p-4 sm:p-5 rounded-2xl border border-blue-100 shadow-sm relative overflow-hidden group hover:border-blue-300 transition-all flex justify-between items-start">
-            <div className="space-y-1">
-              <span className="text-[10px] uppercase font-bold text-[#1E2A33]/50 block">Solde Net</span>
-              <span className={`text-xl sm:text-2xl lg:text-3xl font-bebas tracking-wider block ${netBalance >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
-                {netBalance >= 0 ? "+" : ""}{formatAmount(netBalance)}
-              </span>
-            </div>
-            <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 border ${
-              netBalance >= 0 
-                ? "bg-emerald-50 text-emerald-600 border-emerald-100" 
-                : "bg-rose-50 text-rose-600 border-rose-100"
-            }`}>
-              <Wallet className="w-4 h-4" />
-            </div>
-          </div>
-
-          {/* Card: Rapprochement */}
-          <div className="bg-white p-4 sm:p-5 rounded-2xl border border-[#AE7D5C]/20 shadow-sm relative overflow-hidden group hover:border-[#AE7D5C]/40 transition-all flex justify-between items-start col-span-2 lg:col-span-1">
-            <div className="space-y-1">
-              <span className="text-[10px] uppercase font-bold text-[#1E2A33]/50 block">Rapprochement Global</span>
-              <span className="text-xl sm:text-2xl lg:text-3xl font-bebas tracking-wider text-[#AE7D5C] block">
-                {globalMatchingRate} %
-              </span>
-            </div>
-            <div className="w-8 h-8 rounded-full bg-[#FDFBEF] text-[#AE7D5C] flex items-center justify-center shrink-0 border border-[#AE7D5C]/20">
-              <BadgeCheck className="w-4 h-4" />
-            </div>
-          </div>
-        </div>
-
-        {/* Filter Bar */}
-        <div className="bg-white border border-[#1E2A33]/10 p-4 rounded-2xl shadow-sm">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-row lg:flex-wrap lg:items-center gap-3 w-full">
-            {/* Month Filter */}
-            <div className="flex items-center gap-2 bg-[#FDFBEF] border border-[#1E2A33]/10 rounded-xl px-3 py-2 w-full lg:w-auto">
-              <Calendar className="w-4 h-4 text-[#1E2A33]/50 shrink-0" />
-              <select
-                value={selectedMonth}
-                onChange={(e) => setSelectedMonth(e.target.value)}
-                className="bg-transparent text-xs font-semibold text-[#1E2A33] border-none outline-none cursor-pointer w-full lg:w-auto"
-              >
-                <option value="all">Tous les mois</option>
-                {uniqueMonths.map(m => (
-                  <option key={m} value={m}>
-                    {new Date(`${m}-02`).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Inflow/Outflow Filter */}
-            <div className="flex items-center gap-1 bg-[#FDFBEF] border border-[#1E2A33]/10 p-1 rounded-xl w-full lg:w-auto">
-              <button
-                onClick={() => setFilterFlow("all")}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex-1 lg:flex-none text-center cursor-pointer ${filterFlow === "all" ? "bg-[#1E2A33] text-white" : "text-[#1E2A33]/60 hover:text-[#1E2A33]"}`}
-              >
-                Tout
-              </button>
-              <button
-                onClick={() => setFilterFlow("inflow")}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex-1 lg:flex-none text-center cursor-pointer ${filterFlow === "inflow" ? "bg-emerald-600 text-white" : "text-[#1E2A33]/60 hover:text-[#1E2A33]"}`}
-              >
-                Entrées
-              </button>
-              <button
-                onClick={() => setFilterFlow("outflow")}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex-1 lg:flex-none text-center cursor-pointer ${filterFlow === "outflow" ? "bg-rose-600 text-white" : "text-[#1E2A33]/60 hover:text-[#1E2A33]"}`}
-              >
-                Sorties
-              </button>
-            </div>
-
-            {/* Payment Category Filter */}
-            <div className="flex items-center gap-2 bg-[#FDFBEF] border border-[#1E2A33]/10 rounded-xl px-3 py-2 w-full lg:w-auto">
-              <Filter className="w-4 h-4 text-[#1E2A33]/50 shrink-0" />
-              <select
-                value={filterCategory}
-                onChange={(e) => setFilterCategory(e.target.value)}
-                className="bg-transparent text-xs font-semibold text-[#1E2A33] border-none outline-none cursor-pointer w-full lg:w-auto"
-              >
-                <option value="all">Tous les types</option>
-                <option value="card">Cartes Bancaires</option>
-                <option value="direct_debit">Prélèvements</option>
-                <option value="transfer">Virements</option>
-                <option value="other">Autres</option>
-              </select>
-            </div>
-
-            {/* Matched Filter */}
-            <div className="flex items-center gap-1 bg-[#FDFBEF] border border-[#1E2A33]/10 p-1 rounded-xl w-full lg:w-auto">
-              <button
-                onClick={() => setFilterMatched("all")}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex-1 lg:flex-none text-center cursor-pointer ${filterMatched === "all" ? "bg-[#1E2A33] text-white" : "text-[#1E2A33]/60 hover:text-[#1E2A33]"}`}
-              >
-                Tous
-              </button>
-              <button
-                onClick={() => setFilterMatched("matched")}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex-1 lg:flex-none text-center cursor-pointer ${filterMatched === "matched" ? "bg-emerald-600 text-white" : "text-[#1E2A33]/60 hover:text-[#1E2A33]"}`}
-              >
-                Rapprochés
-              </button>
-              <button
-                onClick={() => setFilterMatched("unmatched")}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex-1 lg:flex-none text-center cursor-pointer ${filterMatched === "unmatched" ? "bg-amber-600 text-white" : "text-[#1E2A33]/60 hover:text-[#1E2A33]"}`}
-              >
-                À rapprocher
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Main daily transactions list */}
-        {loading ? (
+      {/* Main daily transactions list */}
+      {loading ? (
           <div className="flex flex-col items-center justify-center p-20 gap-4">
             <RefreshCcw className="w-8 h-8 text-[#AE7D5C] animate-spin" />
             <span className="text-sm font-medium text-[#1E2A33]/60">Récupération des transactions...</span>
@@ -819,7 +786,7 @@ export default function RelevePage() {
             </p>
           </div>
         ) : (
-          <div className="space-y-6">
+          <div className={`space-y-6 transition-all duration-300 ${isRefetching ? "opacity-60 pointer-events-none" : ""}`}>
             {groupedByMonth.sortedMonthKeys.map(mKey => {
               const group = groupedByMonth.groups[mKey];
               const isExpanded = isMonthExpanded(mKey);
@@ -829,7 +796,7 @@ export default function RelevePage() {
                   {/* Month Accordion Header */}
                   <button
                     onClick={() => toggleMonth(mKey)}
-                    className="w-full flex flex-col md:flex-row md:items-center justify-between p-4 bg-[#1E2A33]/5 hover:bg-[#1E2A33]/10 transition-colors text-left gap-3 border-b border-[#1E2A33]/10"
+                    className="w-full flex flex-row items-center justify-between px-3 sm:px-4 py-3 bg-[#1E2A33]/5 hover:bg-[#1E2A33]/10 transition-colors text-left gap-3 border-b border-[#1E2A33]/10"
                   >
                     <div className="flex items-center gap-2.5 min-w-0">
                       {isExpanded ? <ChevronDown className="w-5 h-5 text-[#AE7D5C]" /> : <ChevronRight className="w-5 h-5 text-[#AE7D5C]" />}
@@ -842,15 +809,6 @@ export default function RelevePage() {
                     </div>
                     
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs font-bold text-[#1E2A33]/70">
-                      <span className="text-emerald-700">
-                        + {formatAmount(group.inflows)}
-                      </span>
-                      <span className="text-rose-700">
-                        - {formatAmount(group.outflows)}
-                      </span>
-                      <span className={`px-2 py-0.5 rounded-lg text-[11px] ${group.net >= 0 ? "bg-emerald-100 text-emerald-800" : "bg-rose-100 text-rose-800"}`}>
-                        Solde : {group.net >= 0 ? "+" : ""}{formatAmount(group.net)}
-                      </span>
                       <span className="text-[#AE7D5C] bg-[#AE7D5C]/10 px-2 py-0.5 rounded-lg text-[11px]">
                         Rapproché : {group.matchingRate}%
                       </span>
@@ -860,7 +818,7 @@ export default function RelevePage() {
                   {/* Month Accordion Content: Sleek single-line Table */}
                   {isExpanded && (
                     <div className="overflow-x-auto">
-                      <Table>
+                      <Table className="w-full table-fixed">
                         <TableHeader>
                           <TableRow className="border-[#1E2A33]/10 hover:bg-transparent hidden sm:table-row">
                             <TableHead className="font-roboto text-[#1E2A33]/40 text-[10px] uppercase tracking-widest pl-6 w-24">Date</TableHead>
@@ -885,28 +843,21 @@ export default function RelevePage() {
                                   onClick={() => toggleTxExpansion(String(tx.id))}
                                 >
                                   {/* Date */}
-                                  <TableCell className="font-roboto font-light text-[#1E2A33]/50 text-xs sm:pl-6 pl-4 whitespace-nowrap py-3.5">
+                                  <TableCell className="font-roboto font-light text-[#1E2A33]/50 text-xs sm:pl-6 pl-3 whitespace-nowrap py-2 sm:py-3.5">
                                     {new Date(tx.date).toLocaleDateString('fr-FR')}
                                   </TableCell>
 
-                                  <TableCell className="font-roboto font-medium text-[#1E2A33] text-sm py-3.5 max-w-[200px] sm:max-w-none">
+                                  <TableCell className="font-roboto font-medium text-[#1E2A33] text-sm py-2 sm:py-3.5 max-w-[200px] sm:max-w-none">
                                     <div className="flex flex-col gap-0.5 min-w-0">
                                       <span className="truncate max-w-[180px] xs:max-w-[240px] sm:max-w-[400px] block font-semibold text-[#1E2A33]" title={tx.label}>{cleanDisplayLabel(tx.label)}</span>
                                       {tx.label !== cleanDisplayLabel(tx.label) && (
-                                        <span className="text-[10px] text-[#1E2A33]/40 font-light truncate max-w-[180px] xs:max-w-[240px] sm:max-w-[400px]" title={tx.label}>
+                                        <span className="text-[10px] text-[#1E2A33]/40 font-light truncate max-w-[180px] xs:max-w-[240px] sm:max-w-[400px] hidden sm:block" title={tx.label}>
                                           {tx.label}
                                         </span>
                                       )}
                                       
                                       {/* Mobile-only badges and details stacked inline */}
                                       <div className="flex flex-wrap items-center gap-1.5 text-[9px] text-[#1E2A33]/50 sm:hidden mt-1">
-                                        <span className="truncate max-w-[120px]">{tx.bankAccountName}</span>
-                                        <span>•</span>
-                                        <span className="flex items-center gap-1">
-                                          {badgeInfo.icon}
-                                          {badgeInfo.label}
-                                        </span>
-                                        <span>•</span>
                                         
                                         {/* Mobile Pro/Perso toggler button */}
                                         <div onClick={(e) => e.stopPropagation()} className="inline-flex">
@@ -1068,7 +1019,7 @@ export default function RelevePage() {
                                   </TableCell>
 
                                   {/* Débit (Sorties) */}
-                                  <TableCell className="text-right py-3.5 whitespace-nowrap w-28">
+                                  <TableCell className="text-right py-2 sm:py-3.5 whitespace-nowrap w-28">
                                     {tx.isOutflow ? (
                                       <span className="inline-flex items-center gap-1 text-sm sm:text-base font-bebas tracking-wider px-2 py-0.5 rounded-lg border font-bold text-rose-700 bg-rose-50/70 border-rose-200/50">
                                         - {formatAmount(tx.absAmount)}
@@ -1079,7 +1030,7 @@ export default function RelevePage() {
                                   </TableCell>
 
                                   {/* Crédit (Entrées) */}
-                                  <TableCell className="text-right sm:pr-6 pr-4 py-3.5 whitespace-nowrap w-28">
+                                  <TableCell className="text-right sm:pr-6 pr-3 py-2 sm:py-3.5 whitespace-nowrap w-28">
                                     <div className="flex items-center justify-end gap-2">
                                       {!tx.isOutflow ? (
                                         <span className="inline-flex items-center gap-1 text-sm sm:text-base font-bebas tracking-wider px-2 py-0.5 rounded-lg border font-bold text-emerald-700 bg-emerald-50/70 border-emerald-200/50">
@@ -1096,42 +1047,23 @@ export default function RelevePage() {
                                 {txExpanded && (
                                   <TableRow className="bg-[#1E2A33]/[0.01] hover:bg-transparent">
                                     <TableCell colSpan={7} className="p-0 border-t-0">
-                                      <div className="px-6 py-5 bg-[#FDFBEF]/30 border-l-4 border-[#AE7D5C] rounded-r-xl grid grid-cols-1 md:grid-cols-2 gap-6 transition-all">
-                                        
-                                        {/* Left Side: Metadata details */}
+                                       <div className="px-3 sm:px-6 py-4 bg-[#FDFBEF]/30 border-l-4 border-[#AE7D5C] rounded-r-xl transition-all space-y-5 w-full overflow-hidden">
+                                        {/* Top Side: Metadata / Details */}
                                         <div className="space-y-4 text-xs">
-                                          <div className="space-y-3">
-                                            <h4 className="font-roboto font-bold text-[10px] uppercase tracking-wider text-[#1E2A33]/50">Opération</h4>
-                                            <div className="grid grid-cols-3 gap-y-2.5 gap-x-4 items-start">
-                                              <span className="text-[#1E2A33]/50 font-light pt-0.5">Type :</span>
-                                              <span className="col-span-2 font-medium text-[#1E2A33] flex items-center gap-1.5">
-                                                {badgeInfo.icon}
-                                                {badgeInfo.label}
-                                              </span>
-
-                                              <span className="text-[#1E2A33]/50 font-light pt-0.5">Compte :</span>
-                                              <span className="col-span-2 font-medium text-[#1E2A33]">{tx.bankAccountName}</span>
-
-                                              <span className="text-[#1E2A33]/50 font-light pt-0.5">Libellé d'origine :</span>
-                                              <span className="col-span-2 font-mono text-[10px] text-[#1E2A33]/70 break-words bg-[#1E2A33]/5 p-2 rounded-xl leading-normal select-all">
-                                                {tx.label}
-                                              </span>
-                                            </div>
-                                          </div>
-
+                                          {/* Show patient details for SumUp / CPAM */}
                                           {typeof tx.productDescription === 'string' && tx.productDescription && (() => {
                                             if (tx.productDescription.startsWith("SUMUP_JSON:")) {
                                               try {
                                                 const patients = JSON.parse(tx.productDescription.substring(11)) as { name: string, amount: number }[];
                                                 return (
-                                                  <div className="pt-3 border-t border-[#1E2A33]/10 space-y-2">
-                                                    <h4 className="font-roboto font-bold text-[10px] uppercase tracking-wider text-emerald-700 font-semibold flex items-center gap-1">
+                                                  <div className="space-y-3">
+                                                    <h4 className="font-roboto font-bold text-[10px] uppercase tracking-wider text-emerald-700 font-bold flex items-center gap-1.5">
                                                       <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                                                       Détail des règlements patients (SumUp)
                                                     </h4>
-                                                    <div className="space-y-1.5 bg-emerald-50/20 border border-emerald-100 p-3 rounded-2xl max-h-[180px] overflow-y-auto">
+                                                    <div className="space-y-1.5 bg-emerald-50/10 border border-emerald-500/10 p-3.5 rounded-2xl max-h-[180px] overflow-y-auto">
                                                       {patients.map((pat, idx) => (
-                                                        <div key={idx} className="flex justify-between items-center text-xs py-1 border-b border-emerald-500/10 last:border-b-0 last:pb-0">
+                                                        <div key={idx} className="flex justify-between items-center text-xs py-1 border-b border-emerald-500/5 last:border-b-0">
                                                           <span className="text-[#1E2A33] font-medium">{pat.name}</span>
                                                           <span className="text-emerald-700 font-bold font-bebas tracking-wide text-sm">{pat.amount.toFixed(2)} €</span>
                                                         </div>
@@ -1139,22 +1071,20 @@ export default function RelevePage() {
                                                     </div>
                                                   </div>
                                                 );
-                                              } catch (e) {
-                                                // ignore
-                                              }
+                                              } catch (e) {}
                                             }
                                             if (tx.productDescription.startsWith("CPAM_JSON:")) {
                                               try {
                                                 const patients = JSON.parse(tx.productDescription.substring(10)) as { name: string, amount: number }[];
                                                 return (
-                                                  <div className="pt-3 border-t border-[#1E2A33]/10 space-y-2">
-                                                    <h4 className="font-roboto font-bold text-[10px] uppercase tracking-wider text-blue-700 font-semibold flex items-center gap-1">
+                                                  <div className="space-y-3">
+                                                    <h4 className="font-roboto font-bold text-[10px] uppercase tracking-wider text-blue-700 font-bold flex items-center gap-1.5">
                                                       <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
                                                       Détail des remboursements tiers-payant (CPAM)
                                                     </h4>
-                                                    <div className="space-y-1.5 bg-blue-50/20 border border-blue-100 p-3 rounded-2xl max-h-[180px] overflow-y-auto">
+                                                    <div className="space-y-1.5 bg-blue-50/10 border border-blue-500/10 p-3.5 rounded-2xl max-h-[180px] overflow-y-auto">
                                                       {patients.map((pat, idx) => (
-                                                        <div key={idx} className="flex justify-between items-center text-xs py-1 border-b border-blue-500/10 last:border-b-0 last:pb-0">
+                                                        <div key={idx} className="flex justify-between items-center text-xs py-1 border-b border-blue-500/5 last:border-b-0">
                                                           <span className="text-[#1E2A33] font-medium">{pat.name}</span>
                                                           <span className="text-blue-700 font-bold font-bebas tracking-wide text-sm">{pat.amount.toFixed(2)} €</span>
                                                         </div>
@@ -1162,20 +1092,30 @@ export default function RelevePage() {
                                                     </div>
                                                   </div>
                                                 );
-                                              } catch (e) {
-                                                // ignore
-                                              }
+                                              } catch (e) {}
                                             }
-                                            return (
-                                              <div className="pt-3 border-t border-[#1E2A33]/10 space-y-1">
-                                                <h4 className="font-roboto font-bold text-[10px] uppercase tracking-wider text-[#AE7D5C] font-semibold">Produit / Service acheté</h4>
-                                                <div className="bg-[#AE7D5C]/5 p-2.5 rounded-xl border border-[#AE7D5C]/10 text-[#1E2A33] font-medium leading-relaxed">
-                                                  {tx.productDescription}
-                                                </div>
+                                            return null;
+                                          })()}
+
+                                          {/* Show origin label if not SumUp/CPAM patient data */}
+                                          {(!tx.productDescription || (!tx.productDescription.startsWith("SUMUP_JSON:") && !tx.productDescription.startsWith("CPAM_JSON:"))) && (
+                                            <div className="space-y-1.5">
+                                              <h4 className="font-roboto font-bold text-[10px] uppercase tracking-wider text-[#1E2A33]/50">Libellé d'origine</h4>
+                                               <div className="font-mono text-[10px] text-[#1E2A33]/70 break-all bg-[#1E2A33]/5 p-2.5 rounded-xl leading-normal select-all">
+                                                 {tx.label}
+                                               </div>
+                                            </div>
+                                          )}
+
+                                          {/* Product details */}
+                                          {typeof tx.productDescription === 'string' && tx.productDescription && !tx.productDescription.startsWith("SUMUP_JSON:") && !tx.productDescription.startsWith("CPAM_JSON:") && (
+                                            <div className="pt-3 border-t border-[#1E2A33]/10 space-y-1">
+                                              <h4 className="font-roboto font-bold text-[10px] uppercase tracking-wider text-[#AE7D5C] font-semibold">Produit / Service acheté</h4>
+                                              <div className="bg-[#AE7D5C]/5 p-2.5 rounded-xl border border-[#AE7D5C]/10 text-[#1E2A33] font-medium leading-relaxed">
+                                                {tx.productDescription}
                                               </div>
-                                            );
-                                           })()}
- 
+                                            </div>
+                                          )}
 
                                           {tx.matchedInvoice?.invoiceLines && tx.matchedInvoice.invoiceLines.length > 0 && (
                                             <div className="pt-3 border-t border-[#1E2A33]/10 space-y-2">
@@ -1191,18 +1131,17 @@ export default function RelevePage() {
                                             </div>
                                           )}
                                         </div>
-
-                                        {/* Right Side: Reconcile / Attachments manager */}
-                                        <div className="space-y-3 flex flex-col justify-center border-t md:border-t-0 md:border-l border-[#1E2A33]/10 pt-4 md:pt-0 md:pl-6">
+                                        {/* Bottom Side: Reconcile / Attachments manager */}
+                                        <div className="pt-4 border-t border-[#1E2A33]/10 space-y-3 flex flex-col justify-center">
                                           <h4 className="font-roboto font-bold text-[10px] uppercase tracking-wider text-[#1E2A33]/50 mb-1">Pièce Justificative (Facture)</h4>
                                           
                                           {tx.matchedInvoice ? (
                                             <div className="space-y-3">
-                                              <div className="p-3 bg-white border border-[#1E2A33]/10 rounded-xl flex items-center justify-between shadow-sm">
-                                                <div className="flex items-center gap-2 min-w-0">
+                                              <div className="p-3 bg-white border border-[#1E2A33]/10 rounded-xl flex items-center justify-between shadow-sm w-full max-w-md gap-3">
+                                                <div className="flex items-center gap-2 min-w-0 flex-1">
                                                   <FileText className="w-5 h-5 text-[#AE7D5C] shrink-0" />
-                                                  <div className="min-w-0">
-                                                    <span className="text-xs font-semibold text-[#1E2A33] block truncate max-w-[200px]" title={tx.matchedInvoice.filename}>
+                                                  <div className="min-w-0 flex-1">
+                                                    <span className="text-xs font-semibold text-[#1E2A33] block truncate max-w-[130px] xs:max-w-[180px] sm:max-w-[260px]" title={tx.matchedInvoice.filename}>
                                                       {tx.matchedInvoice.filename}
                                                     </span>
                                                     <span className="text-[9px] text-[#1E2A33]/40 block">Identifié sur Pennylane</span>
@@ -1211,7 +1150,7 @@ export default function RelevePage() {
                                                 <Button
                                                   variant="ghost"
                                                   size="icon"
-                                                  className="h-8 w-8 text-[#1E2A33]/40 hover:text-rose-600 rounded-full"
+                                                  className="h-8 w-8 text-[#1E2A33]/40 hover:text-rose-600 rounded-full shrink-0"
                                                   onClick={() => triggerManualUpload(null as any, tx)}
                                                   title="Remplacer le justificatif"
                                                 >
@@ -1219,15 +1158,15 @@ export default function RelevePage() {
                                                 </Button>
                                               </div>
                                               
-                                              <div className="flex gap-2">
+                                              <div className="flex gap-2 w-full max-w-md">
                                                 <Button
                                                   variant="outline"
                                                   size="sm"
-                                                  className="text-xs bg-white text-[#1E2A33] hover:bg-[#FDFBEF] rounded-xl flex-1 h-9 cursor-pointer"
+                                                  className="text-xs bg-white text-[#1E2A33] hover:bg-[#FDFBEF] rounded-xl flex-1 h-9 cursor-pointer min-w-0"
                                                   onClick={() => setPreviewUrl(tx.matchedInvoice?.publicFileUrl || null)}
                                                 >
-                                                  <FileText className="w-4 h-4 mr-2" />
-                                                  Voir la facture
+                                                  <FileText className="w-4 h-4 mr-2 shrink-0" />
+                                                  <span className="truncate">Voir la facture</span>
                                                 </Button>
                                                 
                                                 {tx.matchedInvoice.publicFileUrl && (
@@ -1243,34 +1182,18 @@ export default function RelevePage() {
                                                 )}
                                               </div>
                                             </div>
-                                          ) : !tx.isPro ? (
-                                            <p className="text-xs font-light text-[#1E2A33]/40 italic">
-                                              Les transactions personnelles ne requièrent pas de justificatifs pro.
-                                            </p>
-                                          ) : tx.noJustificatif ? (
-                                            tx.amount > 0 ? (
-                                              <div className="bg-emerald-50/40 border border-emerald-500/10 p-3 rounded-xl">
-                                                <div className="flex items-center gap-2 text-emerald-800 font-semibold text-xs mb-1">
-                                                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                                                  Recette validée sans justificatif requis
-                                                </div>
-                                                <p className="text-[11px] text-emerald-700/80 leading-relaxed font-light">
-                                                  Les entrées et encaissements de trésorerie professionnelle ne nécessitent aucun justificatif d'achat.
-                                                </p>
+                                          ) : tx.noJustificatif && !tx.label.toLowerCase().includes("sumup") && !tx.label.toLowerCase().includes("cpam") ? (
+                                            <div className="bg-slate-50/50 border border-slate-200 p-3 rounded-xl max-w-md">
+                                              <div className="flex items-center gap-2 text-slate-700 font-semibold text-xs mb-1">
+                                                <div className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+                                                Opération dispensée de justificatif
                                               </div>
-                                            ) : (
-                                              <div className="bg-slate-50/50 border border-slate-200 p-3 rounded-xl">
-                                                <div className="flex items-center gap-2 text-slate-700 font-semibold text-xs mb-1">
-                                                  <div className="w-1.5 h-1.5 rounded-full bg-slate-400" />
-                                                  Opération dispensée de justificatif
-                                                </div>
-                                                <p className="text-[11px] text-slate-500 leading-relaxed font-light">
-                                                  Certaines opérations (agios, commissions de compte, abonnements sans facture dédiée) sont exemptées de pièce justificative.
-                                                </p>
-                                              </div>
-                                            )
+                                              <p className="text-[11px] text-slate-500 leading-relaxed font-light">
+                                                Certaines opérations (agios, commissions de compte, abonnements sans facture dédiée) sont exemptées de pièce justificative.
+                                              </p>
+                                            </div>
                                           ) : (
-                                            <div className="space-y-2">
+                                            <div className="space-y-2 max-w-md">
                                               <p className="text-xs font-light text-[#1E2A33]/60 mb-2">
                                                 Aucune pièce jointe n'est liée à cette opération.
                                               </p>
@@ -1304,7 +1227,6 @@ export default function RelevePage() {
                                             </div>
                                           )}
                                         </div>
-
                                       </div>
                                     </TableCell>
                                   </TableRow>
