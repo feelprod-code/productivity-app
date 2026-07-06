@@ -1,5 +1,7 @@
 "use client";
 
+export const dynamic = "force-dynamic";
+
 import React, { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import {
@@ -210,23 +212,36 @@ function cleanDisplayLabel(label: string): string {
   return cleaned || label;
 }
 
-export default function RelevePage() {
+function SearchParamsHandler({
+  setActiveTab,
+  setSelectedMonth,
+  setFilterFlow
+}: {
+  setActiveTab: (val: "pro" | "perso") => void;
+  setSelectedMonth: (val: string) => void;
+  setFilterFlow: (val: "all" | "inflow" | "outflow") => void;
+}) {
   const searchParams = useSearchParams();
   const tabParam = searchParams.get("tab");
   const flowParam = searchParams.get("flow");
 
   useEffect(() => {
     if (tabParam === "pro" || tabParam === "perso") {
-      setActiveTab(tabParam);
+      setActiveTab(tabParam as "pro" | "perso");
       setSelectedMonth("all");
     }
-  }, [tabParam]);
+  }, [tabParam, setActiveTab, setSelectedMonth]);
 
   useEffect(() => {
     if (flowParam === "inflow" || flowParam === "outflow" || flowParam === "all") {
-      setFilterFlow(flowParam);
+      setFilterFlow(flowParam as "all" | "inflow" | "outflow");
     }
-  }, [flowParam]);
+  }, [flowParam, setFilterFlow]);
+
+  return null;
+}
+
+function RelevePageContent() {
 
   const [loading, setLoading] = useState(true);
   const [isRefetching, setIsRefetching] = useState(false);
@@ -703,6 +718,13 @@ export default function RelevePage() {
 
   return (
     <main className="min-h-screen bg-[#FDFBEF] text-[#1E2A33] p-4 sm:p-6 lg:p-8 font-sans relative">
+      <React.Suspense fallback={null}>
+        <SearchParamsHandler 
+          setActiveTab={setActiveTab} 
+          setSelectedMonth={setSelectedMonth} 
+          setFilterFlow={setFilterFlow} 
+        />
+      </React.Suspense>
       {/* TDT Grid Background Effect */}
       <div className="absolute inset-0 bg-[url('/grid.svg')] bg-center [mask-image:linear-gradient(180deg,white,rgba(255,255,255,0))] opacity-5 z-0"></div>
 
@@ -1546,5 +1568,13 @@ export default function RelevePage() {
         onChange={handleManualFileChange}
       />
     </main>
+  );
+}
+
+export default function RelevePage() {
+  return (
+    <React.Suspense fallback={<div className="min-h-screen bg-[#FDFBEF] flex items-center justify-center font-sans text-[#1E2A33]/60">Chargement...</div>}>
+      <RelevePageContent />
+    </React.Suspense>
   );
 }

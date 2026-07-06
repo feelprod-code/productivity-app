@@ -5,6 +5,7 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/layout/app-sidebar";
 import { MobileBottomNav } from "@/components/layout/mobile-bottom-nav";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { Suspense } from "react";
 
 const bebas = Bebas_Neue({
   weight: "400",
@@ -52,7 +53,9 @@ export default function RootLayout({
               </div>
               {children}
             </main>
-            <MobileBottomNav />
+            <Suspense fallback={null}>
+              <MobileBottomNav />
+            </Suspense>
           </SidebarProvider>
         </TooltipProvider>
       </body>
