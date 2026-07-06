@@ -27,7 +27,8 @@ import {
   ExternalLink,
   Loader2,
   Wallet,
-  BadgeCheck
+  BadgeCheck,
+  ShoppingBag
 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -233,7 +234,7 @@ export default function RelevePage() {
   const [bankAccounts, setBankAccounts] = useState<BankAccount[]>([]);
   const [activeTab, setActiveTab] = useState<"pro" | "perso">("pro");
   const [selectedMonth, setSelectedMonth] = useState<string>("all");
-  const [selectedYear, setSelectedYear] = useState<string>("2025");
+  const [selectedYear, setSelectedYear] = useState<string>("2026");
   const [togglingTxId, setTogglingTxId] = useState<string | null>(null);
   const [reconcilingTxId, setReconcilingTxId] = useState<string | null>(null);
   
@@ -409,6 +410,8 @@ export default function RelevePage() {
     console.log(`🤖 Autopilot terminé !`);
   }, [transactions, handleReconcileAuto, isAutopilotRunning]);
 
+
+
   // Lancement automatique de l'Autopilot au chargement ou à l'enrichissement
   useEffect(() => {
     if (transactions.length > 0 && !isAutopilotRunning) {
@@ -508,6 +511,29 @@ export default function RelevePage() {
   useEffect(() => {
     loadData();
   }, []);
+
+  const [isAmazonSyncing, setIsAmazonSyncing] = useState(false);
+
+  const runAmazonSync = useCallback(async () => {
+    if (isAmazonSyncing) return;
+    setIsAmazonSyncing(true);
+    try {
+      const res = await fetch('/api/transactions/sync-amazon', {
+        method: 'POST'
+      });
+      const data = await res.json();
+      if (res.ok && data.success) {
+        alert("Succès : Les factures d'Amazon ont été importées et rapprochées avec succès sur Pennylane !");
+        loadData();
+      } else {
+        alert(`Erreur : ${data.error || "Une erreur est survenue lors de la synchronisation Amazon."}`);
+      }
+    } catch (err: any) {
+      alert(`Erreur réseau : ${err.message}`);
+    } finally {
+      setIsAmazonSyncing(false);
+    }
+  }, [isAmazonSyncing, loadData]);
 
   // Filter transactions
   const filteredTxs = useMemo(() => {
@@ -729,6 +755,28 @@ export default function RelevePage() {
                   <>
                     <Sparkles className="w-3.5 h-3.5" />
                     <span>Autopilot</span>
+                  </>
+                )}
+              </button>
+
+              <button
+                onClick={runAmazonSync}
+                disabled={isAmazonSyncing || loading}
+                className={`flex items-center gap-1 px-2.5 py-1.5 sm:px-3 sm:py-1.5 text-xs font-semibold rounded-lg transition-all border cursor-pointer ${
+                  isAmazonSyncing
+                    ? "text-[#FF9900] bg-orange-50 border-[#FF9900]/20 animate-pulse"
+                    : "text-[#FF9900] hover:text-[#e68a00] hover:bg-[#FF9900]/5 border-transparent"
+                }`}
+              >
+                {isAmazonSyncing ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Sync Amazon...</span>
+                  </>
+                ) : (
+                  <>
+                    <ShoppingBag className="w-3.5 h-3.5" />
+                    <span>Amazon</span>
                   </>
                 )}
               </button>
@@ -1066,7 +1114,6 @@ export default function RelevePage() {
                                  </div>
                                  {/* Bottom Side: Reconcile / Attachments manager */}
                                  <div className="pt-4 border-t border-[#1E2A33]/10 space-y-3 flex flex-col justify-center">
-                                   <h4 className="font-roboto font-bold text-[10px] uppercase tracking-wider text-[#1E2A33]/50 mb-1">Pièce Justificative (Facture)</h4>
                                    
                                    {tx.matchedInvoice ? (
                                      <div className="space-y-3">
@@ -1121,15 +1168,9 @@ export default function RelevePage() {
                                          <div className="w-1.5 h-1.5 rounded-full bg-slate-400" />
                                          Opération dispensée de justificatif
                                        </div>
-                                       <p className="text-[11px] text-slate-500 leading-relaxed font-light">
-                                         Certaines opérations (agios, commissions de compte, abonnements sans facture dédiée) sont exemptées de pièce justificative.
-                                       </p>
                                      </div>
                                    ) : (
-                                     <div className="space-y-2 max-w-md">
-                                       <p className="text-xs font-light text-[#1E2A33]/60 mb-2">
-                                         Aucune pièce jointe n'est liée à cette opération.
-                                       </p>
+                                     <div className="w-full max-w-md pt-1">
                                        <div className="flex flex-col sm:flex-row gap-2">
                                          <Button
                                            onClick={() => handleReconcileAuto(tx)}
