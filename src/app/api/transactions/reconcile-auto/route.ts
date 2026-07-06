@@ -243,6 +243,104 @@ export async function POST(request: Request) {
     console.log(`🔍 [AutoReconciliation] Recherche pour "${label}" (${amountStr} €) du ${date}...`);
     console.log(`🔍 Mots-clés de recherche :`, keywords);
 
+    const BASE_URL = "https://app.pennylane.com/api/external/v2";
+
+    // --- PHASE 0: SEARCH EXISTING UNRECONCILED INVOICES ON PENNYLANE ---
+    console.log("🔍 Recherche d'une facture correspondante existante directement sur Pennylane...");
+    try {
+      let pennylaneInvoices: any[] = [];
+      let cursor = '';
+      
+      // Fetch up to 3 pages (300 invoices) to find a match
+      for (let page = 1; page <= 3; page++) {
+        const fetchUrl = `${BASE_URL}/supplier_invoices?limit=100` + (cursor ? `&cursor=${cursor}` : '');
+        const res = await fetch(fetchUrl, {
+          headers: {
+            'Authorization': `Bearer ${pennylaneKey}`,
+            'Accept': 'application/json',
+            'X-Use-2026-API-Changes': 'true'
+          }
+        });
+        if (!res.ok) break;
+        const data: any = await res.json();
+        const items = data.items || data.supplier_invoices || [];
+        if (items.length === 0) break;
+        pennylaneInvoices.push(...items);
+        
+        const nextCursor = data.next_cursor || data.meta?.next_cursor;
+        if (nextCursor) {
+          cursor = nextCursor;
+        } else {
+          break;
+        }
+      }
+
+      const txTime = txDate.getTime();
+      const fifteenDaysMs = 15 * 24 * 60 * 60 * 1000;
+
+      // Filter by amount, date, and keywords
+      const matchingPennylaneInvoice = pennylaneInvoices.find((inv: any) => {
+        // 1. Amount match (+/- 0.05 EUR for rounding)
+        const invAmount = parseFloat(inv.amount || '0');
+        if (Math.abs(invAmount - absAmount) > 0.05) return false;
+
+        // 2. Date match (+/- 15 days)
+        if (inv.date) {
+          const invTime = new Date(inv.date).getTime();
+          if (Math.abs(invTime - txTime) > fifteenDaysMs) return false;
+        }
+
+        // 3. Keyword match (provider or label or filename)
+        const invLabel = (inv.label || '').toLowerCase();
+        const invFilename = (inv.filename || '').toLowerCase();
+        
+        const hasKeyword = keywords.some(kw => 
+          invLabel.includes(kw) || 
+          invFilename.includes(kw)
+        );
+
+        return hasKeyword;
+      });
+
+      if (matchingPennylaneInvoice) {
+        const invoiceId = matchingPennylaneInvoice.id;
+        const publicFileUrl = matchingPennylaneInvoice.public_file_url || matchingPennylaneInvoice.file_url || '';
+        console.log(`🎯 Facture existante trouvée sur Pennylane ! ID : ${invoiceId}, Fichier : ${matchingPennylaneInvoice.filename}`);
+        
+        // Link transaction to this existing invoice
+        console.log(`🔗 Liaison de la transaction ${transactionId} à la facture existante ${invoiceId}...`);
+        const matchRes = await fetch(`${BASE_URL}/supplier_invoices/${invoiceId}/matched_transactions`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${pennylaneKey}`,
+            'Accept': 'application/json',
+            'Content-Type': 'application/json',
+            'X-Use-2026-API-Changes': 'true'
+          },
+          body: JSON.stringify({ transaction_id: String(transactionId) })
+        });
+
+        if (matchRes.ok) {
+          console.log(`✅ Rapprochement réussi avec la facture existante de Pennylane.`);
+          return NextResponse.json({ 
+            success: true, 
+            matchedFile: matchingPennylaneInvoice.filename || 'Facture Pennylane',
+            invoice: {
+              id: invoiceId,
+              date: matchingPennylaneInvoice.date,
+              label: matchingPennylaneInvoice.label || label,
+              filename: matchingPennylaneInvoice.filename || 'Facture',
+              publicFileUrl: publicFileUrl
+            }
+          });
+        } else {
+          console.warn(`⚠️ Échec de la liaison Pennylane avec la facture existante, continuation vers la recherche locale...`);
+        }
+      }
+    } catch (err: any) {
+      console.error("❌ Erreur lors de la recherche de factures existantes sur Pennylane :", err.message);
+    }
+
     let matchedFile: string | null = null;
     let matchedFileBuffer: Buffer | null = null;
 
@@ -356,7 +454,6 @@ export async function POST(request: Request) {
       }, { status: 404 });
     }
 
-    const BASE_URL = "https://app.pennylane.com/api/external/v2";
     const filename = matchedFile;
     console.log(`📤 Téléversement de "${filename}" sur Pennylane...`);
     
