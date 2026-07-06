@@ -709,16 +709,39 @@ export default function RelevePage() {
       <div className="relative z-10 max-w-6xl mx-auto space-y-4">
         {/* Sticky Header & Filters Container */}
         <div className="sticky top-0 bg-[#FDFBEF]/95 backdrop-blur-md z-40 -mt-4 pt-10 pb-3 sm:-mt-6 sm:pt-14 lg:-mt-8 lg:pt-16 border-b border-[#1E2A33]/10 space-y-3 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
-          <div className="flex flex-row justify-between items-center gap-3 w-full mb-3.5">
-            <div className="flex items-center gap-2.5 shrink-0">
-              <div className="w-1.5 bg-[#AE7D5C] rounded-full min-h-[26px] sm:min-h-[38px] self-stretch shadow-[0_0_15px_rgba(174,125,92,0.4)]"></div>
-              <h1 className="text-3xl xs:text-4xl sm:text-5xl font-bebas tracking-wide text-[#1E2A33] leading-none">
-                TRANSACTIONS
-              </h1>
+          <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 w-full mb-3 sm:mb-3.5">
+            <div className="flex items-center justify-between w-full sm:w-auto gap-2.5">
+              <div className="flex items-center gap-2">
+                <div className="w-1.5 bg-[#AE7D5C] rounded-full min-h-[26px] sm:min-h-[38px] self-stretch shadow-[0_0_15px_rgba(174,125,92,0.4)]"></div>
+                <h1 className="text-3xl xs:text-4xl sm:text-5xl font-bebas tracking-wide text-[#1E2A33] leading-none">
+                  TRANSACTIONS
+                </h1>
+              </div>
+              
+              {/* Year Switcher (Mobile Only) */}
+              <div className="flex sm:hidden bg-white/60 p-1 rounded-xl border border-[#1E2A33]/5 gap-1 shadow-inner shrink-0">
+                {uniqueYears.map(y => (
+                  <button
+                    key={y}
+                    onClick={() => {
+                      setSelectedYear(y);
+                      setSelectedMonth("all");
+                    }}
+                    className={`flex items-center justify-center px-3 py-1.5 rounded-lg text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+                      selectedYear === y
+                        ? "bg-[#1E2A33] text-white shadow-md shadow-[#1E2A33]/20"
+                        : "text-[#1E2A33]/60"
+                    }`}
+                  >
+                    {y}
+                  </button>
+                ))}
+              </div>
             </div>
-            <div className="flex items-center gap-2 shrink-0">
-              {/* Year Switcher (Segmented Control chic) */}
-              <div className="flex bg-white/60 p-1 sm:p-2 rounded-xl sm:rounded-2xl border border-[#1E2A33]/5 gap-1 sm:gap-2 shadow-inner shrink-0">
+
+            <div className="flex items-center justify-between sm:justify-end w-full sm:w-auto gap-2 shrink-0">
+              {/* Year Switcher (Desktop Only) */}
+              <div className="hidden sm:flex bg-white/60 p-1 sm:p-2 rounded-xl sm:rounded-2xl border border-[#1E2A33]/5 gap-1 sm:gap-2 shadow-inner shrink-0">
                 {uniqueYears.map(y => (
                   <button
                     key={y}
@@ -737,58 +760,61 @@ export default function RelevePage() {
                 ))}
               </div>
 
-              <button
-                onClick={runAutopilot}
-                disabled={isAutopilotRunning || loading}
-                className={`flex items-center gap-1 px-2.5 py-1.5 sm:px-3 sm:py-1.5 text-xs font-semibold rounded-lg transition-all border cursor-pointer ${
-                  isAutopilotRunning
-                    ? "text-emerald-700 bg-emerald-50 border-emerald-200/50 animate-pulse"
-                    : "text-[#AE7D5C] hover:text-[#8E5D3C] hover:bg-[#AE7D5C]/5 border-transparent"
-                }`}
-              >
-                {isAutopilotRunning ? (
-                  <>
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    <span>Autopilot...</span>
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-3.5 h-3.5" />
-                    <span>Autopilot</span>
-                  </>
-                )}
-              </button>
+              {/* Action Buttons Group (Autopilot, Amazon, Actualiser) */}
+              <div className="flex items-center gap-1.5 sm:gap-2 w-full sm:w-auto justify-end">
+                <button
+                  onClick={runAutopilot}
+                  disabled={isAutopilotRunning || loading}
+                  className={`flex items-center gap-1 px-2 py-1.5 sm:px-3 sm:py-1.5 text-xs font-semibold rounded-lg transition-all border cursor-pointer ${
+                    isAutopilotRunning
+                      ? "text-emerald-700 bg-emerald-50 border-emerald-200/50 animate-pulse"
+                      : "text-[#AE7D5C] hover:text-[#8E5D3C] hover:bg-[#AE7D5C]/5 border-transparent"
+                  }`}
+                >
+                  {isAutopilotRunning ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span className="hidden xs:inline">Autopilot...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-3.5 h-3.5" />
+                      <span>Autopilot</span>
+                    </>
+                  )}
+                </button>
 
-              <button
-                onClick={runAmazonSync}
-                disabled={isAmazonSyncing || loading}
-                className={`flex items-center gap-1 px-2.5 py-1.5 sm:px-3 sm:py-1.5 text-xs font-semibold rounded-lg transition-all border cursor-pointer ${
-                  isAmazonSyncing
-                    ? "text-[#FF9900] bg-orange-50 border-[#FF9900]/20 animate-pulse"
-                    : "text-[#FF9900] hover:text-[#e68a00] hover:bg-[#FF9900]/5 border-transparent"
-                }`}
-              >
-                {isAmazonSyncing ? (
-                  <>
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    <span>Sync Amazon...</span>
-                  </>
-                ) : (
-                  <>
-                    <ShoppingBag className="w-3.5 h-3.5" />
-                    <span>Amazon</span>
-                  </>
-                )}
-              </button>
+                <button
+                  onClick={runAmazonSync}
+                  disabled={isAmazonSyncing || loading}
+                  className={`flex items-center gap-1 px-2 py-1.5 sm:px-3 sm:py-1.5 text-xs font-semibold rounded-lg transition-all border cursor-pointer ${
+                    isAmazonSyncing
+                      ? "text-[#FF9900] bg-orange-50 border-[#FF9900]/20 animate-pulse"
+                      : "text-[#FF9900] hover:text-[#e68a00] hover:bg-[#FF9900]/5 border-transparent"
+                  }`}
+                >
+                  {isAmazonSyncing ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span className="hidden xs:inline">Sync Amazon...</span>
+                    </>
+                  ) : (
+                    <>
+                      <ShoppingBag className="w-3.5 h-3.5" />
+                      <span>Amazon</span>
+                    </>
+                  )}
+                </button>
 
-              <button
-                onClick={loadData}
-                disabled={loading || isRefetching}
-                className="flex items-center gap-1 px-2 py-1.5 sm:px-3 sm:py-1.5 text-xs text-[#1E2A33]/50 hover:text-[#1E2A33] transition-colors rounded-lg cursor-pointer disabled:opacity-75"
-              >
-                <RefreshCcw className={`w-3.5 h-3.5 ${loading || isRefetching ? "animate-spin" : ""}`} />
-                <span className="hidden sm:inline">Actualiser</span>
-              </button>
+                <button
+                  onClick={loadData}
+                  disabled={loading || isRefetching}
+                  className="flex items-center gap-1 px-2 py-1.5 sm:px-3 sm:py-1.5 text-xs text-[#1E2A33]/50 hover:text-[#1E2A33] transition-colors rounded-lg cursor-pointer disabled:opacity-75"
+                >
+                  <RefreshCcw className={`w-3.5 h-3.5 ${loading || isRefetching ? "animate-spin" : ""}`} />
+                  <span>Actualiser</span>
+                </button>
+              </div>
             </div>
           </div>
 
