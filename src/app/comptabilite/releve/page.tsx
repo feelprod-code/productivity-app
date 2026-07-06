@@ -866,7 +866,7 @@ export default function RelevePage() {
                              );
 
                              const detailsContent = (
-                               <div className="px-3 sm:px-6 py-4 bg-[#FDFBEF]/30 border-l-4 border-[#AE7D5C] rounded-r-xl transition-all space-y-5 w-full overflow-hidden">
+                               <div className="px-3 sm:px-6 py-4 bg-[#FDFBEF]/30 border-l-4 border-[#AE7D5C] rounded-r-xl transition-all animate-in fade-in slide-in-from-top-3 duration-300 ease-out space-y-5 w-full overflow-hidden">
                                  {/* Top Side: Metadata / Details */}
                                  <div className="space-y-4 text-xs">
                                    {/* Show patient details for SumUp / CPAM */}
@@ -1051,7 +1051,7 @@ export default function RelevePage() {
                                     {new Date(tx.date).toLocaleDateString('fr-FR')}
                                   </TableCell>
 
-                                  <TableCell className="font-roboto font-medium text-[#1E2A33] text-sm py-2 sm:py-3.5 pl-3 sm:pl-4 max-w-none">
+                                  <TableCell className="font-roboto font-medium text-[#1E2A33] text-sm py-2 sm:py-3.5 pl-3 sm:pl-4 w-[70%] sm:w-auto max-w-none">
                                     <div className="flex flex-col gap-0.5 min-w-0">
                                       <span className="truncate max-w-[220px] xs:max-w-[280px] sm:max-w-[400px] block font-semibold text-[#1E2A33]" title={tx.label}>{cleanDisplayLabel(tx.label)}</span>
                                       {tx.label !== cleanDisplayLabel(tx.label) && (
@@ -1227,7 +1227,7 @@ export default function RelevePage() {
                                   </TableCell>
 
                                   {/* Débit (Sorties sur desktop, Montant Unique sur mobile) */}
-                                  <TableCell className="text-right py-2 sm:py-3.5 whitespace-nowrap w-24 sm:w-28 pr-3 sm:pr-4">
+                                  <TableCell className="text-right py-2 sm:py-3.5 whitespace-nowrap w-[30%] sm:w-28 pr-3 sm:pr-4">
                                     {/* Sur mobile: affiche le montant correspondant (Entrée ou Sortie) + le chevron */}
                                     <div className="sm:hidden flex items-center justify-end gap-1.5 ml-auto w-fit">
                                       {tx.isOutflow ? (
@@ -1278,9 +1278,9 @@ export default function RelevePage() {
                                         {detailsContent}
                                       </TableCell>
                                     </TableRow>
-                                    {/* Version Mobile (2 colonnes) */}
+                                    {/* Version Mobile (7 colonnes pour correspondre à la structure sémantique globale) */}
                                     <TableRow className="bg-[#1E2A33]/[0.01] hover:bg-transparent sm:hidden table-row">
-                                      <TableCell colSpan={2} className="p-0 border-t-0">
+                                      <TableCell colSpan={7} className="p-0 border-t-0">
                                         {detailsContent}
                                       </TableCell>
                                     </TableRow>
