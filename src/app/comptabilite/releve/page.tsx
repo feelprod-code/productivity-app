@@ -103,22 +103,25 @@ function cleanDisplayLabel(label: string): string {
 
   // 1. Détection des marchands spécifiques en priorité absolue pour éviter les conflits (notamment avec LCL)
   if (normalizedLower.includes("carpimko") || normalizedLower.includes("carpinko")) {
-    return "Prélèvement CARPIMKO";
+    return "CARPIMKO";
   }
   if (normalizedLower.includes("adoha")) {
-    return "Prélèvement ADOHA";
+    return "ADOHA";
   }
   if (normalizedLower.includes("swiss life") || normalizedLower.includes("swisslife")) {
-    return "Prélèvement Swiss Life";
+    return "Swiss Life";
   }
   if (normalizedLower.includes("roll identica") || normalizedLower.includes("identica")) {
-    return "Prélèvement Roll Identica";
+    return "Roll Identica";
   }
   if (normalizedLower.includes("dgfip") || normalizedLower.includes("impot") || normalizedLower.includes("direction generale des impots") || normalizedLower.includes("direction générale des impôts")) {
-    return "Prélèvement Impôts";
+    return "Impôts";
   }
   if (normalizedLower.includes("vtto") || normalizedLower.includes("virement permanent et haut") || normalizedLower.includes("virement permanent de haut")) {
     return "VTTO";
+  }
+  if (normalizedLower.includes("cpm")) {
+    return "VRT CPM";
   }
   
   // 2. Détection des autres fournisseurs standards
@@ -136,6 +139,7 @@ function cleanDisplayLabel(label: string): string {
   if (lower.includes("canva")) return "CANVA";
   if (lower.includes("soundcloud")) return "SOUNDCLOUD";
   if (lower.includes("gocardless") || lower.includes("viasana")) return "VIASANA";
+  if (lower.includes("le paris halles") || lower.includes("halles") || lower.includes("parial")) return "Restaurant";
   if (lower.includes("bouygues")) return "BOUYGUES";
   if (lower.includes("vw bank") || lower.includes("volkswagen")) return "VW BANK";
   if (lower.includes("mgen")) return "MGEN";
