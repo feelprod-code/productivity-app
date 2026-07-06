@@ -94,8 +94,8 @@ async function run() {
       const isPro = hasOverride ? overrideMap.get(String(tx.id))! : proAccountIds.has(tx.bank_account_id);
       if (!isPro) return false;
 
-      // Must be unmatched
-      const isMatched = tx.matched_supplier_invoice_id || tx.supplier_invoice_id || tx.matched_customer_invoice_id || tx.customer_invoice_id;
+      // Must be unmatched (outstanding_balance is not 0)
+      const isMatched = parseFloat(tx.outstanding_balance || '0') === 0;
       return !isMatched;
     });
 
