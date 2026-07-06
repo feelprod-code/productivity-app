@@ -30,7 +30,8 @@ import {
   Loader2,
   Wallet,
   BadgeCheck,
-  ShoppingBag
+  ShoppingBag,
+  ArrowUpDown
 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -300,6 +301,7 @@ function RelevePageContent() {
   const [filterCategory, setFilterCategory] = useState<string>("all");
   const [filterMatched, setFilterMatched] = useState<"all" | "matched" | "unmatched">("unmatched");
   const [searchQuery, setSearchQuery] = useState<string>("");
+  const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
   const [expandedMonths, setExpandedMonths] = useState<Record<string, boolean>>({});
   const [isMonthDropdownOpen, setIsMonthDropdownOpen] = useState(false);
@@ -671,17 +673,23 @@ function RelevePageContent() {
       }
     });
     
-    const sortedMonthKeys = Object.keys(groups).sort((a, b) => b.localeCompare(a));
+    const sortedMonthKeys = Object.keys(groups).sort((a, b) => 
+      sortOrder === "desc" ? b.localeCompare(a) : a.localeCompare(b)
+    );
     sortedMonthKeys.forEach(mKey => {
       const g = groups[mKey];
       g.net = g.inflows - g.outflows;
       g.matchingRate = g.totalOutflowCount > 0 ? Math.round((g.matchedCount / g.totalOutflowCount) * 100) : 100;
-      // Sort transactions of this month by date descending
-      g.transactions.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+      // Sort transactions of this month
+      g.transactions.sort((a, b) => {
+        const timeA = new Date(a.date).getTime();
+        const timeB = new Date(b.date).getTime();
+        return sortOrder === "desc" ? timeB - timeA : timeA - timeB;
+      });
     });
     
     return { groups, sortedMonthKeys };
-  }, [filteredTxs]);
+  }, [filteredTxs, sortOrder]);
 
   // Global Statistics
   const totalInflows = useMemo(() => {
@@ -995,6 +1003,18 @@ function RelevePageContent() {
               <span className="xs:hidden">Rapproch.</span>
             </button>
           </div>
+
+          {/* Tri Chronologique / Antéchronologique */}
+          <button
+            onClick={() => setSortOrder(prev => prev === "desc" ? "asc" : "desc")}
+            className="flex items-center justify-center p-2.5 sm:px-4 sm:py-2.5 rounded-2xl border border-[#1E2A33]/10 bg-white/60 text-[#1E2A33] hover:bg-[#AE7D5C]/5 hover:border-[#AE7D5C]/20 transition-all cursor-pointer font-bold text-[10px] sm:text-sm gap-1.5 shrink-0"
+            title={sortOrder === "desc" ? "Trier du plus ancien au plus récent" : "Trier du plus récent au plus ancien"}
+          >
+            <ArrowUpDown className="w-3.5 h-3.5 sm:w-4.5 sm:h-4.5 text-[#AE7D5C]" />
+            <span>
+              {sortOrder === "desc" ? "Récent d'abord" : "Ancien d'abord"}
+            </span>
+          </button>
 
           {/* Search Input (Loupe) */}
           <div className="flex items-center gap-2.5 bg-[#FDFBEF] border border-[#1E2A33]/10 rounded-2xl px-4 py-2.5 w-full xl:w-72 xl:ml-auto">
