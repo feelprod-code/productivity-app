@@ -337,7 +337,9 @@ export default function RelevePage() {
     }
   }, [setTransactions]);
 
-  const handleReconcileAuto = useCallback(async (tx: Transaction) => {
+  const [isAutopilotRunning, setIsAutopilotRunning] = useState(false);
+
+  const handleReconcileAuto = useCallback(async (tx: Transaction, silent = false) => {
     setReconcilingTxId(String(tx.id));
     try {
       const res = await fetch('/api/transactions/reconcile-auto', {
@@ -355,7 +357,6 @@ export default function RelevePage() {
 
       const data = await res.json();
       if (res.ok && data.success) {
-        // Update transaction locally with the new matchedInvoice
         setTransactions(prev =>
           prev.map(t =>
             String(t.id) === String(tx.id)
@@ -363,16 +364,64 @@ export default function RelevePage() {
               : t
           )
         );
-        alert(`Rapprochement réussi avec le fichier : ${data.matchedFile}`);
+        if (!silent) {
+          alert(`Rapprochement réussi avec le fichier : ${data.matchedFile}`);
+        } else {
+          console.log(`🤖 Autopilot : Rapprochement réussi pour "${tx.label}" (${tx.amount} €)`);
+        }
+        return true;
       } else {
-        alert(data.error || "Une erreur s'est produite lors du rapprochement automatique.");
+        if (!silent) {
+          alert(data.error || "Une erreur s'est produite lors du rapprochement automatique.");
+        }
+        return false;
       }
     } catch (err: any) {
-      alert(err.message || "Erreur de connexion lors du rapprochement.");
+      if (!silent) {
+        alert(err.message || "Erreur de connexion lors du rapprochement.");
+      }
+      return false;
     } finally {
       setReconcilingTxId(null);
     }
   }, [setTransactions]);
+
+  const runAutopilot = useCallback(async () => {
+    if (isAutopilotRunning) return;
+    setIsAutopilotRunning(true);
+    
+    // Filtrer uniquement les transactions de type dépense (amount < 0) non rapprochées et pro
+    const unmatchedProTxs = transactions.filter(t => 
+      t.isPro && 
+      !t.matchedInvoice && 
+      t.amount < 0
+    );
+
+    console.log(`🤖 Autopilot démarré pour ${unmatchedProTxs.length} transaction(s) pro non rapprochée(s)...`);
+
+    for (const tx of unmatchedProTxs) {
+      await handleReconcileAuto(tx, true);
+      // Pause de 400ms entre les requêtes pour respecter les limites
+      await new Promise(resolve => setTimeout(resolve, 400));
+    }
+
+    setIsAutopilotRunning(false);
+    console.log(`🤖 Autopilot terminé !`);
+  }, [transactions, handleReconcileAuto, isAutopilotRunning]);
+
+  // Lancement automatique de l'Autopilot au chargement ou à l'enrichissement
+  useEffect(() => {
+    if (transactions.length > 0 && !isAutopilotRunning) {
+      // Trouver s'il y a des transactions pro non rapprochées à traiter
+      const hasUnmatched = transactions.some(t => t.isPro && !t.matchedInvoice && t.amount < 0);
+      if (hasUnmatched) {
+        const timer = setTimeout(() => {
+          runAutopilot();
+        }, 2000); // Déclenchement 2s après le chargement initial
+        return () => clearTimeout(timer);
+      }
+    }
+  }, [transactions.length, runAutopilot, isAutopilotRunning]);
 
   const triggerManualUpload = (e: React.MouseEvent, tx: Transaction) => {
     e.stopPropagation();
@@ -661,6 +710,28 @@ export default function RelevePage() {
                   </button>
                 ))}
               </div>
+
+              <button
+                onClick={runAutopilot}
+                disabled={isAutopilotRunning || loading}
+                className={`flex items-center gap-1 px-2.5 py-1.5 sm:px-3 sm:py-1.5 text-xs font-semibold rounded-lg transition-all border cursor-pointer ${
+                  isAutopilotRunning
+                    ? "text-emerald-700 bg-emerald-50 border-emerald-200/50 animate-pulse"
+                    : "text-[#AE7D5C] hover:text-[#8E5D3C] hover:bg-[#AE7D5C]/5 border-transparent"
+                }`}
+              >
+                {isAutopilotRunning ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Autopilot...</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>Autopilot</span>
+                  </>
+                )}
+              </button>
 
               <button
                 onClick={loadData}

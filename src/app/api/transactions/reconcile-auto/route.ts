@@ -30,7 +30,10 @@ function extractKeywords(label: string): string[] {
     "virement", "sepa", "recu", "instantane", "prlv", "carte", "cb", "facture", "retrait", 
     "pay", "payment", "payments", "de", "la", "le", "du", "en", "pour", "fact", "inv", 
     "numero", "num", "no", "payout", "payouts", "eur", "usd", "ref", "releve", "dun",
-    "confrere", "prelvt"
+    "confrere", "prelvt", "bank", "banque", "ltd", "limited", "gmbh", "sas", "sarl",
+    "sasu", "eurl", "cie", "company", "co", "corp", "corporation", "group", "groupe",
+    "services", "service", "solutions", "solution", "international", "intl", "systems",
+    "system", "france", "europe", "global", "digital"
   ]);
   
   const words = cleaned.split(/\s+/).filter(w => {
