@@ -97,8 +97,31 @@ const getCategoryBadge = (category: string) => {
 
 function cleanDisplayLabel(label: string): string {
   const lower = label.toLowerCase();
+  
+  // Supprimer les points dans CARPIMKO/C.A.R.P.I.M.K.O pour faciliter les recherches
+  const normalizedLower = lower.replace(/\./g, '');
 
-  // Remplacement immédiat par le fournisseur propre
+  // 1. Détection des marchands spécifiques en priorité absolue pour éviter les conflits (notamment avec LCL)
+  if (normalizedLower.includes("carpimko") || normalizedLower.includes("carpinko")) {
+    return "Prélèvement CARPIMKO";
+  }
+  if (normalizedLower.includes("adoha")) {
+    return "Prélèvement ADOHA";
+  }
+  if (normalizedLower.includes("swiss life") || normalizedLower.includes("swisslife")) {
+    return "Prélèvement Swiss Life";
+  }
+  if (normalizedLower.includes("roll identica") || normalizedLower.includes("identica")) {
+    return "Prélèvement Roll Identica";
+  }
+  if (normalizedLower.includes("dgfip") || normalizedLower.includes("impot") || normalizedLower.includes("direction generale des impots") || normalizedLower.includes("direction générale des impôts")) {
+    return "Prélèvement Impôts";
+  }
+  if (normalizedLower.includes("vtto") || normalizedLower.includes("virement permanent et haut") || normalizedLower.includes("virement permanent de haut")) {
+    return "VTTO";
+  }
+  
+  // 2. Détection des autres fournisseurs standards
   if (lower.includes("sumup")) return "SUM UP";
   if (lower.includes("amazon")) return "AMAZON";
   if (lower.includes("gandi")) return "GANDI";
@@ -113,7 +136,6 @@ function cleanDisplayLabel(label: string): string {
   if (lower.includes("canva")) return "CANVA";
   if (lower.includes("soundcloud")) return "SOUNDCLOUD";
   if (lower.includes("gocardless") || lower.includes("viasana")) return "VIASANA";
-  if (lower.includes("lcl") || lower.includes("telelion")) return "LCL";
   if (lower.includes("bouygues")) return "BOUYGUES";
   if (lower.includes("vw bank") || lower.includes("volkswagen")) return "VW BANK";
   if (lower.includes("mgen")) return "MGEN";
@@ -121,32 +143,34 @@ function cleanDisplayLabel(label: string): string {
   if (lower.includes("orange")) return "ORANGE";
   if (lower.includes("edf")) return "EDF";
   if (lower.includes("urssaf")) return "URSSAF";
-  if (lower.includes("dgfip") || lower.includes("impot")) return "IMPÔTS";
   if (lower.includes("malakoff") || lower.includes("humanis")) return "MALAKOFF HUMANIS";
   if (lower.includes("nike")) return "NIKE";
   if (lower.includes("agios") || lower.includes("commission") || lower.includes("arrete de compte")) return "Frais bancaires";
+  
+  // Ne renvoyer LCL que si aucun autre fournisseur spécifique n'a été trouvé
+  if (lower.includes("lcl") || lower.includes("telelion")) return "LCL";
 
+  // 3. Nettoyage générique pour les autres types de transactions (virements/prélèvements génériques)
   let cleaned = label;
 
-  // 1. Clean common payment method tags
-  cleaned = cleaned.replace(/PRELVT SEPA RECU D\/O CONFRERE PRLV SEPA/gi, 'PRLV Confrère');
-  cleaned = cleaned.replace(/PRELVT SEPA RECU D\/O CONFRERE/gi, 'PRLV Confrère');
-  cleaned = cleaned.replace(/VIREMENT PERMANENT/gi, 'VT PERM');
-  cleaned = cleaned.replace(/VIR\.PERMANENT/gi, 'VT PERM');
-  cleaned = cleaned.replace(/VIREMENT INSTANTANE/gi, 'VIR Inst.');
-  cleaned = cleaned.replace(/VIREMENT SEPA RECU/gi, 'VIR');
-  cleaned = cleaned.replace(/VIR SEPA/gi, 'VIR');
-  cleaned = cleaned.replace(/VIR INST/gi, 'VIR Inst.');
-  cleaned = cleaned.replace(/PRLV SEPA/gi, 'PRLV');
-  cleaned = cleaned.replace(/PRELVT/gi, 'PRLV');
-  cleaned = cleaned.replace(/PRLV/gi, 'PRLV');
-  cleaned = cleaned.replace(/Virement/g, 'VIR');
-  cleaned = cleaned.replace(/VIREMENT/g, 'VIR');
-  
-  // Specific cases
-  cleaned = cleaned.replace(/VT PERM appart/gi, 'VT PERM - Appartement');
+  // Remplacer les termes bancaires barbares
+  cleaned = cleaned.replace(/PRELVT SEPA RECU D\/O CONFRERE PRLV SEPA/gi, 'Prélèvement');
+  cleaned = cleaned.replace(/PRELVT SEPA RECU D\/O CONFRERE/gi, 'Prélèvement');
+  cleaned = cleaned.replace(/PRELVT SEPA RECU D\/O/gi, 'Prélèvement');
+  cleaned = cleaned.replace(/VIR SEPA/gi, 'Virement');
+  cleaned = cleaned.replace(/VIREMENT SEPA RECU/gi, 'Virement');
+  cleaned = cleaned.replace(/VIREMENT INSTANTANE/gi, 'Virement Inst.');
+  cleaned = cleaned.replace(/VIR INST/gi, 'Virement Inst.');
+  cleaned = cleaned.replace(/VIREMENT/gi, 'Virement');
+  cleaned = cleaned.replace(/PRLV SEPA/gi, 'Prélèvement');
+  cleaned = cleaned.replace(/PRELVT/gi, 'Prélèvement');
+  cleaned = cleaned.replace(/PRLV/gi, 'Prélèvement');
+  cleaned = cleaned.replace(/Virement/g, 'Virement');
+  cleaned = cleaned.replace(/VIREMENT PERMANENT/gi, 'Virement Perm.');
+  cleaned = cleaned.replace(/VIR\.PERMANENT/gi, 'Virement Perm.');
+  cleaned = cleaned.replace(/VT PERM/gi, 'Virement Perm.');
 
-  // 2. Remove standard bank tracking metadata
+  // Nettoyer les métadonnées de carte et de transaction
   cleaned = cleaned.replace(/CARTE\s+\d+\s+CB/gi, '');
   cleaned = cleaned.replace(/CARTE\s+CB/gi, '');
   cleaned = cleaned.replace(/\bCB\b/g, '');
@@ -158,13 +182,11 @@ function cleanDisplayLabel(label: string): string {
   cleaned = cleaned.replace(/PID\d+/gi, '');
   cleaned = cleaned.replace(/PAYOUT\s+\d+/gi, '');
   cleaned = cleaned.replace(/EXT BAL SWEEP\s+[A-Z0-9]+/gi, '');
-  cleaned = cleaned.replace(/\b[A-Z0-9]{15,}\b/g, ''); // Mandate IDs
-  cleaned = cleaned.replace(/\b\d{10,}\b/g, ''); // Serial numbers
-
-  // 3. Remove client name repetitions and card meta details
+  cleaned = cleaned.replace(/\b[A-Z0-9]{15,}\b/g, '');
+  cleaned = cleaned.replace(/\b\d{10,}\b/g, '');
   cleaned = cleaned.replace(/EUR\s*\d+[\.,]\d*/gi, '');
   cleaned = cleaned.replace(/\d+[\.,]\d*\s*EUR/gi, '');
-  cleaned = cleaned.replace(/\b\d+[\.,]\d*\b/g, ''); 
+  cleaned = cleaned.replace(/\b\d+[\.,]\d*\b/g, '');
   cleaned = cleaned.replace(/\b(EUR|USD)\b/gi, '');
   cleaned = cleaned.replace(/\b(Paris|PARIS)\b/gi, '');
   cleaned = cleaned.replace(/PHILIPPE\s+GUILLAUME/gi, '');
@@ -174,14 +196,10 @@ function cleanDisplayLabel(label: string): string {
   cleaned = cleaned.replace(/MR PHILIPPE GUILLAUME/gi, '');
   cleaned = cleaned.replace(/M\.? PHILIPPE GUILLAUME/gi, '');
 
-  // 4. Final sanitization
-  // Éliminer les répétitions consécutives de mots identiques comme "VIR VIR" ou "PRLV PRLV" (insensible à la casse)
+  // Éliminer les répétitions consécutives
   cleaned = cleaned.replace(/\b(\w+)\b(?:\s+\1\b)+/gi, '$1');
-
   cleaned = cleaned.replace(/\s+/g, ' ');
   cleaned = cleaned.trim();
-  
-  // Remove trailing dots, dashes, or slashes
   cleaned = cleaned.replace(/[\s\-\.\/]+$/, '');
 
   return cleaned || label;
