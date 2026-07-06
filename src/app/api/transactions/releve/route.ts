@@ -423,9 +423,10 @@ export async function GET() {
               }
             }
 
+            const isAmazon = cleanInv.includes('amazon') || cleanInv.includes('sportano') || cleanInv.includes('regatta') || cleanInv.includes('erima');
             let amountMatch = Math.abs(invAmount - absAmount) < 0.01 || isAmazonMarketplaceMatch;
             
-            if (!amountMatch && !cleanInv.includes('amazon')) {
+            if (!amountMatch && isAmazon) {
               const ratio = absAmount / invAmount;
               if (ratio >= 0.80 && ratio <= 1.15) {
                 amountMatch = true;
@@ -438,9 +439,9 @@ export async function GET() {
             }
             if (!amountMatch) return false;
 
-            const isAmazon = cleanInv.includes('amazon') || cleanInv.includes('sportano') || cleanInv.includes('regatta');
-            const maxDaysMs = isAmazon ? 90 * 24 * 60 * 60 * 1000 : thirtyFiveDaysMs;
-            const closeDate = (txTime >= invTime - 5 * 24 * 60 * 60 * 1000) && (txTime - invTime <= maxDaysMs);
+            // Strict date matching: standard is +/- 15 days, Amazon is up to 90 days
+            const maxDaysMs = isAmazon ? 90 * 24 * 60 * 60 * 1000 : 15 * 24 * 60 * 60 * 1000;
+            const closeDate = Math.abs(txTime - invTime) <= maxDaysMs;
             if (!closeDate) return false;
 
             if (isTxAmazon !== isInvAmazon && !isAmazonMarketplaceMatch) return false;
@@ -448,6 +449,15 @@ export async function GET() {
             const isTxOpenrouter = labelLower.includes('openrouter') || !!(realMerchantName && realMerchantName.toLowerCase().includes('openrouter'));
             const isInvOpenrouter = cleanInv.includes('openrouter');
             if (isTxOpenrouter !== isInvOpenrouter) return false;
+
+            // Strict provider guardrails to prevent mismatched invoice links
+            if (cleanInv.includes('carpimko') && !labelLower.includes('carpimko')) return false;
+            if (cleanInv.includes('adobe') && !labelLower.includes('adobe')) return false;
+            if ((cleanInv.includes('volkswagen') || cleanInv.includes('vw')) && 
+                !(labelLower.includes('volkswagen') || labelLower.includes('vw') || labelLower.includes('volks'))) return false;
+            if (cleanInv.includes('swiss') && !labelLower.includes('swiss')) return false;
+            if (cleanInv.includes('urssaf') && !labelLower.includes('urssaf')) return false;
+            if (cleanInv.includes('caisse') && !labelLower.includes('caisse') && !labelLower.includes('retraite') && !labelLower.includes('carpimko')) return false;
 
             const cleanTx = (realMerchantName || labelLower)
               .replace(/(virement|prlv|sepa|carte|cb|facture|achat|payments|digital|sarl|gmbh|inc|sas|eu)/gi, '')

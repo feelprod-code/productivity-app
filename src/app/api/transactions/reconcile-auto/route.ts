@@ -183,8 +183,26 @@ async function searchEmailAccount(
                 const parsedPdf = await pdfParse(buffer);
                 const text = (parsedPdf.text || '').toLowerCase();
 
-                // Check if PDF contains keyword
-                const hasKeyword = keywords.some(kw => text.includes(kw) || cand.filename.toLowerCase().includes(kw));
+                const candNameLower = cand.filename.toLowerCase();
+                
+                // Gardes-fous stricts sur les e-mails
+                if (candNameLower.includes('carpimko') && !keywords.includes('carpimko')) continue;
+                if (candNameLower.includes('adobe') && !keywords.includes('adobe')) continue;
+                if ((candNameLower.includes('volkswagen') || candNameLower.includes('vw')) && 
+                    !(keywords.includes('volkswagen') || keywords.includes('vw'))) continue;
+                if (candNameLower.includes('swiss') && !keywords.includes('swiss')) continue;
+                if (candNameLower.includes('urssaf') && !keywords.includes('urssaf')) continue;
+                if (candNameLower.includes('cacf') && !keywords.includes('cacf')) continue;
+
+                // Recherche intelligente par mot entier pour éviter les sous-chaînes partielles (ex: 'vw' dans 'review')
+                const hasKeyword = keywords.some(kw => {
+                  if (candNameLower.includes(kw)) return true;
+                  if (kw.length < 4) {
+                    const regex = new RegExp(`\\b${kw}\\b`, 'i');
+                    return regex.test(text);
+                  }
+                  return text.includes(kw);
+                });
                 if (!hasKeyword) continue;
 
                 // Check if PDF contains amount
@@ -391,7 +409,27 @@ export async function POST(request: Request) {
         const parsed = await pdfParse(buffer);
         const text = (parsed.text || '').toLowerCase();
 
-        const hasKeyword = keywords.some(kw => text.includes(kw) || path.basename(filePath).toLowerCase().includes(kw));
+        const labelLower = label.toLowerCase();
+        const fileNameLower = path.basename(filePath).toLowerCase();
+        
+        // Gardes-fous stricts sur le nom de fichier et le libellé de transaction
+        if (fileNameLower.includes('carpimko') && !labelLower.includes('carpimko')) continue;
+        if (fileNameLower.includes('adobe') && !labelLower.includes('adobe')) continue;
+        if ((fileNameLower.includes('volkswagen') || fileNameLower.includes('vw')) && 
+            !(labelLower.includes('volkswagen') || labelLower.includes('vw') || labelLower.includes('volks'))) continue;
+        if (fileNameLower.includes('swiss') && !labelLower.includes('swiss')) continue;
+        if (fileNameLower.includes('urssaf') && !labelLower.includes('urssaf')) continue;
+        if (fileNameLower.includes('cacf') && !labelLower.includes('cacf') && !labelLower.includes('consumer')) continue;
+
+        // Recherche intelligente par mot entier pour éviter les sous-chaînes partielles (ex: 'vw' dans 'review')
+        const hasKeyword = keywords.some(kw => {
+          if (fileNameLower.includes(kw)) return true;
+          if (kw.length < 4) {
+            const regex = new RegExp(`\\b${kw}\\b`, 'i');
+            return regex.test(text);
+          }
+          return text.includes(kw);
+        });
         if (!hasKeyword) continue;
 
         const hasAmount = text.includes(amountStr) || text.includes(amountStrComma) || 
