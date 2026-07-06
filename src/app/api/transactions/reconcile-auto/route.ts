@@ -558,13 +558,27 @@ export async function POST(request: Request) {
       body: JSON.stringify(payload)
     });
 
+    let invoiceId: string | null = null;
+
     if (!importRes.ok) {
       const errTxt = await importRes.text();
-      return NextResponse.json({ success: false, error: `Échec de l'import de facture Pennylane : ${errTxt}` }, { status: 500 });
+      // Intercepter le cas où le document existe déjà avec cette pièce jointe (erreur 409)
+      // Format : {"status":409,"error":"A document with ID 25113760727040 already exists with such attachment."}
+      if (importRes.status === 409 || errTxt.includes('already exists with such attachment')) {
+        const match = errTxt.match(/document with ID (\d+) already exists/i);
+        if (match && match[1]) {
+          invoiceId = match[1];
+          console.log(`ℹ️ La facture existe déjà sur Pennylane avec l'ID ${invoiceId}. Tentative de rapprochement direct...`);
+        }
+      }
+      
+      if (!invoiceId) {
+        return NextResponse.json({ success: false, error: `Échec de l'import de facture Pennylane : ${errTxt}` }, { status: 500 });
+      }
+    } else {
+      const importData = await importRes.json();
+      invoiceId = importData.id || importData.supplier_invoice?.id;
     }
-
-    const importData = await importRes.json();
-    const invoiceId = importData.id || importData.supplier_invoice?.id;
 
     // Link transaction to invoice
     console.log(`🔗 Liaison de la transaction ${transactionId} à la facture ${invoiceId}...`);
