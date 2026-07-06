@@ -456,7 +456,9 @@ export async function GET() {
             const txWords = cleanTx.split(/[^a-z0-9]/).filter((w: string) => w.length >= 3);
 
             let providerMatch = false;
-            if (isAmazonMarketplaceMatch) {
+            if (!cleanInv || cleanInv.length < 2) {
+              providerMatch = false;
+            } else if (isAmazonMarketplaceMatch) {
               providerMatch = true;
             } else if (txWords.length > 0) {
               providerMatch = txWords.some((word: string) => cleanInv.includes(word) || word.includes(cleanInv));
