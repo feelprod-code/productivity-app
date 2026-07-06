@@ -6,8 +6,8 @@ import * as crypto from 'crypto';
 import { createClient } from '@supabase/supabase-js';
 import pdfParse from 'pdf-parse';
 import * as dotenv from 'dotenv';
-dotenv.config({ path: '.env.local' });
-dotenv.config({ path: '.env', override: false });
+dotenv.config({ path: '.env.local', override: true });
+dotenv.config({ path: '.env', override: true });
 
 const prisma = new PrismaClient();
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
@@ -15,8 +15,8 @@ const supabase = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env
 
 const IMAP_CONFIG = {
     imap: {
-        user: 'guillaumephilippe@me.com',
-        password: 'ezux-gvqf-htzt-xxpi',
+        user: process.env.ICLOUD_EMAIL || 'guillaumephilippe@me.com',
+        password: process.env.ICLOUD_APP_PASSWORD || 'vcny-lusr-hugo-djpa',
         host: 'imap.mail.me.com',
         port: 993,
         tls: true,
