@@ -582,15 +582,15 @@ export default function RelevePage() {
         {/* Sticky Header & Filters Container */}
         <div className="sticky top-0 bg-[#FDFBEF]/95 backdrop-blur-md z-40 -mt-4 pt-10 pb-3 sm:-mt-6 sm:pt-14 lg:-mt-8 lg:pt-16 border-b border-[#1E2A33]/10 space-y-3 -mx-4 px-4 sm:-mx-6 sm:px-6 lg:-mx-8 lg:px-8">
           <div className="flex flex-row justify-between items-center gap-3 w-full mb-3.5">
-            <div className="flex items-center gap-2 shrink-0">
-              <div className="w-1 bg-[#AE7D5C] rounded-full min-h-[22px] sm:min-h-[32px] self-stretch shadow-[0_0_15px_rgba(174,125,92,0.4)]"></div>
-              <h1 className="text-2xl xs:text-3xl sm:text-4xl font-bebas tracking-wide text-[#1E2A33] leading-none">
+            <div className="flex items-center gap-2.5 shrink-0">
+              <div className="w-1.5 bg-[#AE7D5C] rounded-full min-h-[26px] sm:min-h-[38px] self-stretch shadow-[0_0_15px_rgba(174,125,92,0.4)]"></div>
+              <h1 className="text-3xl xs:text-4xl sm:text-5xl font-bebas tracking-wide text-[#1E2A33] leading-none">
                 TRANSACTIONS
               </h1>
             </div>
             <div className="flex items-center gap-2 shrink-0">
               {/* Year Switcher (Segmented Control chic) */}
-              <div className="flex bg-white/60 p-0.5 sm:p-1.5 rounded-lg sm:rounded-2xl border border-[#1E2A33]/5 gap-0.5 sm:gap-1.5 shadow-inner shrink-0">
+              <div className="flex bg-white/60 p-1 sm:p-2 rounded-xl sm:rounded-2xl border border-[#1E2A33]/5 gap-1 sm:gap-2 shadow-inner shrink-0">
                 {uniqueYears.map(y => (
                   <button
                     key={y}
@@ -598,7 +598,7 @@ export default function RelevePage() {
                       setSelectedYear(y);
                       setSelectedMonth("all");
                     }}
-                    className={`flex items-center justify-center px-3.5 py-1.5 sm:px-5 sm:py-2.5 rounded-md sm:rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer ${
+                    className={`flex items-center justify-center px-4 py-2 sm:px-6 sm:py-3 rounded-lg sm:rounded-xl text-sm sm:text-base font-bold transition-all whitespace-nowrap cursor-pointer ${
                       selectedYear === y
                         ? "bg-[#1E2A33] text-white shadow-md shadow-[#1E2A33]/20"
                         : "text-[#1E2A33]/60 hover:text-[#1E2A33]"
@@ -624,19 +624,19 @@ export default function RelevePage() {
           <div className="flex flex-row flex-wrap justify-center items-center gap-3 bg-transparent p-0 border-none shadow-none print:hidden select-none w-full">
 
           {/* Account Switcher */}
-          <div className="hidden md:flex bg-white/60 p-1 sm:p-1.5 rounded-xl sm:rounded-2xl border border-[#1E2A33]/5 gap-1 sm:gap-1.5 shadow-inner shrink-0">
+          <div className="hidden md:flex bg-white/60 p-1.5 sm:p-2 rounded-2xl border border-[#1E2A33]/5 gap-1.5 sm:gap-2 shadow-inner shrink-0">
             <button
               onClick={() => {
                 setActiveTab("pro");
                 setSelectedMonth("all");
               }}
-              className={`flex items-center justify-center gap-1 px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-[9px] sm:text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+              className={`flex items-center justify-center gap-1.5 px-3 py-2 sm:px-5 sm:py-2.5 rounded-xl text-[10px] sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer ${
                 activeTab === "pro"
                   ? "bg-[#1E2A33] text-white shadow-md shadow-[#1E2A33]/20"
                   : "text-[#1E2A33]/60 hover:text-[#1E2A33]"
               }`}
             >
-              <Building2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+              <Building2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               <span className="hidden sm:inline">COMPTE </span>PRO
             </button>
             <button
@@ -644,22 +644,22 @@ export default function RelevePage() {
                 setActiveTab("perso");
                 setSelectedMonth("all");
               }}
-              className={`flex items-center justify-center gap-1 px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-[9px] sm:text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+              className={`flex items-center justify-center gap-1.5 px-3 py-2 sm:px-5 sm:py-2.5 rounded-xl text-[10px] sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer ${
                 activeTab === "perso"
                   ? "bg-[#1E2A33] text-white shadow-md shadow-[#1E2A33]/20"
                   : "text-[#1E2A33]/60 hover:text-[#1E2A33]"
               }`}
             >
-              <User2 className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
+              <User2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
               <span className="hidden sm:inline">COMPTE </span>PERSO
             </button>
           </div>
 
           {/* Flow Filter (Entrées/Sorties sobre) */}
-          <div className="hidden md:flex bg-white/60 p-1 sm:p-1.5 rounded-xl sm:rounded-2xl border border-[#1E2A33]/5 gap-1 sm:gap-1.5 shadow-inner shrink-0">
+          <div className="hidden md:flex bg-white/60 p-1.5 sm:p-2 rounded-2xl border border-[#1E2A33]/5 gap-1.5 sm:gap-2 shadow-inner shrink-0">
             <button
               onClick={() => setFilterFlow(filterFlow === "inflow" ? "all" : "inflow")}
-              className={`flex items-center justify-center px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-[9px] sm:text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+              className={`flex items-center justify-center px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl text-[10px] sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer ${
                 filterFlow === "inflow"
                   ? "bg-[#1E2A33] text-white shadow-md shadow-[#1E2A33]/20"
                   : "text-[#1E2A33]/60 hover:text-[#1E2A33]"
@@ -669,7 +669,7 @@ export default function RelevePage() {
             </button>
             <button
               onClick={() => setFilterFlow(filterFlow === "outflow" ? "all" : "outflow")}
-              className={`flex items-center justify-center px-3 py-1.5 sm:px-4 sm:py-2 rounded-lg sm:rounded-xl text-[9px] sm:text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+              className={`flex items-center justify-center px-4 py-2 sm:px-5 sm:py-2.5 rounded-xl text-[10px] sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer ${
                 filterFlow === "outflow"
                   ? "bg-[#1E2A33] text-white shadow-md shadow-[#1E2A33]/20"
                   : "text-[#1E2A33]/60 hover:text-[#1E2A33]"
@@ -687,15 +687,15 @@ export default function RelevePage() {
           <div className="relative shrink-0 z-30">
             <button
               onClick={() => setIsMonthDropdownOpen(!isMonthDropdownOpen)}
-              className="flex bg-white/60 p-1.5 py-2 rounded-2xl border border-[#1E2A33]/5 gap-2 shadow-inner items-center px-3 transition-all hover:bg-white hover:border-[#1E2A33]/10 cursor-pointer min-w-[150px] justify-between text-[10px] sm:text-xs font-bold text-[#1E2A33] whitespace-nowrap"
+              className="flex bg-white/60 p-2 py-2.5 rounded-2xl border border-[#1E2A33]/5 gap-2.5 shadow-inner items-center px-4 transition-all hover:bg-white hover:border-[#1E2A33]/10 cursor-pointer min-w-[170px] justify-between text-xs sm:text-sm font-bold text-[#1E2A33] whitespace-nowrap"
             >
-              <span className="flex items-center gap-1.5">
-                <Calendar className="w-3.5 h-3.5 text-[#1E2A33]/50 shrink-0" />
+              <span className="flex items-center gap-2">
+                <Calendar className="w-4 h-4 text-[#1E2A33]/50 shrink-0" />
                 {selectedMonth === "all"
                   ? "Tous les mois"
                   : new Date(`${selectedMonth}-02`).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
               </span>
-              <ChevronDown className={`w-3.5 h-3.5 text-[#1E2A33]/40 shrink-0 transition-transform duration-200 ${isMonthDropdownOpen ? 'rotate-180' : ''}`} />
+              <ChevronDown className={`w-4 h-4 text-[#1E2A33]/40 shrink-0 transition-transform duration-200 ${isMonthDropdownOpen ? 'rotate-180' : ''}`} />
             </button>
 
             {isMonthDropdownOpen && (
@@ -741,10 +741,10 @@ export default function RelevePage() {
           </div>
 
           {/* Matched Filter (Segmented Control avec "Tout") */}
-          <div className="flex bg-white/60 p-1 sm:p-1.5 rounded-xl sm:rounded-2xl border border-[#1E2A33]/5 gap-1 sm:gap-1.5 shadow-inner shrink-0">
+          <div className="flex bg-white/60 p-1.5 sm:p-2 rounded-2xl border border-[#1E2A33]/5 gap-1.5 sm:gap-2 shadow-inner shrink-0">
             <button
               onClick={() => setFilterMatched("all")}
-              className={`flex items-center justify-center px-2.5 py-1.5 sm:px-3.5 sm:py-2 rounded-lg sm:rounded-xl text-[9px] sm:text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+              className={`flex items-center justify-center px-3.5 py-2 sm:px-4.5 sm:py-2.5 rounded-xl text-[10px] sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer ${
                 filterMatched === "all"
                   ? "bg-[#1E2A33] text-white shadow-md shadow-[#1E2A33]/20"
                   : "text-[#1E2A33]/60 hover:text-[#1E2A33]"
@@ -754,7 +754,7 @@ export default function RelevePage() {
             </button>
             <button
               onClick={() => setFilterMatched("unmatched")}
-              className={`flex items-center justify-center px-2.5 py-1.5 sm:px-3.5 sm:py-2 rounded-lg sm:rounded-xl text-[9px] sm:text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+              className={`flex items-center justify-center px-3.5 py-2 sm:px-4.5 sm:py-2.5 rounded-xl text-[10px] sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer ${
                 filterMatched === "unmatched"
                   ? "bg-[#1E2A33] text-white shadow-md shadow-[#1E2A33]/20"
                   : "text-[#1E2A33]/60 hover:text-[#1E2A33]"
@@ -765,7 +765,7 @@ export default function RelevePage() {
             </button>
             <button
               onClick={() => setFilterMatched("matched")}
-              className={`flex items-center justify-center px-2.5 py-1.5 sm:px-3.5 sm:py-2 rounded-lg sm:rounded-xl text-[9px] sm:text-xs font-bold transition-all whitespace-nowrap cursor-pointer ${
+              className={`flex items-center justify-center px-3.5 py-2 sm:px-4.5 sm:py-2.5 rounded-xl text-[10px] sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer ${
                 filterMatched === "matched"
                   ? "bg-[#1E2A33] text-white shadow-md shadow-[#1E2A33]/20"
                   : "text-[#1E2A33]/60 hover:text-[#1E2A33]"
@@ -777,14 +777,14 @@ export default function RelevePage() {
           </div>
 
           {/* Search Input (Loupe) */}
-          <div className="flex items-center gap-2 bg-[#FDFBEF] border border-[#1E2A33]/10 rounded-xl px-3 py-2 w-full xl:w-64 xl:ml-auto">
-            <Search className="w-4 h-4 text-[#1E2A33]/50 shrink-0" />
+          <div className="flex items-center gap-2.5 bg-[#FDFBEF] border border-[#1E2A33]/10 rounded-2xl px-4 py-2.5 w-full xl:w-72 xl:ml-auto">
+            <Search className="w-4.5 h-4.5 text-[#1E2A33]/50 shrink-0" />
             <input
               type="text"
               placeholder="Rechercher par marchand/facture..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="bg-transparent text-xs font-semibold text-[#1E2A33] border-none outline-none w-full placeholder-[#1E2A33]/40"
+              className="bg-transparent text-xs sm:text-sm font-semibold text-[#1E2A33] border-none outline-none w-full placeholder-[#1E2A33]/40"
             />
             {searchQuery && (
               <button onClick={() => setSearchQuery("")} className="text-[#1E2A33]/40 hover:text-[#1E2A33] focus:outline-none">
