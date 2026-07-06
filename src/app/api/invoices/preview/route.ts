@@ -12,7 +12,7 @@ export async function GET(request: Request) {
         }
 
         let arrayBuffer: ArrayBuffer;
-        const isHtml = url.toLowerCase().includes('.html');
+        let contentType = 'application/pdf';
         const isLocal = url.startsWith('/') || url.startsWith('invoices/') || !url.startsWith('http');
 
         if (isLocal) {
@@ -28,17 +28,38 @@ export async function GET(request: Request) {
 
             const fileBuffer = fs.readFileSync(absolutePath);
             arrayBuffer = fileBuffer.buffer.slice(fileBuffer.byteOffset, fileBuffer.byteOffset + fileBuffer.byteLength);
+
+            const ext = path.extname(decodedPath).toLowerCase();
+            if (ext === '.html') contentType = 'text/html';
+            else if (ext === '.jpg' || ext === '.jpeg') contentType = 'image/jpeg';
+            else if (ext === '.png') contentType = 'image/png';
+            else if (ext === '.gif') contentType = 'image/gif';
         } else {
-            // Remote fetch for Supabase URL
+            // Remote fetch for Supabase or Pennylane URL
             const response = await fetch(url);
             if (!response.ok) {
-                return new NextResponse(`Failed to fetch PDF: ${response.status} ${response.statusText}`, { status: response.status });
+                return new NextResponse(`Failed to fetch file: ${response.status} ${response.statusText}`, { status: response.status });
             }
+            
+            // Get content-type dynamically from response headers
+            const remoteContentType = response.headers.get('content-type');
+            if (remoteContentType) {
+                contentType = remoteContentType;
+            } else {
+                // Fallback by extension in URL
+                const cleanUrl = url.split('?')[0];
+                const ext = path.extname(cleanUrl).toLowerCase();
+                if (ext === '.html') contentType = 'text/html';
+                else if (ext === '.jpg' || ext === '.jpeg') contentType = 'image/jpeg';
+                else if (ext === '.png') contentType = 'image/png';
+            }
+            
             arrayBuffer = await response.arrayBuffer();
         }
 
-        const contentType = isHtml ? 'text/html' : 'application/pdf';
-        const contentDisposition = isHtml ? 'inline' : 'inline; filename="facture.pdf"';
+        const isHtml = contentType.startsWith('text/html');
+        const isImage = contentType.startsWith('image/');
+        const contentDisposition = isHtml || isImage ? 'inline' : 'inline; filename="facture.pdf"';
 
         return new NextResponse(arrayBuffer, {
             headers: {
@@ -49,7 +70,7 @@ export async function GET(request: Request) {
             },
         });
     } catch (error) {
-        console.error('PDF Proxy Error:', error);
-        return new NextResponse('Internal Server Error fetching PDF', { status: 500 });
+        console.error('File Proxy Error:', error);
+        return new NextResponse('Internal Server Error fetching file', { status: 500 });
     }
 }
