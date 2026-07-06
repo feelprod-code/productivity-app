@@ -239,6 +239,37 @@ export default function RelevePage() {
   
   // PDF Preview State
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [previewType, setPreviewType] = useState<'pdf' | 'image' | 'html'>('pdf');
+
+  useEffect(() => {
+    if (!previewUrl) return;
+    
+    // Détection rapide par extension
+    const lowerUrl = previewUrl.toLowerCase();
+    if (lowerUrl.includes('.jpg') || lowerUrl.includes('.jpeg') || lowerUrl.includes('.png') || lowerUrl.includes('.webp') || lowerUrl.includes('.gif')) {
+      setPreviewType('image');
+      return;
+    }
+    
+    if (previewUrl.startsWith('http')) {
+      fetch(`/api/invoices/preview?url=${encodeURIComponent(previewUrl)}`, { method: 'HEAD' })
+        .then(res => {
+          const ct = res.headers.get('content-type') || '';
+          if (ct.startsWith('image/')) {
+            setPreviewType('image');
+          } else if (ct.startsWith('text/html')) {
+            setPreviewType('html');
+          } else {
+            setPreviewType('pdf');
+          }
+        })
+        .catch(() => {
+          setPreviewType('pdf');
+        });
+    } else {
+      setPreviewType('pdf');
+    }
+  }, [previewUrl]);
 
   // Manual File Upload State
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -1348,11 +1379,21 @@ export default function RelevePage() {
               <p className="font-roboto text-xs mt-2 opacity-60">Si rien ne s'affiche, utilisez le lien en haut à droite.</p>
             </div>
             {previewUrl && (
-              <iframe
-                src={`/api/invoices/preview?url=${encodeURIComponent(previewUrl)}#toolbar=1&navpanes=0&view=FitH`}
-                className="absolute inset-0 w-full h-full border-none z-10"
-                title="Aperçu PDF"
-              />
+              previewType === 'image' ? (
+                <div className="absolute inset-0 w-full h-full flex items-center justify-center p-4 overflow-auto z-10">
+                  <img
+                    src={`/api/invoices/preview?url=${encodeURIComponent(previewUrl)}`}
+                    className="max-w-full max-h-full object-contain rounded-lg shadow-md border border-[#1E2A33]/5"
+                    alt="Aperçu Facture"
+                  />
+                </div>
+              ) : (
+                <iframe
+                  src={`/api/invoices/preview?url=${encodeURIComponent(previewUrl)}#toolbar=1&navpanes=0&view=FitH`}
+                  className="absolute inset-0 w-full h-full border-none z-10"
+                  title="Aperçu PDF"
+                />
+              )
             )}
           </div>
         </DialogContent>
