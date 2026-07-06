@@ -9,7 +9,7 @@ import { execSync } from 'child_process';
 import os from 'os';
 
 // Explicitly load the parent .env file to access Gmail/iCloud credentials
-dotenv.config({ path: '/Users/guillaumephilippe/ANTIGRAVITY/.env' });
+dotenv.config({ path: `${os.homedir()}/ANTIGRAVITY/.env` });
 
 export const dynamic = 'force-dynamic';
 
@@ -247,10 +247,11 @@ export async function POST(request: Request) {
     let matchedFileBuffer: Buffer | null = null;
 
     // --- PHASE 1: SEARCH LOCAL FILESYSTEM ---
+    const homeDir = os.homedir();
     const searchDirs = [
-      '/Users/guillaumephilippe/Desktop',
-      '/Users/guillaumephilippe/Downloads',
-      '/Users/guillaumephilippe/Documents/1-PAPIERS/1-PAPIERS PHIL/4-Compta'
+      path.join(homeDir, 'Desktop'),
+      path.join(homeDir, 'Downloads'),
+      path.join(homeDir, 'Documents/1-PAPIERS/1-PAPIERS PHIL/4-Compta')
     ];
 
     let allPdfs: string[] = [];

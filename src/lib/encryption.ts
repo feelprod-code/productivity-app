@@ -1,11 +1,14 @@
 import crypto from 'crypto';
 import fs from 'fs';
+import os from 'os';
 
 function getEncryptionKey(): Buffer {
   let keyHex = process.env.ENCRYPTION_KEY;
+  const homeDir = os.homedir();
+  const parentEnvPath = `${homeDir}/ANTIGRAVITY/.env`;
+
   if (!keyHex) {
     // Try to read from parent .env
-    const parentEnvPath = '/Users/guillaumephilippe/ANTIGRAVITY/.env';
     if (fs.existsSync(parentEnvPath)) {
       const content = fs.readFileSync(parentEnvPath, 'utf8');
       const match = content.match(/ENCRYPTION_KEY="?([a-f0-9]{64})"?/);
@@ -19,12 +22,11 @@ function getEncryptionKey(): Buffer {
   if (!keyHex) {
     // Generate a secure 32-byte key (64 hex characters)
     keyHex = crypto.randomBytes(32).toString('hex');
-    const parentEnvPath = '/Users/guillaumephilippe/ANTIGRAVITY/.env';
     if (fs.existsSync(parentEnvPath)) {
       fs.appendFileSync(parentEnvPath, `\nENCRYPTION_KEY="${keyHex}"\n`);
     }
     // Also append to local .env just in case
-    const localEnvPath = '/Users/guillaumephilippe/ANTIGRAVITY/productivity-app/.env';
+    const localEnvPath = `${homeDir}/ANTIGRAVITY/productivity-app/.env`;
     if (fs.existsSync(localEnvPath)) {
       fs.appendFileSync(localEnvPath, `\nENCRYPTION_KEY="${keyHex}"\n`);
     }

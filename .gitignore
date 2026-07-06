@@ -47,3 +47,7 @@ next-env.d.ts
 /scratch/
 /downloads/
 *.log
+
+# Playwright and Chrome temp profiles
+**/amazon_profile/
+**/amazon_personal_profile/

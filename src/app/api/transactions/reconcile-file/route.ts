@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import dotenv from "dotenv";
+import os from "os";
 
-dotenv.config({ path: '/Users/guillaumephilippe/ANTIGRAVITY/.env' });
+dotenv.config({ path: `${os.homedir()}/ANTIGRAVITY/.env` });
 
 export const dynamic = 'force-dynamic';
 
