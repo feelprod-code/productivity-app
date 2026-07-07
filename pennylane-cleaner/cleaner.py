@@ -136,7 +136,7 @@ def load_pennylane_suppliers() -> List[Dict[str, Any]]:
         data = call_pennylane_api("GET", endpoint, params=params)
         
         # Récupération de la clé contenant la liste des fournisseurs
-        batch = data.get("suppliers") or data.get("items") or []
+        batch = data.get("suppliers", [])
         suppliers.extend(batch)
         
         # Gestion de la pagination par curseur
@@ -157,10 +157,12 @@ def create_pennylane_supplier(name: str) -> Dict[str, Any]:
     }
     return call_pennylane_api("POST", "suppliers", json_data=payload)
 
-def load_incomplete_invoices() -> List[Dict[str, Any]]:
+def load_target_invoices(force_all: bool = False, date_after: Optional[str] = None) -> List[Dict[str, Any]]:
     """
     Récupère la liste des factures fournisseurs à traiter.
-    Cible les factures où le fournisseur n'est pas renseigné mais un fichier justificatif est attaché.
+    Si force_all est True, cible toutes les factures avec justificatif.
+    Sinon, cible uniquement celles sans fournisseur renseigné.
+    Si date_after est fournie (format YYYY-MM-DD), ne garde que les factures à cette date ou après.
     """
     print("⏳ Récupération des factures d'achat depuis Pennylane...")
     invoices = []
@@ -169,7 +171,7 @@ def load_incomplete_invoices() -> List[Dict[str, Any]]:
     
     while True:
         data = call_pennylane_api("GET", endpoint, params=params)
-        batch = data.get("supplier_invoices") or data.get("items") or []
+        batch = data.get("supplier_invoices", [])
         invoices.extend(batch)
         
         next_cursor = data.get("meta", {}).get("next_cursor")
@@ -180,21 +182,34 @@ def load_incomplete_invoices() -> List[Dict[str, Any]]:
             
     print(f"📋 {len(invoices)} factures totales récupérées.")
     
-    # Filtrage : Fournisseur manquant (l'objet supplier est None ou absent) ET fichier justificatif présent (public_file_url)
-    incomplete = []
+    # Filtrage
+    target_invoices = []
     for inv in invoices:
-        supplier_obj = inv.get("supplier")
-        has_no_supplier = (
-            supplier_obj is None or 
-            not supplier_obj.get("id")
-        )
-        has_file = bool(inv.get("public_file_url"))
-        
-        if has_no_supplier and has_file:
-            incomplete.append(inv)
+        # Doit avoir un fichier justificatif présent
+        has_file = bool(inv.get("file_url"))
+        if not has_file:
+            continue
             
-    print(f"🎯 {len(incomplete)} factures incomplètes identifiées avec fichier justificatif attaché.")
-    return incomplete
+        # Filtre sur la date d'émission (date)
+        if date_after:
+            inv_date = inv.get("date")
+            if not inv_date or inv_date < date_after:
+                continue
+                
+        # Filtre sur le fournisseur
+        if not force_all:
+            has_no_supplier = (
+                not inv.get("supplier_name") or 
+                not inv.get("supplier_id") or 
+                inv.get("supplier_name").strip() == ""
+            )
+            if not has_no_supplier:
+                continue
+                
+        target_invoices.append(inv)
+            
+    print(f"🎯 {len(target_invoices)} factures cibles identifiées avec fichier justificatif attaché.")
+    return target_invoices
 
 def update_pennylane_invoice(invoice_id: str, update_payload: Dict[str, Any]) -> Dict[str, Any]:
     """Met à jour une facture avec les nouvelles données."""
@@ -332,25 +347,35 @@ def find_best_supplier_match(extracted_name: str, suppliers: List[Dict[str, Any]
 # Logique principale d'orchestration
 # =====================================================================
 
-def run_cleaner(dry_run: bool = True, auto_create_supplier: bool = True, limit_count: int = 0):
+def run_cleaner(dry_run: bool = True, auto_create_supplier: bool = True, limit_count: int = 0, force_all: bool = False, overwrite: bool = False, date_after: Optional[str] = None):
     """
     Lance le traitement de nettoyage.
     :param dry_run: Si True, affiche les modifications prévues sans les enregistrer sur Pennylane.
     :param auto_create_supplier: Si True, crée automatiquement les nouveaux fournisseurs dans Pennylane.
     :param limit_count: Si > 0, limite le nombre de factures à traiter (idéal pour tester).
+    :param force_all: Si True, traite toutes les factures avec justificatif.
+    :param overwrite: Si True, écrase les données existantes de Pennylane par celles de Gemini.
+    :param date_after: Si fournie, filtre pour ne traiter que les factures à partir de cette date.
     """
     mode_str = "SIMULATION (Dry-Run)" if dry_run else "PRODUCTION (Modifications réelles)"
-    print(f"🚀 Lancement du nettoyeur Pennylane x Gemini en mode : {mode_str}\n")
+    print(f"🚀 Lancement du nettoyeur Pennylane x Gemini en mode : {mode_str}")
+    if force_all:
+        print("🎯 Mode Force-All activé : toutes les factures avec justificatif seront traitées.")
+    if overwrite:
+        print("⚠️ Mode Overwrite activé : les données existantes seront écrasées par l'extraction Gemini en cas de différence.")
+    if date_after:
+        print(f"📅 Filtre Date-After : factures à partir du {date_after}.")
+    print()
     
-    # 1. Charger les factures incomplètes
+    # 1. Charger les factures cibles
     try:
-        incomplete_invoices = load_incomplete_invoices()
+        incomplete_invoices = load_target_invoices(force_all=force_all, date_after=date_after)
     except Exception:
         print("❌ Impossible de charger les factures depuis Pennylane. Arrêt.")
         return
         
     if not incomplete_invoices:
-        print("🎉 Aucune facture incomplète trouvée avec justificatif attaché. Travail terminé !")
+        print("🎉 Aucune facture correspondante trouvée avec justificatif attaché. Travail terminé !")
         return
         
     # Limiter le nombre de factures si spécifié
@@ -376,7 +401,7 @@ def run_cleaner(dry_run: bool = True, auto_create_supplier: bool = True, limit_c
     
     for idx, inv in enumerate(incomplete_invoices, 1):
         inv_id = inv.get("id")
-        pdf_url = inv.get("public_file_url")
+        pdf_url = inv.get("file_url")
         inv_label = inv.get("label") or inv.get("invoice_number") or f"Facture #{idx}"
         
         print(f"[{idx}/{len(incomplete_invoices)}] Traitement de la Facture ID {inv_id} ({inv_label})...")
@@ -428,39 +453,94 @@ def run_cleaner(dry_run: bool = True, auto_create_supplier: bool = True, limit_c
                 skipped_count += 1
                 continue
                 
-        # Préparer le payload de mise à jour pour la facture
-        # Nous n'écrasons pas les montants s'ils sont déjà renseignés dans Pennylane
-        update_payload = {
-            "supplier_id": supplier_id
-        }
+        # Détection des écarts et construction du payload de mise à jour
+        has_changes = False
+        update_payload = {}
         
-        # Mettre à jour la date si manquante dans Pennylane
-        if not inv.get("date") and extracted.invoice_date:
-            update_payload["date"] = extracted.invoice_date
-            
-        # Mettre à jour les montants si manquants ou égaux à zéro
-        # Pour Pennylane, les montants financiers sont typiquement passés sous forme de chaînes de caractères
-        # pour éviter les soucis de précision des flottants.
+        # 1. Comparaison du fournisseur
+        current_supplier_id = inv.get("supplier_id")
+        current_supplier_name = inv.get("supplier_name")
+        
+        if not current_supplier_id or current_supplier_id != supplier_id:
+            if not current_supplier_id:
+                print(f"   [Écart] Fournisseur : Aucun -> '{supplier_name_final}'")
+                update_payload["supplier_id"] = supplier_id
+                has_changes = True
+            elif overwrite:
+                print(f"   [Écart] Fournisseur : '{current_supplier_name}' (ID: {current_supplier_id}) -> '{supplier_name_final}' (ID: {supplier_id})")
+                update_payload["supplier_id"] = supplier_id
+                has_changes = True
+            else:
+                print(f"   [Info] Fournisseur différent détecté ('{current_supplier_name}' vs '{supplier_name_final}'), mais non mis à jour (utilise --overwrite pour écraser).")
+                
+        # 2. Comparaison de la date
+        current_date = inv.get("date")
+        if extracted.invoice_date:
+            if not current_date:
+                print(f"   [Écart] Date : Aucune -> {extracted.invoice_date}")
+                update_payload["date"] = extracted.invoice_date
+                has_changes = True
+            elif current_date != extracted.invoice_date:
+                if overwrite:
+                    print(f"   [Écart] Date : {current_date} -> {extracted.invoice_date}")
+                    update_payload["date"] = extracted.invoice_date
+                    has_changes = True
+                else:
+                    print(f"   [Info] Date différente détectée ({current_date} vs {extracted.invoice_date}), mais non mise à jour (utilise --overwrite pour écraser).")
+                    
+        # 3. Comparaison du montant TTC
         try:
-            has_no_amount = not inv.get("amount") or float(inv.get("amount")) == 0.0
+            current_amount = float(inv.get("amount") or 0.0)
         except ValueError:
-            has_no_amount = True
+            current_amount = 0.0
             
-        if has_no_amount:
-            if extracted.amount is not None:
+        if extracted.amount is not None:
+            if current_amount == 0.0:
+                print(f"   [Écart] Montant TTC : Aucun -> {extracted.amount} €")
                 update_payload["amount"] = str(extracted.amount)
                 update_payload["currency_amount"] = str(extracted.amount)
-            if extracted.amount_before_tax is not None:
+                has_changes = True
+            elif abs(current_amount - extracted.amount) > 0.01:
+                if overwrite:
+                    print(f"   [Écart] Montant TTC : {current_amount} € -> {extracted.amount} €")
+                    update_payload["amount"] = str(extracted.amount)
+                    update_payload["currency_amount"] = str(extracted.amount)
+                    has_changes = True
+                else:
+                    print(f"   [Info] Montant TTC différent détecté ({current_amount} € vs {extracted.amount} €), mais non mis à jour (utilise --overwrite pour écraser).")
+                    
+        # 4. Comparaison du montant HT
+        try:
+            current_ht = float(inv.get("currency_amount_before_tax") or 0.0)
+        except ValueError:
+            current_ht = 0.0
+            
+        if extracted.amount_before_tax is not None:
+            if current_ht == 0.0:
+                print(f"   [Écart] Montant HT : Aucun -> {extracted.amount_before_tax} €")
                 update_payload["currency_amount_before_tax"] = str(extracted.amount_before_tax)
-            # Les en-têtes ou champs complémentaires peuvent être ajoutés ici si nécessaire
+                has_changes = True
+            elif abs(current_ht - extracted.amount_before_tax) > 0.01:
+                if overwrite:
+                    print(f"   [Écart] Montant HT : {current_ht} € -> {extracted.amount_before_tax} €")
+                    update_payload["currency_amount_before_tax"] = str(extracted.amount_before_tax)
+                    has_changes = True
+                else:
+                    print(f"   [Info] Montant HT différent détecté ({current_ht} € vs {extracted.amount_before_tax} €), mais non mis à jour (utilise --overwrite pour écraser).")
+                    
+        if not has_changes:
+            print("   ✨ Aucune modification nécessaire pour cette facture.")
+            success_count += 1
+            print()
+            continue
             
         if dry_run:
-            print(f"   [Simulation] Facture ID {inv_id} mise à jour avec : {update_payload}")
+            print(f"   [Simulation] Facture ID {inv_id} serait mise à jour avec : {update_payload}")
             success_count += 1
         else:
             try:
                 update_pennylane_invoice(inv_id, update_payload)
-                print(f"   🎉 Facture ID {inv_id} : Fournisseur mis à jour -> {supplier_name_final}")
+                print(f"   🎉 Facture ID {inv_id} mise à jour avec succès.")
                 success_count += 1
             except Exception as e:
                 print(f"   ❌ Échec de la mise à jour de la facture {inv_id}.")
@@ -492,6 +572,22 @@ if __name__ == "__main__":
         default=0, 
         help="Limiter le traitement à N factures (ex. --limit 5)."
     )
+    parser.add_argument(
+        "--force-all",
+        action="store_true",
+        help="Traiter toutes les factures avec justificatif, même celles ayant déjà un fournisseur renseigné."
+    )
+    parser.add_argument(
+        "--overwrite",
+        action="store_true",
+        help="Écraser les données existantes (fournisseur, date, montants) par les données extraites par Gemini."
+    )
+    parser.add_argument(
+        "--date-after",
+        type=str,
+        default=None,
+        help="Filtrer pour ne traiter que les factures à partir de cette date (format YYYY-MM-DD)."
+    )
     
     args = parser.parse_args()
     
@@ -503,5 +599,8 @@ if __name__ == "__main__":
     run_cleaner(
         dry_run=dry_run, 
         auto_create_supplier=auto_create, 
-        limit_count=args.limit
+        limit_count=args.limit,
+        force_all=args.force_all,
+        overwrite=args.overwrite,
+        date_after=args.date_after
     )
