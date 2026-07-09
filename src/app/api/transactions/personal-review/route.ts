@@ -51,7 +51,7 @@ export async function GET() {
         // Filter and analyze
         const personalKeywords = [
             'canal', 'netflix', 'disney', 'carrefour', 'monoprix', 'auchan', 'leclerc', 'intermarche',
-            'uber', 'deliveroo', 'fnac', 'zara', 'decathlon', 'leroy', 'boulangerie', 'restau', 
+            'uber', 'deliveroo', 'zara', 'decathlon', 'leroy', 'boulangerie', 'restau', 
             'cafe', 'darty', 'spotify', 'sncf', 'airbnb', 'booking.com', 'h&m', 'ikea', 'castorama'
         ];
 

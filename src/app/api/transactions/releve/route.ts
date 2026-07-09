@@ -20,6 +20,43 @@ function formatPatientName(rawName: string): string {
   }).join(' ');
 }
 
+function guessCategory(label: string, isPro: boolean, productDescription: string | null, amount: number): string {
+  if (!isPro) return "PERSO";
+  
+  const labelLower = label.toLowerCase();
+  const descLower = (productDescription || "").toLowerCase();
+  
+  if (labelLower.includes("netflix") || labelLower.includes("spotify") || labelLower.includes("disney") || labelLower.includes("canal") || labelLower.includes("zara") || labelLower.includes("decathlon") || labelLower.includes("uber eat") || labelLower.includes("deliveroo")) {
+    return "PERSO";
+  }
+  
+  if (labelLower.includes("openai") || labelLower.includes("chatgpt") || labelLower.includes("openrouter") || labelLower.includes("google check") || labelLower.includes("google ai") || labelLower.includes("google one") || labelLower.includes("cloudflare") || labelLower.includes("supabase") || labelLower.includes("vercel") || labelLower.includes("github") || labelLower.includes("canva") || labelLower.includes("suno") || labelLower.includes("headliner") || labelLower.includes("krotos") || labelLower.includes("paddle")) {
+    return "LOGICIELS_IA";
+  }
+  
+  if (labelLower.includes("restaurant") || labelLower.includes("bistro") || labelLower.includes("cafe") || labelLower.includes("brasserie") || labelLower.includes("paris halles") || labelLower.includes("sebastopol") || labelLower.includes("traiteur") || labelLower.includes("snack") || labelLower.includes("mcdonald") || labelLower.includes("bk ") || labelLower.includes("starbucks") || descLower.includes("repas") || descLower.includes("restaurant")) {
+    return "RESTAURANT";
+  }
+  
+  if (labelLower.includes("amazon") || labelLower.includes("amzn") || labelLower.includes("office") || labelLower.includes("papeterie") || labelLower.includes("cartouche") || labelLower.includes("encre") || labelLower.includes("papier") || labelLower.includes("stylo") || descLower.includes("encre") || descLower.includes("fourniture") || descLower.includes("bureau") || descLower.includes("papier") || descLower.includes("coque macbook") || descLower.includes("coque ipad") || descLower.includes("coque iphone")) {
+    return "FOURNITURES";
+  }
+  
+  if (labelLower.includes("sapn") || labelLower.includes("aprr") || labelLower.includes("sanef") || labelLower.includes("cofiroute") || labelLower.includes("autoroute") || labelLower.includes("peage") || labelLower.includes("sncf") || labelLower.includes("train") || labelLower.includes("taxi") || labelLower.includes("parking") || labelLower.includes("indigo") || labelLower.includes("total") || (labelLower.includes("station") && !labelLower.includes("prestation")) || labelLower.includes("carburant") || labelLower.includes("essence") || labelLower.includes("bp ") || labelLower.includes("shell") || labelLower.includes("esso") || labelLower.includes("uber") || descLower.includes("péage") || descLower.includes("déplacement") || descLower.includes("autoroute")) {
+    return "DEPLACEMENTS";
+  }
+  
+  if (labelLower.includes("doctolib") || labelLower.includes("drap d'examen") || labelLower.includes("lpm ") || labelLower.includes("cotte industries") || labelLower.includes("medical") || labelLower.includes("pharmacie") || labelLower.includes("hygiene") || labelLower.includes("papier d'examen") || descLower.includes("drap d'examen") || descLower.includes("matériel médical") || descLower.includes("cabinet") || descLower.includes("patient")) {
+    return "CABINET";
+  }
+  
+  if (labelLower.includes("urssaf") || labelLower.includes("carpimko") || labelLower.includes("assurance pro") || labelLower.includes("prevoyance") || labelLower.includes("macsf") || labelLower.includes("mgen") || labelLower.includes("medicale") || labelLower.includes("axa") || labelLower.includes("allianz") || labelLower.includes("cpam") || labelLower.includes("c.p.a.m.") || labelLower.includes("assurance maladie") || labelLower.includes("ameli")) {
+    return "COTISATIONS";
+  }
+  
+  return "FOURNITURES";
+}
+
 async function autoEnrichCpam(allTxs: any[], allInvs: any[], detailsMap: Record<string, string>) {
   try {
     // 1. Trouver les relevés CPAM
@@ -150,11 +187,11 @@ export async function GET() {
     }
 
     // Load overrides from DB
-    const overridesMap: Record<string, boolean> = {};
+    const overridesMap: Record<string, { isPro: boolean, category: string | null }> = {};
     try {
       const overrides = await prisma.transactionOverride.findMany();
       overrides.forEach(o => {
-        overridesMap[o.id] = o.isPro;
+        overridesMap[o.id] = { isPro: o.isPro, category: o.category };
       });
     } catch (err) {
       console.error("Failed to load transaction overrides:", err);
@@ -439,8 +476,8 @@ export async function GET() {
             }
             if (!amountMatch) return false;
 
-            // Strict date matching: standard is +/- 15 days, Amazon is up to 90 days
-            const maxDaysMs = isAmazon ? 90 * 24 * 60 * 60 * 1000 : 15 * 24 * 60 * 60 * 1000;
+            // Strict date matching: standard is +/- 35 days, Amazon is up to 90 days
+            const maxDaysMs = isAmazon ? 90 * 24 * 60 * 60 * 1000 : 35 * 24 * 60 * 60 * 1000;
             const closeDate = Math.abs(txTime - invTime) <= maxDaysMs;
             if (!closeDate) return false;
 
@@ -463,7 +500,12 @@ export async function GET() {
               .replace(/(virement|prlv|sepa|carte|cb|facture|achat|payments|digital|sarl|gmbh|inc|sas|eu)/gi, '')
               .toLowerCase()
               .trim();
-            const txWords = cleanTx.split(/[^a-z0-9]/).filter((w: string) => w.length >= 3);
+            const txWords = cleanTx.split(/[^a-z0-9]/).filter((w: string) => {
+              if (w.length < 3) return false;
+              if (w === 'com' || w === 'net' || w === 'org' || w === 'www') return false;
+              if (/^\d+$/.test(w)) return false;
+              return true;
+            });
 
             let providerMatch = false;
             if (!cleanInv || cleanInv.length < 2) {
@@ -506,7 +548,12 @@ export async function GET() {
             if (!isInvSumup) return false;
             
             const invTime = new Date(inv.date).getTime();
-            return Math.abs(txTime - invTime) <= 15 * 24 * 60 * 60 * 1000;
+            const closeDate = Math.abs(txTime - invTime) <= 35 * 24 * 60 * 60 * 1000;
+            if (!closeDate) return false;
+            
+            const txAmount = Math.abs(parseFloat(tx.amount || '0'));
+            const invAmount = inv.amount || 0;
+            return Math.abs(invAmount - txAmount) < 0.05;
           }) || null;
         }
       }
@@ -563,8 +610,10 @@ export async function GET() {
       let isPro = isProAccount;
 
       const isOverridden = overridesMap[String(tx.id)] !== undefined;
+      let overriddenCategory: string | null = null;
       if (isOverridden) {
-        isPro = overridesMap[String(tx.id)];
+        isPro = overridesMap[String(tx.id)].isPro;
+        overriddenCategory = overridesMap[String(tx.id)].category;
       }
 
       if (!isOverridden) {
@@ -579,7 +628,7 @@ export async function GET() {
         } else {
           const personalKeywords = [
             'canal', 'netflix', 'disney', 'carrefour', 'monoprix', 'auchan', 'leclerc', 'intermarche',
-            'uber', 'deliveroo', 'fnac', 'zara', 'decathlon', 'leroy', 'boulangerie', 'restau', 
+            'uber', 'deliveroo', 'zara', 'decathlon', 'leroy', 'boulangerie', 'restau', 
             'cafe', 'darty', 'spotify', 'sncf', 'airbnb', 'booking.com', 'h&m', 'ikea', 'castorama',
             'appart', 'loyer', 'mgen', 'bouygues', 'magd', 'kaori', 'vw bank', 'volkswagen',
             'assurance voiture', 'poissonnerie', 'guillaume ou mm',
@@ -610,6 +659,8 @@ export async function GET() {
                              isSmallIndigo ||
                              isAmazonPrime;
 
+      const proCategory = overriddenCategory || guessCategory(label, isPro, productDescription, amount);
+
       const txResult = {
         id: tx.id,
         date: tx.date,
@@ -620,6 +671,7 @@ export async function GET() {
         category,
         isProAccount,
         isPro,
+        proCategory,
         noJustificatif,
         bankAccountName: accInfo ? accInfo.name : "Compte Inconnu",
         productDescription,

@@ -20,17 +20,17 @@ const roboto = Roboto({
 });
 
 export const metadata: Metadata = {
-  title: "Application Mission",
-  description: "Cerveau Vectoriel & Productivité",
+  title: "Compta",
+  description: "Gestion comptable & Rapprochement de factures",
   icons: {
-    icon: "/icon.png",
-    apple: "/apple-icon.png",
+    icon: "/favicon-compta.png?v=3",
+    apple: "/apple-favicon-compta.png?v=3",
   },
   manifest: "/manifest.json",
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
-    title: "Mission",
+    title: "Compta",
   },
 };
 

@@ -1,6 +1,8 @@
 import { PrismaClient } from '@prisma/client';
 import * as fs from 'fs';
 import * as path from 'path';
+import * as os from 'os';
+import pdfParse from 'pdf-parse';
 
 const prisma = new PrismaClient();
 const pennylaneKey = process.env.PENNYLANE_API_KEY;
@@ -217,7 +219,7 @@ async function main() {
     
     // --- 1. SCANNER LES DOSSIERS LOCAUX ---
     for (const year of years) {
-        const dirPath = path.join(process.cwd(), 'public', 'invoices', year);
+        const dirPath = path.join(os.homedir(), 'Documents', '1-PAPIERS', '1-PAPIERS PHIL', '4-Compta', `Factures ${year}`);
         if (!fs.existsSync(dirPath)) {
             console.log(`⚠️ Dossier non trouvé : ${dirPath}`);
             continue;
@@ -242,10 +244,33 @@ async function main() {
             const amountStr = match[3].replace(/\s/g, '').replace(',', '.');
             const amount = parseFloat(amountStr);
             const date = new Date(`${dateStr}T12:00:00Z`);
+            const filePath = path.join(dirPath, file);
+
+            // Vérification du contenu du PDF de la facture Amazon
+            try {
+                const buffer = fs.readFileSync(filePath);
+                const parsedPdf = await pdfParse(buffer);
+                const text = (parsedPdf.text || '').toLowerCase();
+
+                const hasRecipient = text.includes("guillaume philippe") || text.includes("philippe guillaume");
+                if (!hasRecipient) {
+                    console.log(`❌ Facture Amazon locale ${file} ignorée : non adressée à Guillaume Philippe.`);
+                    continue;
+                }
+
+                const hasPayPal = text.includes("paypal") || text.includes("pay pal");
+                const hasProCard = text.includes("1397") || text.includes("6150");
+                if (!hasPayPal && !hasProCard) {
+                    console.log(`❌ Facture Amazon locale ${file} ignorée : mode de paiement non autorisé (ni pro 1397/6150, ni PayPal).`);
+                    continue;
+                }
+            } catch (err: any) {
+                console.warn(`⚠️ Impossible de parser le PDF ${file} pour vérification, inclusion par défaut : ${err.message}`);
+            }
             
             localInvoices.push({
                 filename: file,
-                filePath: path.join(dirPath, file),
+                filePath,
                 date,
                 description,
                 amount,
@@ -348,7 +373,7 @@ async function main() {
     
     for (const localInv of localInvoices) {
         const formattedProvider = `AMAZON - ${localInv.description.toUpperCase()}`;
-        const fileUrl = `/invoices/${localInv.year}/${localInv.filename}`;
+        const fileUrl = `/invoices/Factures ${localInv.year}/${localInv.filename}`;
         
         // A. Vérification et insertion en base de données locale
         const dateMin = new Date(localInv.date.getTime() - 24 * 60 * 60 * 1000 * 2);

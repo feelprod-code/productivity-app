@@ -20,7 +20,8 @@ function extractKeywords(label: string): string[] {
     "numero", "num", "no", "payout", "payouts", "eur", "usd", "ref", "releve", "dun",
     "sepa", "recu", "prelvt", "prlv", "confrere", "facture", "fact", "inv", "invoice",
     "virement", "instantane", "transfer", "vir", "inst", "paiement", "cb", "date",
-    "fsp416e20020e00630", "fr51zzz487778", "00000r0063000"
+    "fsp416e20020e00630", "fr51zzz487778", "00000r0063000",
+    "com", "net", "org", "www"
   ]);
 
   const words = cleaned.split(" ");

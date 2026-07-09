@@ -138,9 +138,9 @@ async function main() {
         console.log(`📂 Lecture de la boîte : ${box}...`);
         await connection.openBox(box);
 
-        // Recherche des e-mails SumUp de relevé quotidien depuis le 01 Janvier 2026
+        // Recherche des e-mails SumUp de relevé quotidien depuis le 01 Mai 2026
         const searchCriteria = [
-            ['SINCE', '01-Jan-2026'],
+            ['SINCE', '01-May-2026'],
             ['SUBJECT', 'Relevé quotidien de vos paiements']
         ];
         

@@ -1,4 +1,4 @@
-import { Calendar, Home, Inbox, Search, Settings, BrainCircuit, ReceiptEuro, LineChart, CreditCard, Sparkles, Key } from "lucide-react"
+import { Calendar, Home, Inbox, Search, Settings, BrainCircuit, ReceiptEuro, LineChart, CreditCard, Sparkles, Key, Upload, ExternalLink } from "lucide-react"
 
 import {
     Sidebar,
@@ -19,19 +19,19 @@ const items = [
         icon: Sparkles,
     },
     {
-        title: "Sorties & Abonnements",
+        title: "Import justificatifs",
+        url: "/comptabilite/import",
+        icon: Upload,
+    },
+    {
+        title: "Charges",
         url: "/comptabilite/sorties",
         icon: CreditCard,
     },
     {
-        title: "Identifiants & Fournisseurs",
-        url: "/comptabilite/fournisseurs",
-        icon: Key,
-    },
-    {
-        title: "Paramètres",
-        url: "#",
-        icon: Settings,
+        title: "Pennylane",
+        url: "https://app.pennylane.com",
+        icon: ExternalLink,
     },
 ]
 
@@ -40,13 +40,17 @@ export function AppSidebar() {
         <Sidebar>
             <SidebarContent>
                 <SidebarGroup>
-                    <SidebarGroupLabel>Application Mission</SidebarGroupLabel>
+                    <SidebarGroupLabel>Compta</SidebarGroupLabel>
                     <SidebarGroupContent>
                         <SidebarMenu>
                             {items.map((item) => (
                                 <SidebarMenuItem key={item.title}>
                                     <SidebarMenuButton asChild>
-                                        <a href={item.url}>
+                                        <a 
+                                            href={item.url}
+                                            target={item.url.startsWith("http") ? "_blank" : undefined}
+                                            rel={item.url.startsWith("http") ? "noopener noreferrer" : undefined}
+                                        >
                                             <item.icon />
                                             <span>{item.title}</span>
                                         </a>

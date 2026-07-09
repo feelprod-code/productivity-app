@@ -47,6 +47,7 @@ next-env.d.ts
 /scratch/
 /downloads/
 *.log
+/public/invoices
 
 # Playwright and Chrome temp profiles
 **/amazon_profile/

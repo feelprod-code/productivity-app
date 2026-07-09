@@ -61,6 +61,7 @@ model SupplierCredential {
 model TransactionOverride {
   id        String   @id // The Pennylane transaction ID
   isPro     Boolean
+  category  String?  // Analytical category selected by user
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

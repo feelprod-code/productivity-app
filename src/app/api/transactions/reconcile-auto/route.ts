@@ -7,9 +7,24 @@ import imaps from 'imap-simple';
 import { simpleParser } from 'mailparser';
 import { execSync } from 'child_process';
 import os from 'os';
+import { prisma } from '@/lib/prisma';
+import { createClient } from '@supabase/supabase-js';
 
 // Explicitly load the parent .env file to access Gmail/iCloud credentials
 dotenv.config({ path: `${os.homedir()}/ANTIGRAVITY/.env` });
+
+if (typeof process !== 'undefined') {
+  if (!process.listeners('uncaughtException').length) {
+    process.on('uncaughtException', (err) => {
+      console.error('🔥 [reconcile-auto] [Uncaught Exception Caught]:', err);
+    });
+  }
+  if (!process.listeners('unhandledRejection').length) {
+    process.on('unhandledRejection', (reason) => {
+      console.error('🔥 [reconcile-auto] [Unhandled Rejection Caught]:', reason);
+    });
+  }
+}
 
 export const dynamic = 'force-dynamic';
 
@@ -33,7 +48,8 @@ function extractKeywords(label: string): string[] {
     "confrere", "prelvt", "bank", "banque", "ltd", "limited", "gmbh", "sas", "sarl",
     "sasu", "eurl", "cie", "company", "co", "corp", "corporation", "group", "groupe",
     "services", "service", "solutions", "solution", "international", "intl", "systems",
-    "system", "france", "europe", "global", "digital"
+    "system", "france", "europe", "global", "digital", "cblm", "paris", "guillaume", "philippe",
+    "com", "net", "org", "www"
   ]);
   
   const words = cleaned.split(/\s+/).filter(w => {
@@ -41,8 +57,8 @@ function extractKeywords(label: string): string[] {
     if (w.length < 2) return false;
     // Skip common noise
     if (noise.has(w)) return false;
-    // Skip purely numeric strings (amounts or dates) unless they are very short (e.g. 2-3 chars)
-    if (/^\d+$/.test(w) && w.length > 3) return false;
+    // Skip all purely numeric strings (amounts, dates, card numbers, etc.)
+    if (/^\d+$/.test(w)) return false;
     // Skip alphanumeric code strings (like mandate refs, IBANs, etc.)
     // i.e., strings longer than 7 characters containing both letters and numbers
     if (w.length > 7 && /[a-z]/.test(w) && /\d/.test(w)) return false;
@@ -117,6 +133,14 @@ async function extractPdfsFromZip(zipBuffer: Buffer): Promise<{ buffer: Buffer; 
   
   return pdfs;
 }
+function formatImapDate(date: Date): string {
+  const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = months[date.getMonth()];
+  const year = date.getFullYear();
+  return `${day}-${month}-${year}`;
+}
+
 // Search a specific IMAP email account
 async function searchEmailAccount(
   accountConfig: any,
@@ -136,9 +160,23 @@ async function searchEmailAccount(
     const amountStrComma = amountStr.replace(".", ",");
     const amountInt = Math.floor(absAmount).toString();
 
+    const dateSince = new Date(txDate.getTime() - 16 * 24 * 60 * 60 * 1000);
+    const dateBefore = new Date(txDate.getTime() + 16 * 24 * 60 * 60 * 1000);
+    const formattedSince = formatImapDate(dateSince);
+    const formattedBefore = formatImapDate(dateBefore);
+
+    // Sort keywords by length descending and limit to top 2 to avoid searching generic/short words
+    const searchKeywords = [...keywords]
+      .sort((a, b) => b.length - a.length)
+      .slice(0, 2);
+
     // Search subject for each keyword to find matching emails
-    for (const keyword of keywords) {
-      const searchCriteria = [['HEADER', 'SUBJECT', keyword]];
+    for (const keyword of searchKeywords) {
+      const searchCriteria = [
+        ['HEADER', 'SUBJECT', keyword],
+        ['SINCE', formattedSince],
+        ['BEFORE', formattedBefore]
+      ];
       const fetchOptions = { bodies: ['HEADER', 'TEXT', ''], struct: true };
       const messages = await connection.search(searchCriteria, fetchOptions);
 
@@ -150,11 +188,57 @@ async function searchEmailAccount(
 
         const parsed = await simpleParser(allPart.body);
         
-        // Verify email date: +/- 15 days window around the transaction date
+        // Verify email date: +/- 35 days window around the transaction date
         const msgDate = new Date(parsed.date || '');
         const timeDiff = Math.abs(msgDate.getTime() - txDate.getTime());
-        const fifteenDaysMs = 15 * 24 * 60 * 60 * 1000;
-        if (timeDiff > fifteenDaysMs) continue;
+        const thirtyFiveDaysMs = 35 * 24 * 60 * 60 * 1000;
+        if (timeDiff > thirtyFiveDaysMs) continue;
+
+        // If it's a PayPal transaction and this email is a PayPal confirmation email:
+        const isPayPalTx = keywords.includes('paypal');
+        const fromText = (parsed.from?.text || '').toLowerCase();
+        const subjectLower = (parsed.subject || '').toLowerCase();
+        const isPayPalEmail = fromText.includes('paypal') || subjectLower.includes('paypal');
+
+        if (isPayPalTx && isPayPalEmail) {
+          const text = (parsed.text || '').toLowerCase();
+          const html = parsed.html || '';
+          
+          const hasAmount = subjectLower.includes(amountStr) || subjectLower.includes(amountStrComma) ||
+                            text.includes(amountStr) || text.includes(amountStrComma);
+
+          if (hasAmount) {
+            // Find the merchant name from subject or body
+            const subjectMatch = parsed.subject?.match(/(?:à|to|pour|payment to|paiement à)\s+([^,.(]+)/i);
+            let merchant = "PAYPAL";
+            if (subjectMatch && subjectMatch[1]) {
+              const candidate = subjectMatch[1].trim();
+              if (candidate.toLowerCase() !== 'paypal') {
+                merchant = `PAYPAL - ${candidate.toUpperCase()}`;
+              }
+            } else {
+              const bodyMatch = text.match(/(?:marchand|merchant|compte du marchand|paiement envoyé à)\s*:\s*([^<\r\n]+)/i);
+              if (bodyMatch && bodyMatch[1]) {
+                const candidate = bodyMatch[1].trim();
+                if (candidate.toLowerCase() !== 'paypal') {
+                  merchant = `PAYPAL - ${candidate.toUpperCase()}`;
+                }
+              }
+            }
+
+            console.log(`🎯 Match found in PayPal email! Merchant: ${merchant}, Amount: ${amountStr}`);
+            
+            const cleanDateStr = txDate.toISOString().split('T')[0];
+            const cleanMerchantFilename = merchant.replace(/[^a-zA-Z0-9\- ]/g, '_');
+            const filename = `${cleanDateStr} - ${cleanMerchantFilename} - ${amountStr}EUR.html`;
+            const buffer = Buffer.from(html || text || '', 'utf-8');
+
+            return {
+              buffer,
+              filename
+            };
+          }
+        }
 
         // Check attachments (direct PDFs or nested inside ZIPs)
         const attachments = parsed.attachments || [];
@@ -184,7 +268,35 @@ async function searchEmailAccount(
                 const text = (parsedPdf.text || '').toLowerCase();
 
                 const candNameLower = cand.filename.toLowerCase();
-                
+                 
+                 // Règles spécifiques de destinataire (Guillaume Philippe) et de moyen de paiement
+                 const isAmazonInvoice = candNameLower.includes('amazon') || candNameLower.includes('amz ') || text.includes('amazon');
+                 const isAppleInvoice = candNameLower.includes('apple') || text.includes('apple');
+
+                 // 1. Pour Apple et Amazon, l'adresse doit contenir strictement "guillaume philippe" (et pas philippe guillaume seul)
+                 if (isAmazonInvoice || isAppleInvoice) {
+                   if (!text.includes("guillaume philippe")) {
+                     console.log(`❌ Facture Apple/Amazon e-mail ${cand.filename} rejetée : non adressée à Guillaume Philippe.`);
+                     continue;
+                   }
+                 } else {
+                   // 2. Pour les autres factures, rejeter si adressé explicitement à la personne physique "philippe guillaume" sans "guillaume philippe"
+                   if (text.includes("philippe guillaume") && !text.includes("guillaume philippe")) {
+                     console.log(`❌ Facture e-mail ${cand.filename} rejetée : adressée à Philippe Guillaume (compte personnel).`);
+                     continue;
+                   }
+                 }
+
+                 // 3. Pour Amazon uniquement, valider aussi le moyen de paiement (pro card ou PayPal)
+                 if (isAmazonInvoice) {
+                   const hasPayPal = text.includes("paypal") || text.includes("pay pal");
+                   const hasProCard = text.includes("1397") || text.includes("6150");
+                   if (!hasPayPal && !hasProCard) {
+                     console.log(`❌ Facture Amazon e-mail ${cand.filename} rejetée : moyen de paiement non autorisé (ni pro 1397/6150, ni PayPal).`);
+                     continue;
+                   }
+                 }
+
                 // Gardes-fous stricts sur les e-mails
                 if (candNameLower.includes('carpimko') && !keywords.includes('carpimko')) continue;
                 if (candNameLower.includes('adobe') && !keywords.includes('adobe')) continue;
@@ -206,9 +318,31 @@ async function searchEmailAccount(
                 if (!hasKeyword) continue;
 
                 // Check if PDF contains amount
-                const hasAmount = text.includes(amountStr) || text.includes(amountStrComma) || 
-                                  (absAmount % 1 === 0 && text.includes(` ${amountInt} `)) || 
-                                  cand.filename.includes(amountInt);
+                let hasAmount = text.includes(amountStr) || text.includes(amountStrComma);
+                if (!hasAmount && absAmount % 1 === 0) {
+                  const regexTextInt = new RegExp(`\\b${amountInt}\\b`, 'i');
+                  if (regexTextInt.test(text)) {
+                    hasAmount = true;
+                  }
+                }
+                
+                // Check filename for amount
+                if (!hasAmount) {
+                  const cleanFn = cand.filename.toLowerCase();
+                  if (cleanFn.includes(amountStr) || cleanFn.includes(amountStrComma)) {
+                    hasAmount = true;
+                  } else if (absAmount % 1 === 0) {
+                    const regexFnInt = new RegExp(`\\b${amountInt}\\b|_${amountInt}_|-${amountInt}-|\\s${amountInt}€|\\s${amountInt}eur`, 'i');
+                    if (regexFnInt.test(cleanFn)) {
+                      // Prevent matching years (2024, 2025, 2026) as amount if amount is 20/24/25/26
+                      if (!((amountInt === '20' || amountInt === '24' || amountInt === '25' || amountInt === '26') && 
+                            (cleanFn.includes('2024') || cleanFn.includes('2025') || cleanFn.includes('2026')) && 
+                            !regexFnInt.test(cleanFn.replace(/2024|2025|2026/g, '')) )) {
+                        hasAmount = true;
+                      }
+                    }
+                  }
+                }
                 if (!hasAmount) continue;
 
                 console.log(`🎯 Match found in email attachment: "${cand.filename}" (from ${att.filename || 'zip'})`);
@@ -261,6 +395,42 @@ export async function POST(request: Request) {
     }
 
     const txDate = new Date(date);
+    
+    // Enrich PayPal keywords from cache
+    const labelLower = label.toLowerCase();
+    if (labelLower.includes('paypal')) {
+      try {
+        const cachePath = path.join(process.cwd(), 'src/app/api/transactions/releve/paypal_cache.json');
+        if (fs.existsSync(cachePath)) {
+          const paypalCache = JSON.parse(fs.readFileSync(cachePath, 'utf8'));
+          const exactKey = `${date}_${absAmount.toFixed(2)}`;
+          let realMerchantName = paypalCache[exactKey] || "";
+          
+          if (!realMerchantName) {
+            // Check adjacent days (+/- 6 days)
+            for (let i = 1; i <= 6; i++) {
+              const checkDate = new Date(txDate);
+              checkDate.setDate(txDate.getDate() - i);
+              const checkDateStr = checkDate.toISOString().split('T')[0];
+              const checkKey = `${checkDateStr}_${absAmount.toFixed(2)}`;
+              if (paypalCache[checkKey]) {
+                realMerchantName = paypalCache[checkKey];
+                break;
+              }
+            }
+          }
+          
+          if (realMerchantName) {
+            console.log(`🎯 [AutoReconcile] PayPal cache matched merchant: "${realMerchantName}"`);
+            const merchantKeywords = extractKeywords(realMerchantName);
+            keywords.push(...merchantKeywords);
+          }
+        }
+      } catch (err: any) {
+        console.error("❌ Failed to load PayPal cache in auto-reconcile:", err.message);
+      }
+    }
+
     console.log(`🔍 [AutoReconciliation] Recherche pour "${label}" (${amountStr} €) du ${date}...`);
     console.log(`🔍 Mots-clés de recherche :`, keywords);
 
@@ -297,7 +467,7 @@ export async function POST(request: Request) {
       }
 
       const txTime = txDate.getTime();
-      const fifteenDaysMs = 15 * 24 * 60 * 60 * 1000;
+      const thirtyFiveDaysMs = 35 * 24 * 60 * 60 * 1000;
 
       // Filter by amount, date, and keywords
       const matchingPennylaneInvoice = pennylaneInvoices.find((inv: any) => {
@@ -305,10 +475,10 @@ export async function POST(request: Request) {
         const invAmount = parseFloat(inv.amount || '0');
         if (Math.abs(invAmount - absAmount) > 0.05) return false;
 
-        // 2. Date match (+/- 15 days)
+        // 2. Date match (+/- 35 days)
         if (inv.date) {
           const invTime = new Date(inv.date).getTime();
-          if (Math.abs(invTime - txTime) > fifteenDaysMs) return false;
+          if (Math.abs(invTime - txTime) > thirtyFiveDaysMs) return false;
         }
 
         // 3. Keyword match (provider or label or filename)
@@ -364,142 +534,153 @@ export async function POST(request: Request) {
 
     let matchedFile: string | null = null;
     let matchedFileBuffer: Buffer | null = null;
+    let matchedLocalInvoiceId: string | null = null;
 
-    // --- PHASE 1: SEARCH LOCAL FILESYSTEM ---
-    const homeDir = os.homedir();
-    const searchDirs = [
-      path.join(homeDir, 'Desktop'),
-      path.join(homeDir, 'Downloads'),
-      path.join(homeDir, 'Documents/1-PAPIERS/1-PAPIERS PHIL/4-Compta')
-    ];
-
-    let allPdfs: string[] = [];
-    for (const dir of searchDirs) {
-      allPdfs.push(...(await getPdfFiles(dir, 0, 2)));
-    }
-
-    // Prioritize PDFs where the filename matches keywords or amounts
-    allPdfs.sort((a, b) => {
-      const aName = path.basename(a).toLowerCase();
-      const bName = path.basename(b).toLowerCase();
-      const aHasKeyword = keywords.some(k => aName.includes(k));
-      const bHasKeyword = keywords.some(k => bName.includes(k));
-      if (aHasKeyword && !bHasKeyword) return -1;
-      if (!aHasKeyword && bHasKeyword) return 1;
+    // --- PHASE 0.5: SEARCH LOCAL DATABASE (PRISMA) ---
+    console.log("🔍 Recherche d'une facture correspondante existante dans la base locale (Prisma)...");
+    try {
+      const localInvoices = await prisma.invoice.findMany({
+        where: {
+          type: "PRO"
+        }
+      });
       
-      const aHasAmt = aName.includes(amountInt);
-      const bHasAmt = bName.includes(amountInt);
-      if (aHasAmt && !bHasAmt) return -1;
-      if (!aHasAmt && bHasAmt) return 1;
+      const txTime = txDate.getTime();
+      const thirtyFiveDaysMs = 35 * 24 * 60 * 60 * 1000;
+      const cleanSupplier = keywords[0].toUpperCase();
       
-      return 0;
-    });
-
-    let parsedCount = 0;
-    for (const filePath of allPdfs) {
-      if (parsedCount >= 150) {
-        console.log(`⚠️ Limite de 150 PDFs analysés atteinte, arrêt de la recherche locale.`);
-        break;
-      }
-      try {
-        const buffer = await fs.promises.readFile(filePath);
-        if (buffer.slice(0, 4).toString() !== '%PDF') continue;
-
-        parsedCount++;
-        const parsed = await pdfParse(buffer);
-        const text = (parsed.text || '').toLowerCase();
-
-        const labelLower = label.toLowerCase();
-        const fileNameLower = path.basename(filePath).toLowerCase();
+      const matchedLocalInvoice = localInvoices.find(inv => {
+        // 1. Amount match (+/- 0.05 EUR) - strict check, amount cannot be null/0
+        if (!inv.amount || Math.abs(inv.amount - absAmount) > 0.05) return false;
         
-        // Gardes-fous stricts sur le nom de fichier et le libellé de transaction
-        if (fileNameLower.includes('carpimko') && !labelLower.includes('carpimko')) continue;
-        if (fileNameLower.includes('adobe') && !labelLower.includes('adobe')) continue;
-        if ((fileNameLower.includes('volkswagen') || fileNameLower.includes('vw')) && 
-            !(labelLower.includes('volkswagen') || labelLower.includes('vw') || labelLower.includes('volks'))) continue;
-        if (fileNameLower.includes('swiss') && !labelLower.includes('swiss')) continue;
-        if (fileNameLower.includes('urssaf') && !labelLower.includes('urssaf')) continue;
-        if (fileNameLower.includes('cacf') && !labelLower.includes('cacf') && !labelLower.includes('consumer')) continue;
-
-        // Recherche intelligente par mot entier pour éviter les sous-chaînes partielles (ex: 'vw' dans 'review')
-        const hasKeyword = keywords.some(kw => {
-          if (fileNameLower.includes(kw)) return true;
-          if (kw.length < 4) {
-            const regex = new RegExp(`\\b${kw}\\b`, 'i');
-            return regex.test(text);
-          }
-          return text.includes(kw);
-        });
-        if (!hasKeyword) continue;
-
-        const hasAmount = text.includes(amountStr) || text.includes(amountStrComma) || 
-                          (absAmount % 1 === 0 && text.includes(` ${amountInt} `)) || 
-                          path.basename(filePath).includes(amountInt);
-        if (!hasAmount) continue;
-
-        matchedFile = path.basename(filePath);
-        matchedFileBuffer = buffer;
-        console.log(`🎯 Justificatif local trouvé ! Fichier : ${filePath}`);
-        break;
-      } catch (err) {
-        continue;
-      }
-    }
-
-    // --- PHASE 2: SEARCH EMAILS (GMAIL & ICLOUD) IF LOCAL NOT FOUND ---
-    if (!matchedFileBuffer) {
-      console.log("🔍 Justificatif local non trouvé. Recherche dans les e-mails (Gmail & iCloud)...");
+        // 2. Date match (+/- 35 days)
+        const invTime = new Date(inv.date).getTime();
+        if (Math.abs(invTime - txTime) > thirtyFiveDaysMs) return false;
+        
+        // 3. Keyword match (provider/filename contains any of our transaction keywords)
+        const invProvider = (inv.provider || '').toLowerCase();
+        const invFileUrl = (inv.fileUrl || '').toLowerCase();
+        const hasKeyword = keywords.some(kw => 
+          invProvider.includes(kw) || 
+          invFileUrl.includes(kw)
+        );
+        
+        return hasKeyword;
+      });
       
-      // Gmail configuration
-      const gmailConfig = {
-        user: process.env.GMAIL_EMAIL || 'guillaumephilippe1968@gmail.com',
-        password: process.env.GMAIL_APP_PASSWORD || 'ridi mpgu rfbl deqp',
-        host: 'imap.gmail.com',
-        port: 993,
-        tls: true,
-        authTimeout: 10000,
-        tlsOptions: { rejectUnauthorized: false }
-      };
-
-      // iCloud (.me) configuration
-      const icloudConfig = {
-        user: process.env.ICLOUD_EMAIL || 'guillaumephilippe@me.com',
-        password: process.env.ICLOUD_APP_PASSWORD || 'vcny-lusr-hugo-djpa',
-        host: 'imap.mail.me.com',
-        port: 993,
-        tls: true,
-        authTimeout: 10000,
-        tlsOptions: { rejectUnauthorized: false }
-      };
-
-      // Search Gmail first
-      let emailMatch = await searchEmailAccount(gmailConfig, keywords, absAmount, txDate);
-      
-      // Search iCloud next if Gmail failed
-      if (!emailMatch) {
-        emailMatch = await searchEmailAccount(icloudConfig, keywords, absAmount, txDate);
+      if (matchedLocalInvoice) {
+        console.log(`🎯 Facture locale trouvée ! ID : ${matchedLocalInvoice.id}, Provider: ${matchedLocalInvoice.provider}`);
+        matchedLocalInvoiceId = matchedLocalInvoice.id;
+        
+        let originalFilename = path.basename(matchedLocalInvoice.fileUrl);
+        if (originalFilename.includes('?')) {
+          originalFilename = originalFilename.split('?')[0];
+        }
+        if (!originalFilename) {
+          originalFilename = `${date} - ${cleanSupplier} - ${absAmount.toFixed(2)}€.pdf`;
+        }
+        
+        console.log(`📥 Téléchargement de la pièce locale depuis : ${matchedLocalInvoice.fileUrl}`);
+        const downloadRes = await fetch(matchedLocalInvoice.fileUrl);
+        if (downloadRes.ok) {
+          matchedFileBuffer = Buffer.from(await downloadRes.arrayBuffer());
+          matchedFile = originalFilename;
+          console.log(`🎯 Pièce locale téléchargée avec succès !`);
+        } else {
+          console.warn(`⚠️ Échec du téléchargement de la pièce locale, poursuite vers la recherche e-mail...`);
+        }
       }
-
-      if (emailMatch) {
-        matchedFile = emailMatch.filename;
-        matchedFileBuffer = emailMatch.buffer;
-        console.log(`🎯 Justificatif e-mail trouvé ! Fichier : ${emailMatch.filename}`);
-      }
+    } catch (localDbErr: any) {
+      console.error("❌ Erreur lors de la recherche locale Prisma :", localDbErr.message);
     }
 
     // --- PHASE 3: UPLOAD & MATCH ON PENNYLANE ---
     if (!matchedFile || !matchedFileBuffer) {
       return NextResponse.json({ 
         success: false, 
-        error: `Aucun justificatif correspondant à "${keywords.join(' ')}" de ${amountStr} € n'a été trouvé (Bureau, Téléchargements, e-mails Gmail ou iCloud).` 
+        error: `Aucun justificatif correspondant à "${keywords.join(' ')}" de ${amountStr} € n'a été trouvé dans la base locale.` 
       }, { status: 404 });
     }
 
-    const filename = matchedFile;
+    const txDateStr = new Date(date).toISOString().split('T')[0];
+    const cleanSupplier = keywords[0].toUpperCase();
+    let isHtml = matchedFile.toLowerCase().endsWith('.html');
+    
+    if (isHtml) {
+      console.log(`📄 [HTML-to-PDF] Conversion du justificatif HTML en PDF via Chrome headless...`);
+      const tempHtmlPath = `/tmp/temp_${Date.now()}.html`;
+      const tempPdfPath = `/tmp/temp_${Date.now()}.pdf`;
+      
+      try {
+        await fs.promises.writeFile(tempHtmlPath, matchedFileBuffer);
+        const chromePath = '"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"';
+        const { exec } = require('child_process');
+        const { promisify } = require('util');
+        const execPromise = promisify(exec);
+        
+        await execPromise(`${chromePath} --headless --disable-gpu --print-to-pdf=${tempPdfPath} ${tempHtmlPath}`);
+        
+        if (fs.existsSync(tempPdfPath)) {
+          matchedFileBuffer = await fs.promises.readFile(tempPdfPath);
+          matchedFile = matchedFile.replace(/\.html$/i, '.pdf');
+          isHtml = false;
+          console.log(`📄 [HTML-to-PDF] Conversion réussie ! Taille du PDF : ${matchedFileBuffer.length} octets`);
+        }
+      } catch (err: any) {
+        console.error("❌ [HTML-to-PDF] Échec de la conversion :", err.message);
+      } finally {
+        await fs.promises.unlink(tempHtmlPath).catch(() => {});
+        await fs.promises.unlink(tempPdfPath).catch(() => {});
+      }
+    }
+
+    const filename = isHtml ? matchedFile : `${txDateStr} - ${cleanSupplier} - ${absAmount.toFixed(2)}€.pdf`;
+    const mimeType = isHtml ? 'text/html' : 'application/pdf';
+
+    // Sauvegarde physique locale dans le dossier compta de l'ordinateur
+    try {
+      const year = txDateStr.split('-')[0];
+      const monthDigit = txDateStr.split('-')[1];
+      const MONTH_MAP: { [key: string]: string } = {
+        '01': '01 - Janvier',
+        '02': '02 - F\u00e9vrier',
+        '03': '03 - Mars',
+        '04': '04 - Avril',
+        '05': '05 - Mai',
+        '06': '06 - Juin',
+        '07': '07 - Juillet',
+        '08': '08 - Ao\u00fbt',
+        '09': '09 - Septembre',
+        '10': '10 - Octobre',
+        '11': '11 - Novembre',
+        '12': '12 - D\u00e9cembre'
+      };
+      
+      const monthFolder = MONTH_MAP[monthDigit] || `${monthDigit}`;
+      let normalizedMonthFolder = monthFolder;
+      if (monthDigit === '02') {
+        normalizedMonthFolder = '02 - Fe\u0301vrier';
+      } else if (monthDigit === '08') {
+        normalizedMonthFolder = '08 - Aou\u0302t';
+      } else if (monthDigit === '12') {
+        normalizedMonthFolder = '12 - De\u0301cembre';
+      }
+
+      const comptaBaseDir = '/Users/guillaumephilippe/Documents/1-PAPIERS/1-PAPIERS PHIL/4-Compta';
+      const targetDir = path.join(comptaBaseDir, `Factures ${year}`, normalizedMonthFolder);
+      await fs.promises.mkdir(targetDir, { recursive: true });
+      
+      const localFilePath = path.join(targetDir, filename);
+      await fs.promises.writeFile(localFilePath, matchedFileBuffer);
+      console.log(`💾 Justificatif sauvegardé localement : ${localFilePath}`);
+    } catch (localSaveErr: any) {
+      console.error("⚠️ [LocalSave] Échec de l'enregistrement local de la facture :", localSaveErr.message);
+    }
+
     console.log(`📤 Téléversement de "${filename}" sur Pennylane...`);
     
     const formData = new FormData();
-    const blob = new Blob([new Uint8Array(matchedFileBuffer)], { type: 'application/pdf' });
+    const blob = new Blob([new Uint8Array(matchedFileBuffer)], { type: mimeType });
     formData.append('file', blob, filename);
 
     const uploadRes = await fetch(`${BASE_URL}/file_attachments`, {
@@ -514,6 +695,7 @@ export async function POST(request: Request) {
 
     if (!uploadRes.ok) {
       const errTxt = await uploadRes.text();
+      console.error(`❌ [Pennylane Upload Error] Status: ${uploadRes.status}, Response: ${errTxt}`);
       return NextResponse.json({ success: false, error: `Échec du téléversement Pennylane : ${errTxt}` }, { status: 500 });
     }
 
@@ -565,7 +747,6 @@ export async function POST(request: Request) {
 
     // Create supplier invoice
     console.log(`🧾 Importation de la facture sur Pennylane...`);
-    const txDateStr = new Date(date).toISOString().split('T')[0];
     const payload = {
       file_attachment_id: fileAttachmentId,
       supplier_id: supplierId,
@@ -580,7 +761,7 @@ export async function POST(request: Request) {
           currency_amount: absAmount.toFixed(2),
           currency_tax: '0.00',
           vat_rate: 'exempt',
-          label: label
+          label: `${cleanSupplier} - ${txDateStr} - ${absAmount.toFixed(2)}€`
         }
       ]
     };
@@ -607,6 +788,27 @@ export async function POST(request: Request) {
         if (match && match[1]) {
           invoiceId = match[1];
           console.log(`ℹ️ La facture existe déjà sur Pennylane avec l'ID ${invoiceId}. Tentative de rapprochement direct...`);
+          
+          // Forcer le renommage sur Pennylane pour que le nom soit identique à celui de l'application
+          try {
+            console.log(`✏️ Renommage de la facture existante sur Pennylane avec le nom : ${filename}...`);
+            await fetch(`${BASE_URL}/supplier_invoices/${invoiceId}`, {
+              method: 'PUT',
+              headers: {
+                'Authorization': `Bearer ${pennylaneKey}`,
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+                'X-Use-2026-API-Changes': 'true'
+              },
+              body: JSON.stringify({
+                supplier_invoice: {
+                  file_name: filename
+                }
+              })
+            });
+          } catch (renameErr: any) {
+            console.error("⚠️ [PennylaneRename] Échec du renommage sur Pennylane :", renameErr.message);
+          }
         }
       }
       
@@ -638,15 +840,82 @@ export async function POST(request: Request) {
 
     console.log(`✅ Rapprochement automatique réussi pour la transaction ${transactionId}`);
 
+    // Double sync locally with Supabase and Prisma
+    let finalFileUrl = publicFileUrl || "";
+    try {
+      console.log("[AutoReconcile] Synchronisation avec la base de données locale...");
+      const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.SUPABASE_SERVICE_ROLE_KEY!
+      );
+
+      const cleanStorageKey = (name: string) => name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-zA-Z0-9.\-_ ]/g, "");
+      const safeStorageKey = cleanStorageKey(filename);
+
+      // Upload to Supabase Storage
+      const { error: storageErr } = await supabase.storage
+        .from('invoices')
+        .upload(safeStorageKey, matchedFileBuffer, {
+          contentType: mimeType,
+          upsert: true
+        });
+
+      if (storageErr) {
+        console.error("⚠️ [AutoReconcile] Échec du téléversement Supabase Storage :", storageErr.message);
+      } else {
+        const { data: publicUrlData } = supabase.storage.from('invoices').getPublicUrl(safeStorageKey);
+        finalFileUrl = publicUrlData.publicUrl;
+      }
+
+      // Check if we matched a local invoice in Phase 0.5
+      if (matchedLocalInvoiceId) {
+        await prisma.invoice.update({
+          where: { id: matchedLocalInvoiceId },
+          data: {
+            status: "COMPLETED",
+            fileUrl: finalFileUrl || undefined
+          }
+        });
+        console.log(`🎉 [AutoReconcile] Facture locale existante (ID: ${matchedLocalInvoiceId}) mise à jour sur COMPLETED !`);
+      } else {
+        // Check if invoice already exists locally by signature
+        const existingLocally = await prisma.invoice.findFirst({
+          where: {
+            provider: `${cleanSupplier} - ${txDateStr} - ${absAmount.toFixed(2)}€`,
+            amount: absAmount,
+            date: new Date(txDateStr)
+          }
+        });
+
+        if (!existingLocally) {
+          await prisma.invoice.create({
+            data: {
+              provider: `${cleanSupplier} - ${txDateStr} - ${absAmount.toFixed(2)}€`,
+              amount: absAmount,
+              currency: "EUR",
+              date: new Date(txDateStr),
+              fileUrl: finalFileUrl,
+              status: "COMPLETED",
+              type: "PRO"
+            }
+          });
+          console.log("🎉 [AutoReconcile] Justificatif synchronisé avec succès dans la base locale (Prisma + Storage) !");
+        }
+      }
+    } catch (dbErr: any) {
+      console.error("⚠️ [AutoReconcile] Échec d'enregistrement base locale :", dbErr.message);
+    }
+
     return NextResponse.json({ 
       success: true, 
       matchedFile: filename,
+      localInvoiceId: matchedLocalInvoiceId,
       invoice: {
         id: invoiceId,
         date: txDateStr,
         label: label,
         filename: filename,
-        publicFileUrl: publicFileUrl
+        publicFileUrl: finalFileUrl
       }
     });
 

@@ -86,6 +86,17 @@ const formatAmount = (num: number) => {
   }).format(num);
 };
 
+const getExpectedSource = (label: string): 'email' | 'manual' => {
+  const labelLower = label.toLowerCase();
+  const isOnlineSaaS = [
+    'openai', 'chatgpt', 'openrouter', 'vercel', 'github', 'supabase', 
+    'cloudflare', 'stripe', 'suno', 'adobe', 'canva', 'amazon', 'google', 
+    'apple', 'dropbox', 'microsoft', 'zoom', 'figma', 'spotify', 'netflix',
+    'paypal', 'sumup', 'pennylane'
+  ].some(kw => labelLower.includes(kw));
+  return isOnlineSaaS ? 'email' : 'manual';
+};
+
 const getCategoryBadge = (category: string) => {
   switch (category) {
     case "card":
@@ -105,7 +116,34 @@ function cleanDisplayLabel(label: string): string {
   // Supprimer les points dans CARPIMKO/C.A.R.P.I.M.K.O pour faciliter les recherches
   const normalizedLower = lower.replace(/\./g, '');
 
-  // 1. Détection des marchands spécifiques en priorité absolue pour éviter les conflits (notamment avec LCL)
+  // 1. Détection des organismes de santé / mutuelles en priorité absolue
+  if (normalizedLower.includes("henner")) {
+    return "Henner";
+  }
+  if (normalizedLower.includes("spsant") || normalizedLower.includes("sp sante")) {
+    return "SP Santé";
+  }
+  if (normalizedLower.includes("viamedis") || normalizedLower.includes("vm001000")) {
+    return "Viamedis";
+  }
+  if (normalizedLower.includes("korelio")) {
+    return "Korelio";
+  }
+  if (normalizedLower.includes("almerys")) {
+    return "Almerys";
+  }
+  if (normalizedLower.includes("cetip")) {
+    return "Cetip";
+  }
+  if (normalizedLower.includes("cpam") || normalizedLower.includes("c.p.a.m.") || normalizedLower.includes("assurance maladie")) {
+    const cpamDeptMatch = label.match(/cpam\s*(\d{2,3})/i);
+    if (cpamDeptMatch) {
+      return `CPAM ${cpamDeptMatch[1]}`;
+    }
+    return "CPAM";
+  }
+
+  // 2. Détection des marchands spécifiques standards
   if (normalizedLower.includes("carpimko") || normalizedLower.includes("carpinko")) {
     return "CARPIMKO";
   }
@@ -128,7 +166,6 @@ function cleanDisplayLabel(label: string): string {
     return "VRT CPM";
   }
   
-  // 2. Détection des autres fournisseurs standards
   if (lower.includes("sumup")) return "SUM UP";
   if (lower.includes("amazon")) return "AMAZON";
   if (lower.includes("gandi")) return "GANDI";
@@ -154,29 +191,17 @@ function cleanDisplayLabel(label: string): string {
   if (lower.includes("malakoff") || lower.includes("humanis")) return "MALAKOFF HUMANIS";
   if (lower.includes("nike")) return "NIKE";
   if (lower.includes("agios") || lower.includes("commission") || lower.includes("arrete de compte")) return "Frais bancaires";
-  
-  // Ne renvoyer LCL que si aucun autre fournisseur spécifique n'a été trouvé
   if (lower.includes("lcl") || lower.includes("telelion")) return "LCL";
 
-  // 3. Nettoyage générique pour les autres types de transactions (virements/prélèvements génériques)
+  // 3. Nettoyage générique intelligent
   let cleaned = label;
 
-  // Remplacer les termes bancaires barbares
-  cleaned = cleaned.replace(/PRELVT SEPA RECU D\/O CONFRERE PRLV SEPA/gi, 'Prélèvement');
-  cleaned = cleaned.replace(/PRELVT SEPA RECU D\/O CONFRERE/gi, 'Prélèvement');
-  cleaned = cleaned.replace(/PRELVT SEPA RECU D\/O/gi, 'Prélèvement');
-  cleaned = cleaned.replace(/VIR SEPA/gi, 'Virement');
-  cleaned = cleaned.replace(/VIREMENT SEPA RECU/gi, 'Virement');
-  cleaned = cleaned.replace(/VIREMENT INSTANTANE/gi, 'Virement Inst.');
-  cleaned = cleaned.replace(/VIR INST/gi, 'Virement Inst.');
-  cleaned = cleaned.replace(/VIREMENT/gi, 'Virement');
-  cleaned = cleaned.replace(/PRLV SEPA/gi, 'Prélèvement');
-  cleaned = cleaned.replace(/PRELVT/gi, 'Prélèvement');
-  cleaned = cleaned.replace(/PRLV/gi, 'Prélèvement');
-  cleaned = cleaned.replace(/Virement/g, 'Virement');
-  cleaned = cleaned.replace(/VIREMENT PERMANENT/gi, 'Virement Perm.');
-  cleaned = cleaned.replace(/VIR\.PERMANENT/gi, 'Virement Perm.');
-  cleaned = cleaned.replace(/VT PERM/gi, 'Virement Perm.');
+  // Supprimer les préfixes de type de transaction redondants au début de la chaîne
+  cleaned = cleaned.replace(/^(PRELVT SEPA RECU D\/O CONFRERE PRLV SEPA|PRELVT SEPA RECU D\/O CONFRERE|PRELVT SEPA RECU D\/O|VIR SEPA|VIREMENT SEPA RECU|VIREMENT INSTANTANE|VIR INST|VIREMENT PERMANENT|VIR\.PERMANENT|VT PERM|VIREMENT|PRLV SEPA|PRELVT|PRLV|Prélèvement|Virement|Virt)\b\s*/gi, '');
+
+  // Supprimer les codes de date bancaire du type TP-20260630 ou 20260630 ou 300626
+  cleaned = cleaned.replace(/TP-\d{8}/gi, '');
+  cleaned = cleaned.replace(/\b\d{8}\b/g, '');
 
   // Nettoyer les métadonnées de carte et de transaction
   cleaned = cleaned.replace(/CARTE\s+\d+\s+CB/gi, '');
@@ -191,7 +216,8 @@ function cleanDisplayLabel(label: string): string {
   cleaned = cleaned.replace(/PAYOUT\s+\d+/gi, '');
   cleaned = cleaned.replace(/EXT BAL SWEEP\s+[A-Z0-9]+/gi, '');
   cleaned = cleaned.replace(/\b[A-Z0-9]{15,}\b/g, '');
-  cleaned = cleaned.replace(/\b\d{10,}\b/g, '');
+  cleaned = cleaned.replace(/\b\d{3,}\b/g, ''); // Supprimer tous les nombres de 3 chiffres ou plus
+  cleaned = cleaned.replace(/\b[a-z0-9]*\d[a-z0-9]*\b/gi, ''); // Supprimer tous les codes alphanumériques mixtes
   cleaned = cleaned.replace(/EUR\s*\d+[\.,]\d*/gi, '');
   cleaned = cleaned.replace(/\d+[\.,]\d*\s*EUR/gi, '');
   cleaned = cleaned.replace(/\b\d+[\.,]\d*\b/g, '');
@@ -204,11 +230,16 @@ function cleanDisplayLabel(label: string): string {
   cleaned = cleaned.replace(/MR PHILIPPE GUILLAUME/gi, '');
   cleaned = cleaned.replace(/M\.? PHILIPPE GUILLAUME/gi, '');
 
+  // Supprimer les mots "Virement" ou "Prélèvement" s'ils apparaissent au milieu ou à la fin
+  cleaned = cleaned.replace(/\b(Virement|Prélèvement|Vrt|Prlv)\b/gi, '');
+
   // Éliminer les répétitions consécutives
   cleaned = cleaned.replace(/\b(\w+)\b(?:\s+\1\b)+/gi, '$1');
+  
+  // Nettoyer les caractères spéciaux et séparateurs résiduels
+  cleaned = cleaned.replace(/[\s\-\.\/_]+/g, ' ');
   cleaned = cleaned.replace(/\s+/g, ' ');
   cleaned = cleaned.trim();
-  cleaned = cleaned.replace(/[\s\-\.\/]+$/, '');
 
   return cleaned || label;
 }
@@ -356,6 +387,13 @@ function RelevePageContent() {
   }, [setTransactions]);
 
   const [isAutopilotRunning, setIsAutopilotRunning] = useState(false);
+  const hasAutoRunRef = useRef(false);
+  const [invoices, setInvoices] = useState<any[]>([]);
+
+  const pendingInvoicesCount = useMemo(() => {
+    if (invoices.length === 0) return null;
+    return invoices.filter((inv: any) => inv.status === "PENDING").length;
+  }, [invoices]);
 
   const handleReconcileAuto = useCallback(async (tx: Transaction, silent = false) => {
     setReconcilingTxId(String(tx.id));
@@ -382,6 +420,16 @@ function RelevePageContent() {
               : t
           )
         );
+        const localIdToUpdate = data.localInvoiceId || (data.invoice && data.invoice.id);
+        if (localIdToUpdate) {
+          setInvoices(prev =>
+            prev.map(inv =>
+              String(inv.id) === String(localIdToUpdate)
+                ? { ...inv, status: "COMPLETED" }
+                : inv
+            )
+          );
+        }
         if (!silent) {
           alert(`Rapprochement réussi avec le fichier : ${data.matchedFile}`);
         } else {
@@ -408,40 +456,68 @@ function RelevePageContent() {
     if (isAutopilotRunning) return;
     setIsAutopilotRunning(true);
     
-    // Filtrer uniquement les transactions de type dépense (amount < 0) non rapprochées et pro
+    // Filtrer uniquement les transactions pro, de type dépense (amount < 0), non rapprochées, et qui NE sont PAS exemptes de justificatif
     const unmatchedProTxs = transactions.filter(t => 
       t.isPro && 
       !t.matchedInvoice && 
+      !t.noJustificatif && 
       t.amount < 0
     );
 
-    console.log(`🤖 Autopilot démarré pour ${unmatchedProTxs.length} transaction(s) pro non rapprochée(s)...`);
+    // Pré-filtrer uniquement les transactions qui ont une facture locale candidate pour éviter de faire des centaines d'appels API 404 inutiles
+    const candidateTxs = unmatchedProTxs.filter(tx => {
+      const absAmount = Math.abs(tx.amount);
+      const txTime = new Date(tx.date).getTime();
+      const thirtyFiveDaysMs = 35 * 24 * 60 * 60 * 1000;
+      
+      return invoices.some(inv => 
+        inv.status === "PENDING" &&
+        inv.amount &&
+        Math.abs(inv.amount - absAmount) <= 0.05 &&
+        Math.abs(new Date(inv.date).getTime() - txTime) <= thirtyFiveDaysMs
+      );
+    });
 
-    for (const tx of unmatchedProTxs) {
+    console.log(`🤖 Autopilot démarré pour ${candidateTxs.length} transaction(s) ciblée(s) sur ${unmatchedProTxs.length} totales...`);
+
+    // Traitement séquentiel avec délai pour éviter les erreurs de Rate Limit (429) de Pennylane
+    for (const tx of candidateTxs) {
       await handleReconcileAuto(tx, true);
-      // Pause de 400ms entre les requêtes pour respecter les limites
-      await new Promise(resolve => setTimeout(resolve, 400));
+      // Pause de 1.5s entre chaque transaction pour respecter la limite de taux de l'API Pennylane
+      await new Promise(resolve => setTimeout(resolve, 1500));
     }
 
     setIsAutopilotRunning(false);
     console.log(`🤖 Autopilot terminé !`);
-  }, [transactions, handleReconcileAuto, isAutopilotRunning]);
+  }, [transactions, invoices, handleReconcileAuto, isAutopilotRunning]);
 
 
 
-  // Lancement automatique de l'Autopilot au chargement ou à l'enrichissement
+  // Lancement automatique de l'Autopilot au chargement
   useEffect(() => {
-    if (transactions.length > 0 && !isAutopilotRunning) {
+    if (transactions.length > 0 && !isAutopilotRunning && !hasAutoRunRef.current) {
       // Trouver s'il y a des transactions pro non rapprochées à traiter
-      const hasUnmatched = transactions.some(t => t.isPro && !t.matchedInvoice && t.amount < 0);
-      if (hasUnmatched) {
+      const hasCandidates = transactions.some(tx => {
+        if (!tx.isPro || tx.matchedInvoice || tx.noJustificatif || tx.amount >= 0) return false;
+        const absAmount = Math.abs(tx.amount);
+        const txTime = new Date(tx.date).getTime();
+        const thirtyFiveDaysMs = 35 * 24 * 60 * 60 * 1000;
+        return invoices.some(inv => 
+          inv.status === "PENDING" &&
+          inv.amount &&
+          Math.abs(inv.amount - absAmount) <= 0.05 &&
+          Math.abs(new Date(inv.date).getTime() - txTime) <= thirtyFiveDaysMs
+        );
+      });
+      if (hasCandidates) {
+        hasAutoRunRef.current = true; // Empêcher les lancements automatiques ultérieurs (boucle infinie)
         const timer = setTimeout(() => {
           runAutopilot();
         }, 2000); // Déclenchement 2s après le chargement initial
         return () => clearTimeout(timer);
       }
     }
-  }, [transactions.length, runAutopilot, isAutopilotRunning]);
+  }, [transactions, invoices, runAutopilot, isAutopilotRunning]);
 
   const triggerManualUpload = (e: React.MouseEvent, tx: Transaction) => {
     e.stopPropagation();
@@ -479,6 +555,20 @@ function RelevePageContent() {
               : t
           )
         );
+        if (data.invoice && data.invoice.id) {
+          setInvoices(prev => {
+            const exists = prev.some(inv => String(inv.id) === String(data.invoice.id));
+            if (exists) {
+              return prev.map(inv =>
+                String(inv.id) === String(data.invoice.id)
+                  ? { ...inv, status: "COMPLETED" }
+                  : inv
+              );
+            } else {
+              return [data.invoice, ...prev];
+            }
+          });
+        }
         alert(`Justificatif téléversé et transaction rapprochée avec succès !`);
       } else {
         alert(data.error || "Erreur de rapprochement manuel.");
@@ -510,6 +600,15 @@ function RelevePageContent() {
     } else {
       setLoading(true);
     }
+
+    // Fetch invoices immediately and independently for instant display
+    fetch("/api/invoices?t=" + Date.now())
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data) setInvoices(data.invoices || []);
+      })
+      .catch(err => console.error("Failed to fetch invoices:", err));
+
     try {
       const res = await fetch("/api/transactions/releve?t=" + Date.now());
       if (res.ok) {
@@ -743,9 +842,16 @@ function RelevePageContent() {
             <div className="flex items-center justify-between w-full sm:w-auto gap-2.5">
               <div className="flex items-center gap-2">
                 <div className="w-1.5 bg-[#AE7D5C] rounded-full min-h-[26px] sm:min-h-[38px] self-stretch shadow-[0_0_15px_rgba(174,125,92,0.4)]"></div>
-                <h1 className="text-3xl xs:text-4xl sm:text-5xl font-bebas tracking-wide text-[#1E2A33] leading-none">
-                  TRANSACTIONS
-                </h1>
+                <div className="flex flex-col">
+                  <h1 className="text-3xl xs:text-4xl sm:text-5xl font-bebas tracking-wide text-[#1E2A33] leading-none">
+                    TRANSACTIONS
+                  </h1>
+                  {pendingInvoicesCount !== null && pendingInvoicesCount > 0 && (
+                    <span className="text-[9px] sm:text-[10px] font-bold text-[#AE7D5C] uppercase tracking-wider mt-0.5 sm:mt-1">
+                      {pendingInvoicesCount} justificatif{pendingInvoicesCount > 1 ? 's' : ''} en attente
+                    </span>
+                  )}
+                </div>
               </div>
               
               {/* Year Switcher (Mobile Only) */}
@@ -909,130 +1015,133 @@ function RelevePageContent() {
         </div>
 
           {/* Secondary Filters & Search Bar */}
-          <div className="flex flex-row flex-wrap items-center gap-2.5 bg-transparent p-0 border-none shadow-none print:hidden select-none w-full">
+          <div className="flex flex-col md:flex-row items-center gap-3 bg-transparent p-0 border-none shadow-none print:hidden select-none w-full">
+            
+            {/* Group for Month & Sort (side-by-side on mobile, horizontal on desktop) */}
+            <div className="flex flex-row gap-2.5 w-full md:w-auto">
+              {/* Month Filter Dropdown Premium */}
+              <div className="relative flex-1 md:flex-initial z-30">
+                <button
+                  onClick={() => setIsMonthDropdownOpen(!isMonthDropdownOpen)}
+                  className="flex bg-white/60 p-2 py-2.5 rounded-2xl border border-[#1E2A33]/5 gap-2.5 shadow-inner items-center px-4 transition-all hover:bg-white hover:border-[#1E2A33]/10 cursor-pointer w-full md:min-w-[170px] justify-between text-xs sm:text-sm font-bold text-[#1E2A33] whitespace-nowrap"
+                >
+                  <span className="flex items-center gap-2">
+                    <Calendar className="w-4 h-4 text-[#1E2A33]/50 shrink-0" />
+                    {selectedMonth === "all"
+                      ? "Tous les mois"
+                      : new Date(`${selectedMonth}-02`).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
+                  </span>
+                  <ChevronDown className={`w-4 h-4 text-[#1E2A33]/40 shrink-0 transition-transform duration-200 ${isMonthDropdownOpen ? 'rotate-180' : ''}`} />
+                </button>
 
-          {/* Month Filter Dropdown Premium */}
-          <div className="relative shrink-0 z-30">
-            <button
-              onClick={() => setIsMonthDropdownOpen(!isMonthDropdownOpen)}
-              className="flex bg-white/60 p-2 py-2.5 rounded-2xl border border-[#1E2A33]/5 gap-2.5 shadow-inner items-center px-4 transition-all hover:bg-white hover:border-[#1E2A33]/10 cursor-pointer min-w-[170px] justify-between text-xs sm:text-sm font-bold text-[#1E2A33] whitespace-nowrap"
-            >
-              <span className="flex items-center gap-2">
-                <Calendar className="w-4 h-4 text-[#1E2A33]/50 shrink-0" />
-                {selectedMonth === "all"
-                  ? "Tous les mois"
-                  : new Date(`${selectedMonth}-02`).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
-              </span>
-              <ChevronDown className={`w-4 h-4 text-[#1E2A33]/40 shrink-0 transition-transform duration-200 ${isMonthDropdownOpen ? 'rotate-180' : ''}`} />
-            </button>
+                {isMonthDropdownOpen && (
+                  <>
+                    {/* Backdrop invisible pour clore au clic extérieur */}
+                    <div className="fixed inset-0 z-40" onClick={() => setIsMonthDropdownOpen(false)} />
+                    
+                    {/* Liste des mois déroulante */}
+                    <div className="absolute left-0 mt-2 w-56 bg-white/95 backdrop-blur-md rounded-2xl border border-[#1E2A33]/10 shadow-2xl p-1.5 z-50 overflow-hidden max-h-[300px] overflow-y-auto">
+                      <button
+                        onClick={() => {
+                          setSelectedMonth("all");
+                          setIsMonthDropdownOpen(false);
+                        }}
+                        className={`w-full text-left px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                          selectedMonth === "all"
+                            ? "bg-[#1E2A33] text-white shadow-sm"
+                            : "text-[#1E2A33]/70 hover:bg-[#AE7D5C]/10 hover:text-[#1E2A33]"
+                        }`}
+                      >
+                        Tous les mois
+                      </button>
+                      <div className="h-px bg-[#1E2A33]/5 my-1" />
+                      {uniqueMonths.map(m => (
+                        <button
+                          key={m}
+                          onClick={() => {
+                            setSelectedMonth(m);
+                            setIsMonthDropdownOpen(false);
+                          }}
+                          className={`w-full text-left px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                            selectedMonth === m
+                              ? "bg-[#1E2A33] text-white shadow-sm"
+                              : "text-[#1E2A33]/70 hover:bg-[#AE7D5C]/10 hover:text-[#1E2A33]"
+                          }`}
+                        >
+                          {new Date(`${m}-02`).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
 
-            {isMonthDropdownOpen && (
-              <>
-                {/* Backdrop invisible pour clore au clic extérieur */}
-                <div className="fixed inset-0 z-40" onClick={() => setIsMonthDropdownOpen(false)} />
-                
-                {/* Liste des mois déroulante */}
-                <div className="absolute left-0 mt-2 w-56 bg-white/95 backdrop-blur-md rounded-2xl border border-[#1E2A33]/10 shadow-2xl p-1.5 z-50 overflow-hidden max-h-[300px] overflow-y-auto">
-                  <button
-                    onClick={() => {
-                      setSelectedMonth("all");
-                      setIsMonthDropdownOpen(false);
-                    }}
-                    className={`w-full text-left px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                      selectedMonth === "all"
-                        ? "bg-[#1E2A33] text-white shadow-sm"
-                        : "text-[#1E2A33]/70 hover:bg-[#AE7D5C]/10 hover:text-[#1E2A33]"
-                    }`}
-                  >
-                    Tous les mois
-                  </button>
-                  <div className="h-px bg-[#1E2A33]/5 my-1" />
-                  {uniqueMonths.map(m => (
-                    <button
-                      key={m}
-                      onClick={() => {
-                        setSelectedMonth(m);
-                        setIsMonthDropdownOpen(false);
-                      }}
-                      className={`w-full text-left px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-                        selectedMonth === m
-                          ? "bg-[#1E2A33] text-white shadow-sm"
-                          : "text-[#1E2A33]/70 hover:bg-[#AE7D5C]/10 hover:text-[#1E2A33]"
-                      }`}
-                    >
-                      {new Date(`${m}-02`).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })}
-                    </button>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
-
-          {/* Matched Filter (Segmented Control avec "Tout") */}
-          <div className="flex bg-white/60 p-1.5 sm:p-2 rounded-2xl border border-[#1E2A33]/5 gap-1.5 sm:gap-2 shadow-inner shrink-0">
-            <button
-              onClick={() => setFilterMatched("all")}
-              className={`flex items-center justify-center px-3.5 py-2 sm:px-4.5 sm:py-2.5 rounded-xl text-[10px] sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer ${
-                filterMatched === "all"
-                  ? "bg-[#1E2A33] text-white shadow-md shadow-[#1E2A33]/20"
-                  : "text-[#1E2A33]/60 hover:text-[#1E2A33]"
-              }`}
-            >
-              Tout
-            </button>
-            <button
-              onClick={() => setFilterMatched("unmatched")}
-              className={`flex items-center justify-center px-3.5 py-2 sm:px-4.5 sm:py-2.5 rounded-xl text-[10px] sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer ${
-                filterMatched === "unmatched"
-                  ? "bg-[#1E2A33] text-white shadow-md shadow-[#1E2A33]/20"
-                  : "text-[#1E2A33]/60 hover:text-[#1E2A33]"
-              }`}
-            >
-              <span className="hidden xs:inline">À rapprocher</span>
-              <span className="xs:hidden">À rappr.</span>
-            </button>
-            <button
-              onClick={() => setFilterMatched("matched")}
-              className={`flex items-center justify-center px-3.5 py-2 sm:px-4.5 sm:py-2.5 rounded-xl text-[10px] sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer ${
-                filterMatched === "matched"
-                  ? "bg-[#1E2A33] text-white shadow-md shadow-[#1E2A33]/20"
-                  : "text-[#1E2A33]/60 hover:text-[#1E2A33]"
-              }`}
-            >
-              <span className="hidden xs:inline">Rapprochés</span>
-              <span className="xs:hidden">Rapproch.</span>
-            </button>
-          </div>
-
-          {/* Tri Chronologique / Antéchronologique */}
-          <button
-            onClick={() => setSortOrder(prev => prev === "desc" ? "asc" : "desc")}
-            className="flex items-center justify-center p-2.5 sm:px-4 sm:py-2.5 rounded-2xl border border-[#1E2A33]/10 bg-white/60 text-[#1E2A33] hover:bg-[#AE7D5C]/5 hover:border-[#AE7D5C]/20 transition-all cursor-pointer font-bold text-[10px] sm:text-sm gap-1.5 shrink-0"
-            title={sortOrder === "desc" ? "Trier du plus ancien au plus récent" : "Trier du plus récent au plus ancien"}
-          >
-            <ArrowUpDown className="w-3.5 h-3.5 sm:w-4.5 sm:h-4.5 text-[#AE7D5C]" />
-            <span>
-              {sortOrder === "desc" ? "Récent d'abord" : "Ancien d'abord"}
-            </span>
-          </button>
-
-          {/* Search Input (Loupe) */}
-          <div className="flex items-center gap-2.5 bg-[#FDFBEF] border border-[#1E2A33]/10 rounded-2xl px-4 py-2.5 w-full xl:w-72 xl:ml-auto">
-            <Search className="w-4.5 h-4.5 text-[#1E2A33]/50 shrink-0" />
-            <input
-              type="text"
-              placeholder="Rechercher par marchand/facture..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="bg-transparent text-xs sm:text-sm font-semibold text-[#1E2A33] border-none outline-none w-full placeholder-[#1E2A33]/40"
-            />
-            {searchQuery && (
-              <button onClick={() => setSearchQuery("")} className="text-[#1E2A33]/40 hover:text-[#1E2A33] focus:outline-none">
-                <X className="w-3.5 h-3.5" />
+              {/* Tri Chronologique / Antéchronologique */}
+              <button
+                onClick={() => setSortOrder(prev => prev === "desc" ? "asc" : "desc")}
+                className="flex-1 md:flex-initial flex items-center justify-center p-2.5 rounded-2xl border border-[#1E2A33]/10 bg-white/60 text-[#1E2A33] hover:bg-[#AE7D5C]/5 hover:border-[#AE7D5C]/20 transition-all cursor-pointer font-bold text-xs sm:text-sm gap-1.5"
+                title={sortOrder === "desc" ? "Trier du plus ancien au plus récent" : "Trier du plus récent au plus ancien"}
+              >
+                <ArrowUpDown className="w-3.5 h-3.5 sm:w-4.5 sm:h-4.5 text-[#AE7D5C]" />
+                <span>
+                  {sortOrder === "desc" ? "Récent d'abord" : "Ancien d'abord"}
+                </span>
               </button>
-            )}
+            </div>
+
+            {/* Matched Filter (Segmented Control avec "Tout") */}
+            <div className="flex bg-white/60 p-1.5 rounded-2xl border border-[#1E2A33]/5 gap-1.5 shadow-inner w-full md:w-auto justify-between md:justify-start">
+              <button
+                onClick={() => setFilterMatched("all")}
+                className={`flex-1 md:flex-initial flex items-center justify-center px-3.5 py-2 sm:px-4.5 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer ${
+                  filterMatched === "all"
+                    ? "bg-[#1E2A33] text-white shadow-md shadow-[#1E2A33]/20"
+                    : "text-[#1E2A33]/60 hover:text-[#1E2A33]"
+                }`}
+              >
+                Tout
+              </button>
+              <button
+                onClick={() => setFilterMatched("unmatched")}
+                className={`flex-1 md:flex-initial flex items-center justify-center px-3.5 py-2 sm:px-4.5 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer ${
+                  filterMatched === "unmatched"
+                    ? "bg-[#1E2A33] text-white shadow-md shadow-[#1E2A33]/20"
+                    : "text-[#1E2A33]/60 hover:text-[#1E2A33]"
+                }`}
+              >
+                <span className="hidden xs:inline">À rapprocher</span>
+                <span className="xs:hidden">À rappr.</span>
+              </button>
+              <button
+                onClick={() => setFilterMatched("matched")}
+                className={`flex-1 md:flex-initial flex items-center justify-center px-3.5 py-2 sm:px-4.5 sm:py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap cursor-pointer ${
+                  filterMatched === "matched"
+                    ? "bg-[#1E2A33] text-white shadow-md shadow-[#1E2A33]/20"
+                    : "text-[#1E2A33]/60 hover:text-[#1E2A33]"
+                }`}
+              >
+                <span className="hidden xs:inline">Rapprochés</span>
+                <span className="xs:hidden">Rapproch.</span>
+              </button>
+            </div>
+
+            {/* Search Input (Loupe) */}
+            <div className="flex items-center gap-2.5 bg-[#FDFBEF] border border-[#1E2A33]/10 rounded-2xl px-4 py-2.5 w-full xl:w-72 xl:ml-auto">
+              <Search className="w-4.5 h-4.5 text-[#1E2A33]/50 shrink-0" />
+              <input
+                type="text"
+                placeholder="Rechercher par marchand/facture..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="bg-transparent text-xs sm:text-sm font-semibold text-[#1E2A33] border-none outline-none w-full placeholder-[#1E2A33]/40"
+              />
+              {searchQuery && (
+                <button onClick={() => setSearchQuery("")} className="text-[#1E2A33]/40 hover:text-[#1E2A33] focus:outline-none">
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
           </div>
-        </div>
       </div>
 
       {/* Main daily transactions list */}
@@ -1199,7 +1308,7 @@ function RelevePageContent() {
                                            variant="ghost"
                                            size="icon"
                                            className="h-8 w-8 text-[#1E2A33]/40 hover:text-rose-600 rounded-full shrink-0"
-                                           onClick={() => triggerManualUpload(null as any, tx)}
+                                           onClick={(e) => triggerManualUpload(e, tx)}
                                            title="Remplacer le justificatif"
                                          >
                                            <Upload className="w-4 h-4" />
@@ -1220,6 +1329,7 @@ function RelevePageContent() {
                                          {tx.matchedInvoice.publicFileUrl && (
                                            <a
                                              href={tx.matchedInvoice.publicFileUrl}
+                                             download
                                              target="_blank"
                                              rel="noopener noreferrer"
                                              className="h-9 px-3 border border-[#1E2A33]/10 text-[#1E2A33]/60 hover:text-[#1E2A33] bg-white rounded-xl flex items-center justify-center shrink-0"
@@ -1441,7 +1551,7 @@ function RelevePageContent() {
                                         <button
                                           onClick={() => handleReconcileAuto(tx)}
                                           disabled={reconcilingTxId === String(tx.id)}
-                                          className="flex items-center gap-1 text-amber-600 bg-amber-50 border border-amber-200/50 hover:bg-amber-100/80 transition-colors px-2 py-0.5 rounded-lg text-[10px] font-bold cursor-pointer disabled:opacity-50"
+                                          className="flex items-center gap-1.5 text-amber-600 bg-amber-50 border border-amber-200/50 hover:bg-amber-100/80 transition-colors px-2 py-0.5 rounded-lg text-[10px] font-bold cursor-pointer disabled:opacity-50"
                                         >
                                           {reconcilingTxId === String(tx.id) ? (
                                             <>
