@@ -167,6 +167,7 @@ function cleanDisplayLabel(label: string): string {
     return "VRT CPM";
   }
   
+  if (normalizedLower.includes("macsf")) return "MACSF ASSURANCE";
   if (lower.includes("sumup")) return "SUM UP";
   if (lower.includes("amazon")) return "AMAZON";
   if (lower.includes("gandi")) return "GANDI";
@@ -175,9 +176,14 @@ function cleanDisplayLabel(label: string): string {
   if (lower.includes("chargemap")) return "CHARGEMAP";
   if (lower.includes("freebox")) return "FREEBOX";
   if (lower.includes("google")) return "GOOGLE";
-  if (lower.includes("paypal")) return "PAYPAL";
+  if (lower.includes("paypal")) {
+    if (label.includes(" * ")) return label;
+    return "PAYPAL";
+  }
   if (lower.includes("cloudflare")) return "CLOUDFLARE";
   if (lower.includes("spotify")) return "SPOTIFY";
+  if (lower.includes("suno")) return "SUNO";
+  if (lower.includes("elevenlabs")) return "ELEVEN LABS";
   if (lower.includes("canva")) return "CANVA";
   if (lower.includes("soundcloud")) return "SOUNDCLOUD";
   if (lower.includes("gocardless") || lower.includes("viasana")) return "VIASANA";

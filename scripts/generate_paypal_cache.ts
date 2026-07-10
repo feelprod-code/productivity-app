@@ -68,12 +68,19 @@ async function scanAccount(config: any, accountName: string, cache: Record<strin
         connection = await imaps.connect(config);
         await connection.openBox('INBOX');
 
-        console.log(`🔍 Scanning ${accountName} for PayPal emails since 01-Jan-2025...`);
+        const sixtyDaysAgo = new Date();
+        sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        const day = String(sixtyDaysAgo.getDate()).padStart(2, '0');
+        const month = months[sixtyDaysAgo.getMonth()];
+        const year = sixtyDaysAgo.getFullYear();
+        const sinceStr = `${day}-${month}-${year}`;
+
+        console.log(`🔍 Scanning ${accountName} for PayPal emails since ${sinceStr}...`);
         
-        // Search criteria: since Jan 1st 2025, and SUBJECT contains "paypal" or "paiement"
         const searchCriteria = [
-            ['SINCE', '01-Jan-2025'],
-            ['HEADER', 'SUBJECT', 'paypal']
+            ['SINCE', sinceStr],
+            ['HEADER', 'FROM', 'paypal']
         ];
         
         const fetchOptions = { bodies: ['HEADER', 'TEXT', ''], struct: true };
