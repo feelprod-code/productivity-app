@@ -59,8 +59,9 @@ async function main() {
     try {
         // 1. Charger toutes les transactions de 2025 & 2026 depuis Pennylane
         console.log("📥 Récupération des transactions bancaires Pennylane...");
+        const startDateVal = process.env.COPILOT_START_DATE || "2025-01-01";
         const filterObj = [
-            { field: "date", operator: "gteq", value: "2025-01-01" },
+            { field: "date", operator: "gteq", value: startDateVal },
             { field: "date", operator: "lteq", value: "2026-12-31" }
         ];
         const filterStr = encodeURIComponent(JSON.stringify(filterObj));
@@ -148,10 +149,12 @@ async function main() {
         const suppliersList = suppliersData.items || suppliersData.suppliers || [];
 
         // 4. Parcourir les fichiers locaux renommés
-        const folders = [
-            path.join(BASE_DIR, 'Factures 2025'),
-            path.join(BASE_DIR, 'Factures 2026')
-        ];
+        const folders = [];
+        const startEnv = process.env.COPILOT_START_DATE;
+        if (!startEnv || startEnv.startsWith("2025")) {
+            folders.push(path.join(BASE_DIR, 'Factures 2025'));
+        }
+        folders.push(path.join(BASE_DIR, 'Factures 2026'));
 
         let matchedCount = 0;
 
@@ -163,41 +166,76 @@ async function main() {
             for (const filePath of pdfFiles) {
                 const filename = path.basename(filePath);
                 
+                // Skip files before COPILOT_START_DATE if specified
+                const fileDateMatch = filename.match(/^(\d{4}-\d{2}-\d{2})/);
+                if (fileDateMatch && startEnv) {
+                    if (fileDateMatch[1] < startEnv) {
+                        continue;
+                    }
+                }
+                
                 // Exclure les fichiers rejetés
                 if (filename.startsWith("REJETE") || filename.includes("REJETE")) {
                     continue;
                 }
 
-                // Parser le nom de fichier propre : YYYY-MM-DD - SUPPLIER - Description - AMOUNT.pdf
-                // Exemple: 2024-08-08 - AMAZON - Protection écran iPhone - 19.99EUR.pdf
-                const regex = /^(\d{4}-\d{2}-\d{2})\s*-\s*([^-]+)\s*-\s*([^-]+)\s*-\s*([\d\.]+)EUR\.pdf$/i;
-                const match = filename.match(regex);
-                if (!match) {
+                // Robust parsing of filename: YYYY-MM-DD - SUPPLIER - (optionally DESCRIPTION) - AMOUNT(€ or EUR)
+                let fileDateStr = "";
+                let fileSupplier = "";
+                let fileDesc = "";
+                let fileAmount = 0;
+                
+                const regex4 = /^(\d{4}-\d{2}-\d{2})\s*-\s*([^-]+)\s*-\s*([^-]+)\s*-\s*([\d\.]+)\s*(?:€|eur)/i;
+                const regex3 = /^(\d{4}-\d{2}-\d{2})\s*-\s*([^-]+)\s*-\s*([\d\.]+)\s*(?:€|eur)/i;
+                
+                const match4 = filename.match(regex4);
+                const match3 = filename.match(regex3);
+                
+                if (match4) {
+                    fileDateStr = match4[1];
+                    fileSupplier = match4[2].trim().toUpperCase();
+                    fileDesc = match4[3].trim();
+                    fileAmount = parseFloat(match4[4]);
+                } else if (match3) {
+                    fileDateStr = match3[1];
+                    fileSupplier = match3[2].trim().toUpperCase();
+                    fileDesc = "";
+                    fileAmount = parseFloat(match3[3]);
+                } else {
                     // console.log(`⚠️ Fichier ignoré (nom non standardisé) : ${filename}`);
                     continue;
                 }
-
-                const fileDateStr = match[1];
-                const fileSupplier = match[2].trim().toUpperCase();
-                const fileDesc = match[3].trim();
-                const fileAmount = parseFloat(match[4]);
 
                 console.log(`\n📝 Analyse fichier local : ${filename}`);
                 console.log(`   👉 Fournisseur : ${fileSupplier} | Date : ${fileDateStr} | Montant : ${fileAmount} EUR`);
 
                 // A. Trouver une transaction correspondante
-                // Critères : Montant exact, Date proche (+/- 5 jours), Libellé contenant le fournisseur
+                // Critères : Montant exact, Date proche (+/- 35 jours), Libellé contenant le fournisseur ou mapping spécial
                 const fileDate = new Date(fileDateStr);
                 const matchingTx = unmatchedTxs.find((tx: any) => {
                     const txAmount = Math.abs(parseFloat(tx.amount || '0'));
                     const amountDiff = Math.abs(txAmount - fileAmount);
-                    if (amountDiff > 0.01) return false;
+                    if (amountDiff > 0.05) return false;
 
                     const txDate = new Date(tx.date);
                     const daysDiff = Math.abs(txDate.getTime() - fileDate.getTime()) / (1000 * 60 * 60 * 24);
-                    if (daysDiff > 5) return false;
+                    if (daysDiff > 35) return false;
 
                     const labelLower = (tx.label || '').toLowerCase();
+                    const supplierLower = fileSupplier.toLowerCase();
+
+                    // Special mapping overrides
+                    if (supplierLower.includes('sofinco') && (labelLower.includes('ca consumer finance') || labelLower.includes('sofinco') || labelLower.includes('fnac'))) {
+                        return true;
+                    }
+                    if (supplierLower.includes('harmonie') && labelLower.includes('harmonie')) {
+                        return true;
+                    }
+                    if ((supplierLower.includes('navigo') || supplierLower.includes('iledefrance')) && 
+                        (labelLower.includes('navigo') || labelLower.includes('ile de france') || labelLower.includes('mobilites') || labelLower.includes('idf'))) {
+                        return true;
+                    }
+
                     const supplierKeywords = extractKeywords(fileSupplier);
                     const hasKeyword = supplierKeywords.some(kw => labelLower.includes(kw));
 
@@ -321,6 +359,17 @@ async function main() {
                         console.log(`   ✅ Facture créée avec succès sur Pennylane (ID: ${invoiceId})`);
                         // Mettre à jour la liste locale
                         existingInvoices.push({ id: invoiceId, amount: fileAmount.toString(), date: fileDateStr, label: cleanLabel });
+                    } else if (importRes.status === 409) {
+                        const errorText = await importRes.text();
+                        const docIdMatch = errorText.match(/A document with ID (\d+) already exists/);
+                        if (docIdMatch) {
+                            invoiceId = parseInt(docIdMatch[1], 10);
+                            console.log(`   ℹ️ Facture existante récupérée via 409 de Pennylane (ID: ${invoiceId})`);
+                            existingInvoices.push({ id: invoiceId, amount: fileAmount.toString(), date: fileDateStr, label: cleanLabel });
+                        } else {
+                            console.error(`   ❌ Échec de la création de la facture (409) : ${errorText}`);
+                            continue;
+                        }
                     } else {
                         console.error(`   ❌ Échec de la création de la facture : ${importRes.status} ${await importRes.text()}`);
                         continue;

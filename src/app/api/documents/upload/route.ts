@@ -59,7 +59,7 @@ export async function POST(req: Request) {
 
         // 1. Définir le nom normalisé
         const fileExt = file.name.split('.').pop() || 'pdf';
-        const normalizedFilename = `${dateStr} - ${supplierName} - ${description.replace(/\s+/g, ' ')} - ${amount.toFixed(2)}EUR.${fileExt}`;
+        const normalizedFilename = `${dateStr} - ${supplierName} - ${description.replace(/\s+/g, ' ')} - ${amount.toFixed(2)}€.${fileExt}`;
 
         // 2. Préfixe de la catégorie pour le libellé Pennylane
         const prefix = CATEGORY_PREFIXES[category] || "";
@@ -155,12 +155,22 @@ export async function POST(req: Request) {
             body: JSON.stringify(payload)
         });
 
-        if (!importRes.ok) {
+        let invoiceId = null;
+        if (importRes.ok) {
+            const importData: any = await importRes.json();
+            invoiceId = importData.id || importData.supplier_invoice?.id;
+        } else if (importRes.status === 409) {
+            const errorText = await importRes.text();
+            const docIdMatch = errorText.match(/A document with ID (\d+) already exists/);
+            if (docIdMatch) {
+                invoiceId = parseInt(docIdMatch[1], 10);
+                console.log(`[API Upload] Facture existante récupérée via 409 (ID: ${invoiceId})`);
+            } else {
+                return NextResponse.json({ error: `Échec de création de la facture (Doublon 409) : ${errorText}` }, { status: 500 });
+            }
+        } else {
             return NextResponse.json({ error: `Échec de création de la facture (Status ${importRes.status})` }, { status: 500 });
         }
-
-        const importData: any = await importRes.json();
-        const invoiceId = importData.id || importData.supplier_invoice?.id;
 
         // 6. Tenter de rapprocher la facture automatiquement avec une transaction bancaire correspondante
         console.log("[API Upload] Recherche d'une transaction correspondante pour rapprochement...");
@@ -263,7 +273,7 @@ export async function POST(req: Request) {
                     currency: "EUR",
                     date: new Date(dateStr),
                     fileUrl: finalFileUrl,
-                    status: "COMPLETED",
+                    status: matchedSuccessfully ? "COMPLETED" : "PENDING",
                     type: "PRO"
                 }
             });

@@ -156,11 +156,12 @@ async function processEmailAccount(name: string, config: any, sinceDate: string)
     const BASE_URL = "https://app.pennylane.com/api/external/v2";
     let txCursor: string | null = null;
     const allTxs: any[] = [];
+    const startDateVal = process.env.COPILOT_START_DATE || "2025-01-01";
     const filterObj = [
         {
             field: "date",
             operator: "gteq",
-            value: "2025-01-01"
+            value: startDateVal
         }
     ];
     const filterStr = encodeURIComponent(JSON.stringify(filterObj));
@@ -519,7 +520,17 @@ async function main() {
         }
     };
 
-    const sinceDate = '01-Jan-2025';
+    let sinceDate = '01-Jan-2025';
+    if (process.env.COPILOT_START_DATE) {
+        const d = new Date(process.env.COPILOT_START_DATE);
+        if (!isNaN(d.getTime())) {
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            const day = String(d.getDate()).padStart(2, '0');
+            const month = months[d.getMonth()];
+            const year = d.getFullYear();
+            sinceDate = `${day}-${month}-${year}`;
+        }
+    }
 
     // Traiter iCloud
     await processEmailAccount('iCloud', ICLOUD_CONFIG, sinceDate);

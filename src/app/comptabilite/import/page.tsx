@@ -67,35 +67,79 @@ export default function ImportPage() {
   const loadHistory = useCallback(() => {
     setLoadingInvoices(true);
     
-    // Charger simultanément les factures et le relevé des transactions pour faire le rapprochement
-    Promise.all([
-      fetch("/api/invoices").then(res => res.json()),
-      fetch("/api/transactions/releve").then(res => res.json())
-    ]).then(([invData, txData]) => {
-      if (invData.success) {
-        const invoices = invData.invoices || [];
-        const transactions = txData.transactions || [];
-        
-        // Extraire tous les IDs de factures déjà associées à des transactions
-        const matchedIds = new Set<string>();
-        transactions.forEach((tx: any) => {
-          if (tx.matchedInvoice && tx.matchedInvoice.id) {
-            matchedIds.add(String(tx.matchedInvoice.id));
-          }
-        });
-        
-        // Enrichir les factures avec leur état de rapprochement
-        const enriched = invoices.map((inv: any) => ({
-          ...inv,
-          isMatched: matchedIds.has(String(inv.id)) || inv.status === "COMPLETED"
-        }));
-        
-        setImportedInvoices(enriched);
-      }
-    })
-    .catch(err => console.error("Error loading invoices history:", err))
-    .finally(() => setLoadingInvoices(false));
+    // Charger uniquement les factures pour un affichage instantané (évite le fetch très lourd du relevé entier)
+    fetch("/api/invoices?t=" + Date.now())
+      .then(res => res.json())
+      .then((invData) => {
+        if (invData.success) {
+          const invoices = invData.invoices || [];
+          
+          // Enrichir les factures avec leur état de rapprochement direct
+          const enriched = invoices.map((inv: any) => ({
+            ...inv,
+            isMatched: inv.status === "COMPLETED"
+          }));
+          
+          setImportedInvoices(enriched);
+        }
+      })
+      .catch(err => console.error("Error loading invoices history:", err))
+      .finally(() => setLoadingInvoices(false));
   }, []);
+
+  const deleteInvoice = async (id: string) => {
+    if (!confirm("Voulez-vous supprimer définitivement ce justificatif de la base de données ?")) return;
+    try {
+      const res = await fetch(`/api/invoices?id=${id}`, { method: "DELETE" });
+      if (res.ok) {
+        showToast("Justificatif supprimé avec succès", "success");
+        loadHistory();
+      } else {
+        showToast("Erreur lors de la suppression", "error");
+      }
+    } catch (err) {
+      console.error(err);
+      showToast("Erreur réseau lors de la suppression", "error");
+    }
+  };
+
+  const toggleInvoiceType = async (id: string, currentType: string) => {
+    try {
+      const res = await fetch("/api/invoices", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, type: currentType === "PRO" ? "PERSO" : "PRO" })
+      });
+      if (res.ok) {
+        showToast("Type de justificatif mis à jour", "success");
+        loadHistory();
+      } else {
+        showToast("Erreur lors de la mise à jour", "error");
+      }
+    } catch (err) {
+      console.error(err);
+      showToast("Erreur réseau lors de la mise à jour", "error");
+    }
+  };
+
+  const forceCompleteInvoice = async (id: string) => {
+    try {
+      const res = await fetch("/api/invoices", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, status: "COMPLETED" })
+      });
+      if (res.ok) {
+        showToast("Justificatif marqué comme rapproché !", "success");
+        loadHistory();
+      } else {
+        showToast("Erreur lors de la mise à jour", "error");
+      }
+    } catch (err) {
+      console.error(err);
+      showToast("Erreur réseau", "error");
+    }
+  };
 
   useEffect(() => {
     if (activeView === "history") {
@@ -128,18 +172,23 @@ export default function ImportPage() {
   };
 
   // Clean up previews on unmount
+  const filesRef = useRef<UploadedFile[]>([]);
+  useEffect(() => {
+    filesRef.current = files;
+  }, [files]);
+
   useEffect(() => {
     return () => {
-      files.forEach(f => {
+      filesRef.current.forEach(f => {
         if (f.previewUrl) URL.revokeObjectURL(f.previewUrl);
       });
     };
-  }, [files]);
+  }, []);
 
   // Auto guess default category
   const guessDefaultCategory = (supplier: string, recipient: string): string => {
-    const sLower = supplier.toLowerCase();
-    const rLower = recipient.toLowerCase();
+    const sLower = (supplier || "").toLowerCase();
+    const rLower = (recipient || "").toLowerCase();
 
     // Check personal names
     if (rLower.includes("sabrina") || rLower.includes("kanouche") || rLower.includes("anita") || rLower.includes("kacha")) {
@@ -149,7 +198,7 @@ export default function ImportPage() {
     if (sLower.includes("openai") || sLower.includes("chatgpt") || sLower.includes("openrouter") || sLower.includes("cloudflare") || sLower.includes("supabase") || sLower.includes("vercel") || sLower.includes("github") || sLower.includes("canva")) {
       return "LOGICIELS_IA";
     }
-    if (sLower.includes("restaurant") || sLower.includes("bistro") || sLower.includes("cafe") || sLower.includes("brasserie") || sLower.includes("halles") || sLower.includes("sebastopol") || sLower.includes("starbucks") || sLower.includes("mcdonald")) {
+    if (sLower.includes("restaurant") || sLower.includes("bistro") || sLower.includes("cafe") || sLower.includes("brasserie") || sLower.includes("halles") || sLower.includes("sebastopol") || sLower.includes("starbucks") || sLower.includes("mcdonald") || sLower.includes("harmonie")) {
       return "RESTAURANT";
     }
     if (sLower.includes("sapn") || sLower.includes("aprr") || sLower.includes("sanef") || sLower.includes("cofiroute") || sLower.includes("autoroute") || sLower.includes("peage") || sLower.includes("sncf") || sLower.includes("taxi") || sLower.includes("parking") || sLower.includes("indigo") || sLower.includes("total") || sLower.includes("uber")) {
@@ -767,6 +816,7 @@ export default function ImportPage() {
                       <th className="px-4 py-3">Montant</th>
                       <th className="px-4 py-3">Type</th>
                       <th className="px-4 py-3">Fichier</th>
+                      <th className="px-4 py-3 text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-[#1E2A33]/5">
@@ -805,6 +855,35 @@ export default function ImportPage() {
                             <span className="text-[#1E2A33]/30">Pas de fichier</span>
                           )}
                         </td>
+                        <td className="px-4 py-3 text-right space-x-1.5">
+                          {inv.status === "PENDING" && (
+                            <button
+                              onClick={() => forceCompleteInvoice(inv.id)}
+                              className="inline-flex items-center justify-center p-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 rounded border border-emerald-200 transition-all cursor-pointer"
+                              title="Forcer Rapproché"
+                            >
+                              <FileCheck className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                          <button
+                            onClick={() => toggleInvoiceType(inv.id, inv.type)}
+                            className={`inline-flex items-center justify-center p-1 rounded border transition-all cursor-pointer ${
+                              inv.type === "PRO"
+                                ? "bg-amber-50 hover:bg-amber-100 text-amber-600 border-amber-200"
+                                : "bg-slate-50 hover:bg-slate-100 text-slate-600 border-slate-200"
+                            }`}
+                            title={inv.type === "PRO" ? "Passer en Personnel" : "Passer en Professionnel"}
+                          >
+                            <Sparkles className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={() => deleteInvoice(inv.id)}
+                            className="inline-flex items-center justify-center p-1 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded border border-rose-200 transition-all cursor-pointer"
+                            title="Supprimer définitivement"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -816,38 +895,71 @@ export default function ImportPage() {
                 {filteredImportedInvoices.map((inv) => (
                   <div 
                     key={inv.id} 
-                    className="p-4 bg-slate-50/40 border border-[#1E2A33]/5 rounded-2xl flex items-center justify-between gap-4"
+                    className="p-4 bg-[#FDFBEF]/20 border border-[#1E2A33]/5 rounded-2xl flex flex-col gap-3"
                   >
-                    <div className="min-w-0 space-y-1">
-                      <div className="font-bold text-xs text-[#1E2A33] truncate">
-                        {inv.provider.replace(/^\[.*?\]\s*/, "")}
+                    <div className="flex items-center justify-between gap-4">
+                      <div className="min-w-0 space-y-1">
+                        <div className="font-bold text-xs text-[#1E2A33] truncate">
+                          {inv.provider.replace(/^\[.*?\]\s*/, "")}
+                        </div>
+                        <div className="text-[10px] text-[#1E2A33]/50 font-medium flex items-center gap-2">
+                          <span>{new Date(inv.date).toLocaleDateString("fr-FR")}</span>
+                          <span>•</span>
+                          <span className={`font-bold ${inv.type === "PERSO" ? "text-rose-600" : "text-green-600"}`}>
+                            {inv.type}
+                          </span>
+                        </div>
                       </div>
-                      <div className="text-[10px] text-[#1E2A33]/50 font-medium flex items-center gap-2">
-                        <span>{new Date(inv.date).toLocaleDateString("fr-FR")}</span>
-                        <span>•</span>
-                        <span className={`font-bold ${inv.type === "PERSO" ? "text-rose-600" : "text-green-600"}`}>
-                          {inv.type}
+
+                      <div className="flex flex-col items-end shrink-0 gap-1.5">
+                        <span className="font-mono font-bold text-xs text-[#1E2A33]">
+                          {inv.amount ? `${inv.amount.toFixed(2)} €` : "-"}
                         </span>
+                        {inv.fileUrl ? (
+                          <a
+                            href={inv.fileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 px-2.5 py-1 bg-[#AE7D5C]/10 hover:bg-[#AE7D5C]/15 text-[#AE7D5C] text-[10px] font-bold rounded-lg transition-all"
+                          >
+                            <Eye className="w-3 h-3" />
+                            <span>Aperçu</span>
+                          </a>
+                        ) : (
+                          <span className="text-[10px] text-[#1E2A33]/30">Aucun fichier</span>
+                        )}
                       </div>
                     </div>
 
-                    <div className="flex flex-col items-end shrink-0 gap-1.5">
-                      <span className="font-mono font-bold text-xs text-[#1E2A33]">
-                        {inv.amount ? `${inv.amount.toFixed(2)} €` : "-"}
-                      </span>
-                      {inv.fileUrl ? (
-                        <a
-                          href={inv.fileUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 px-2.5 py-1 bg-[#AE7D5C]/10 hover:bg-[#AE7D5C]/15 text-[#AE7D5C] text-[10px] font-bold rounded-lg transition-all"
+                    {/* Mobile Action buttons bar */}
+                    <div className="flex justify-end gap-2 border-t border-[#1E2A33]/5 pt-2">
+                      {inv.status === "PENDING" && (
+                        <button
+                          onClick={() => forceCompleteInvoice(inv.id)}
+                          className="flex items-center gap-1 px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 text-[10px] font-bold rounded-lg border border-emerald-200 transition-all cursor-pointer"
                         >
-                          <Eye className="w-3 h-3" />
-                          <span>Aperçu</span>
-                        </a>
-                      ) : (
-                        <span className="text-[10px] text-[#1E2A33]/30">Aucun fichier</span>
+                          <FileCheck className="w-3 h-3" />
+                          <span>Rapprocher</span>
+                        </button>
                       )}
+                      <button
+                        onClick={() => toggleInvoiceType(inv.id, inv.type)}
+                        className={`flex items-center gap-1 px-2.5 py-1 rounded-lg border text-[10px] font-bold transition-all cursor-pointer ${
+                          inv.type === "PRO"
+                            ? "bg-amber-50 hover:bg-amber-100 text-amber-600 border-amber-200"
+                            : "bg-slate-50 hover:bg-slate-100 text-slate-600 border-slate-200"
+                        }`}
+                      >
+                        <Sparkles className="w-3 h-3" />
+                        <span>{inv.type === "PRO" ? "Perso" : "Pro"}</span>
+                      </button>
+                      <button
+                        onClick={() => deleteInvoice(inv.id)}
+                        className="flex items-center gap-1 px-2.5 py-1 bg-rose-50 hover:bg-rose-100 text-rose-600 text-[10px] font-bold rounded-lg border border-rose-200 transition-all cursor-pointer"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                        <span>Supprimer</span>
+                      </button>
                     </div>
                   </div>
                 ))}

@@ -67,9 +67,17 @@ function extractKeywords(label: string): string[] {
   });
   
   // Custom expansions
+  // Custom expansions
   const expanded = [...words];
   if (words.includes('vw')) expanded.push('volkswagen');
   if (words.includes('mgen')) expanded.push('mutuelle');
+  if (words.includes('rafenne') || words.includes('comptab') || words.includes('comptabilite') || cleaned.includes('autonome')) {
+    expanded.push('gcl');
+  }
+  if (words.includes('magd') || words.includes('sebastopol') || words.includes('mcdo') || words.includes('mcdonalds') || cleaned.includes('sebastopol')) {
+    expanded.push('halles');
+    expanded.push('paris');
+  }
   
   return expanded;
 }
@@ -539,33 +547,91 @@ export async function POST(request: Request) {
     // --- PHASE 0.5: SEARCH LOCAL DATABASE (PRISMA) ---
     console.log("🔍 Recherche d'une facture correspondante existante dans la base locale (Prisma)...");
     try {
+      // Find any PENDING invoice (PRO or PERSO, as requested by user)
       const localInvoices = await prisma.invoice.findMany({
         where: {
-          type: "PRO"
+          status: "PENDING"
         }
       });
       
       const txTime = txDate.getTime();
-      const thirtyFiveDaysMs = 35 * 24 * 60 * 60 * 1000;
       const cleanSupplier = keywords[0].toUpperCase();
+      const txLabel = (label || '').toLowerCase();
       
       const matchedLocalInvoice = localInvoices.find(inv => {
-        // 1. Amount match (+/- 0.05 EUR) - strict check, amount cannot be null/0
-        if (!inv.amount || Math.abs(inv.amount - absAmount) > 0.05) return false;
+        if (!inv.amount) return false;
         
-        // 2. Date match (+/- 35 days)
         const invTime = new Date(inv.date).getTime();
-        if (Math.abs(invTime - txTime) > thirtyFiveDaysMs) return false;
+        const invAmount = inv.amount;
+        const invProv = (inv.provider || '').toLowerCase();
         
-        // 3. Keyword match (provider/filename contains any of our transaction keywords)
-        const invProvider = (inv.provider || '').toLowerCase();
+        const amtDiff = Math.abs(invAmount - absAmount);
+        const isAmtMatch = amtDiff <= 1.50 || amtDiff / invAmount <= 0.05;
+        const dateDiffDays = Math.abs(txTime - invTime) / (24 * 60 * 60 * 1000);
+        const isDateMatch = dateDiffDays <= 45;
+        
+        const isCreditTx = txLabel.includes('cpam') || txLabel.includes('ameli') || txLabel.includes('remise') || txLabel.includes('credit') || txLabel.includes('avoir');
+        
+        // 1. Via Sana (1848 EUR or 1897 EUR or 1904.8 EUR or 1911.53 EUR)
+        if (invProv.includes('via_sana') && (invAmount === 1848 || invAmount === 1897 || invAmount === 1904.8 || invAmount === 1911.53)) {
+          const isViaSanaTxAmount = absAmount === 1848 || absAmount === 1897 || absAmount === 1904.8 || absAmount === 1911.53 || (absAmount >= 1800 && absAmount <= 1950);
+          return isViaSanaTxAmount && isDateMatch;
+        }
+
+        // 2. SumUp report
+        if (invProv.includes('sumup')) {
+          const isSumUpTx = txLabel.includes('sumup') || txLabel.includes('sum up') || txLabel.includes('paypal') || txLabel.includes('autonome') || txLabel.includes('payout');
+          return isAmtMatch && isDateMatch && isSumUpTx && !txLabel.includes('cpam');
+        }
+
+        // 3. Bouygues Telecom
+        if (invProv.includes('bouygues')) {
+          const isTxBouygues = txLabel.includes('bouygues') || txLabel.includes('btelec') || txLabel.includes('btl');
+          return isAmtMatch && isDateMatch && !isCreditTx && (isTxBouygues || txLabel.includes('prelevement') || txLabel.includes('autonome') || txLabel.includes('sepa') || txLabel.includes('prlv'));
+        }
+
+        // 4. Gandi
+        if (invProv.includes('gandi')) {
+          return isAmtMatch && isDateMatch && !isCreditTx && (txLabel.includes('gandi') || txLabel.includes('autonome') || txLabel.includes('sepa') || txLabel.includes('prlv'));
+        }
+
+        // 5. Canva
+        if (invProv.includes('canva')) {
+          return isAmtMatch && isDateMatch && !isCreditTx && (txLabel.includes('canva') || txLabel.includes('autonome') || txLabel.includes('sepa') || txLabel.includes('prlv') || txLabel.includes('paypal'));
+        }
+
+        // 6. Amazon or third-party sellers
+        const isAmazonInv = invProv.includes('amazon') ||
+                            invProv.includes('shenzhen') ||
+                            invProv.includes('ugreen') ||
+                            invProv.includes('yisave') ||
+                            invProv.includes('letadianzishangwu') ||
+                            invProv.includes('junyu') ||
+                            invProv.includes('spring grace') ||
+                            invProv.includes('jiashan') ||
+                            invProv.includes('beijing') ||
+                            invProv.includes('hohem') ||
+                            invProv.includes('li hai') ||
+                            invProv.includes('jinhui') ||
+                            invProv.includes('kexingtong') ||
+                            invProv.includes('qilechuang') ||
+                            invProv.includes('paperlike') ||
+                            invProv.includes('cuperinox') ||
+                            invProv.includes('bal ') ||
+                            invProv.includes('recyclivre') ||
+                            invProv.includes('merity');
+        if (isAmazonInv && (txLabel.includes('amazon') || txLabel.includes('amzn') || txLabel.includes('amz') || txLabel.includes('digital fra') || txLabel.includes('payments'))) {
+          return isAmtMatch && isDateMatch;
+        }
+        
+        // Standard name/keyword matching
         const invFileUrl = (inv.fileUrl || '').toLowerCase();
         const hasKeyword = keywords.some(kw => 
-          invProvider.includes(kw) || 
+          invProv.includes(kw) || 
           invFileUrl.includes(kw)
         );
         
-        return hasKeyword;
+        return isAmtMatch && isDateMatch && hasKeyword && !isCreditTx;
       });
       
       if (matchedLocalInvoice) {

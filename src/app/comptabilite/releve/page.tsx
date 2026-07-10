@@ -388,6 +388,24 @@ function RelevePageContent() {
 
   const [isAutopilotRunning, setIsAutopilotRunning] = useState(false);
   const hasAutoRunRef = useRef(false);
+  const [isCopilotModalOpen, setIsCopilotModalOpen] = useState(false);
+  const [copilotStages, setCopilotStages] = useState({
+    emails: true,
+    amazon: true,
+    sumup: true,
+    imported_folders: true,
+    simple: true
+  });
+  const [copilotPeriod, setCopilotPeriod] = useState<string>("all");
+  const [copilotStatus, setCopilotStatusState] = useState<any>({
+    running: false,
+    stages: [],
+    currentStage: null,
+    progress: null,
+    logs: []
+  });
+  const [localFilesCount, setLocalFilesCount] = useState<number | null>(null);
+  const logEndRef = useRef<HTMLDivElement>(null);
   const [invoices, setInvoices] = useState<any[]>([]);
 
   const pendingInvoicesCount = useMemo(() => {
@@ -493,31 +511,145 @@ function RelevePageContent() {
 
 
 
-  // Lancement automatique de l'Autopilot au chargement
-  useEffect(() => {
-    if (transactions.length > 0 && !isAutopilotRunning && !hasAutoRunRef.current) {
-      // Trouver s'il y a des transactions pro non rapprochées à traiter
-      const hasCandidates = transactions.some(tx => {
-        if (!tx.isPro || tx.matchedInvoice || tx.noJustificatif || tx.amount >= 0) return false;
-        const absAmount = Math.abs(tx.amount);
-        const txTime = new Date(tx.date).getTime();
-        const thirtyFiveDaysMs = 35 * 24 * 60 * 60 * 1000;
-        return invoices.some(inv => 
-          inv.status === "PENDING" &&
-          inv.amount &&
-          Math.abs(inv.amount - absAmount) <= 0.05 &&
-          Math.abs(new Date(inv.date).getTime() - txTime) <= thirtyFiveDaysMs
-        );
-      });
-      if (hasCandidates) {
-        hasAutoRunRef.current = true; // Empêcher les lancements automatiques ultérieurs (boucle infinie)
-        const timer = setTimeout(() => {
-          runAutopilot();
-        }, 2000); // Déclenchement 2s après le chargement initial
-        return () => clearTimeout(timer);
+  const fetchLocalCount = useCallback(async () => {
+    try {
+      const res = await fetch("/api/copilot/local-count");
+      if (res.ok) {
+        const data = await res.json();
+        setLocalFilesCount(data.total);
       }
+    } catch (err) {
+      console.error("Error fetching local files count:", err);
     }
-  }, [transactions, invoices, runAutopilot, isAutopilotRunning]);
+  }, []);
+
+  const startCopilot = async () => {
+    const selectedStages = Object.entries(copilotStages)
+      .filter(([_, checked]) => checked)
+      .map(([stage]) => stage);
+
+    if (selectedStages.length === 0) {
+      alert("Veuillez sélectionner au moins une étape.");
+      return;
+    }
+
+    let startDate = "";
+    if (copilotPeriod === "7days") {
+      const d = new Date();
+      d.setDate(d.getDate() - 7);
+      startDate = d.toISOString().split("T")[0];
+    } else if (copilotPeriod === "30days") {
+      const d = new Date();
+      d.setDate(d.getDate() - 30);
+      startDate = d.toISOString().split("T")[0];
+    } else if (copilotPeriod === "90days") {
+      const d = new Date();
+      d.setDate(d.getDate() - 90);
+      startDate = d.toISOString().split("T")[0];
+    }
+
+    try {
+      const res = await fetch("/api/copilot/run", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ stages: selectedStages, startDate })
+      });
+      if (res.ok) {
+        setCopilotStatusState((prev: any) => ({
+          ...prev,
+          running: true,
+          logs: ["Lancement du Copilote..."]
+        }));
+      } else {
+        const err = await res.json();
+        alert(`Erreur : ${err.error || "Impossible de démarrer le Copilote"}`);
+      }
+    } catch (e: any) {
+      alert(`Erreur réseau : ${e.message}`);
+    }
+  };
+
+  const resetCopilot = async () => {
+    try {
+      const res = await fetch("/api/copilot/run", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ action: "reset" })
+      });
+      if (res.ok) {
+        setCopilotStatusState({
+          running: false,
+          status: "idle",
+          stages: [],
+          currentStage: null,
+          progress: null,
+          logs: []
+        });
+        loadData();
+      }
+    } catch (err) {
+      console.error("Error resetting copilot:", err);
+    }
+  };
+
+  // Poll status when copilot is running
+  useEffect(() => {
+    let timer: NodeJS.Timeout;
+    if (copilotStatus.running) {
+      const pollStatus = async () => {
+        try {
+          const res = await fetch("/api/copilot/status");
+          if (res.ok) {
+            const data = await res.json();
+            setCopilotStatusState(data);
+            if (!data.running) {
+              // Reload data when copilot finishes
+              loadData();
+            }
+          }
+        } catch (err) {
+          console.error("Error polling copilot status:", err);
+        }
+      };
+      timer = setInterval(pollStatus, 1500);
+      // Run once immediately
+      pollStatus();
+    }
+    return () => {
+      if (timer) clearInterval(timer);
+    };
+  }, [copilotStatus.running]);
+
+  // Sync isAutopilotRunning with copilotStatus.running
+  useEffect(() => {
+    setIsAutopilotRunning(copilotStatus.running);
+  }, [copilotStatus.running]);
+
+  // Load initial status
+  useEffect(() => {
+    fetch("/api/copilot/status")
+      .then(res => res.ok ? res.json() : null)
+      .then(data => {
+        if (data) setCopilotStatusState(data);
+      })
+      .catch(err => console.error("Error fetching initial status:", err));
+  }, []);
+
+  useEffect(() => {
+    if (isCopilotModalOpen) {
+      fetchLocalCount();
+    }
+  }, [isCopilotModalOpen, fetchLocalCount]);
+
+  useEffect(() => {
+    if (logEndRef.current) {
+      logEndRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  }, [copilotStatus.logs]);
 
   const triggerManualUpload = (e: React.MouseEvent, tx: Transaction) => {
     e.stopPropagation();
@@ -628,28 +760,7 @@ function RelevePageContent() {
     loadData();
   }, []);
 
-  const [isAmazonSyncing, setIsAmazonSyncing] = useState(false);
-
-  const runAmazonSync = useCallback(async () => {
-    if (isAmazonSyncing) return;
-    setIsAmazonSyncing(true);
-    try {
-      const res = await fetch('/api/transactions/sync-amazon', {
-        method: 'POST'
-      });
-      const data = await res.json();
-      if (res.ok && data.success) {
-        alert("Succès : Les factures d'Amazon ont été importées et rapprochées avec succès sur Pennylane !");
-        loadData();
-      } else {
-        alert(`Erreur : ${data.error || "Une erreur est survenue lors de la synchronisation Amazon."}`);
-      }
-    } catch (err: any) {
-      alert(`Erreur réseau : ${err.message}`);
-    } finally {
-      setIsAmazonSyncing(false);
-    }
-  }, [isAmazonSyncing, loadData]);
+  // Filter transactions
 
   // Filter transactions
   const filteredTxs = useMemo(() => {
@@ -899,45 +1010,23 @@ function RelevePageContent() {
               {/* Action Buttons Group (Autopilot, Amazon, Actualiser) */}
               <div className="flex items-center gap-1.5 sm:gap-2 w-full sm:w-auto justify-end">
                 <button
-                  onClick={runAutopilot}
-                  disabled={isAutopilotRunning || loading}
+                  onClick={() => setIsCopilotModalOpen(true)}
+                  disabled={loading}
                   className={`flex items-center gap-1 px-2 py-1.5 sm:px-3 sm:py-1.5 text-xs font-semibold rounded-lg transition-all border cursor-pointer ${
-                    isAutopilotRunning
+                    copilotStatus.running
                       ? "text-emerald-700 bg-emerald-50 border-emerald-200/50 animate-pulse"
                       : "text-[#AE7D5C] hover:text-[#8E5D3C] hover:bg-[#AE7D5C]/5 border-transparent"
                   }`}
                 >
-                  {isAutopilotRunning ? (
+                  {copilotStatus.running ? (
                     <>
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      <span className="hidden xs:inline">Autopilot...</span>
+                      <span className="hidden xs:inline">Copilote en cours...</span>
                     </>
                   ) : (
                     <>
                       <Sparkles className="w-3.5 h-3.5" />
-                      <span>Autopilot</span>
-                    </>
-                  )}
-                </button>
-
-                <button
-                  onClick={runAmazonSync}
-                  disabled={isAmazonSyncing || loading}
-                  className={`flex items-center gap-1 px-2 py-1.5 sm:px-3 sm:py-1.5 text-xs font-semibold rounded-lg transition-all border cursor-pointer ${
-                    isAmazonSyncing
-                      ? "text-[#FF9900] bg-orange-50 border-[#FF9900]/20 animate-pulse"
-                      : "text-[#FF9900] hover:text-[#e68a00] hover:bg-[#FF9900]/5 border-transparent"
-                  }`}
-                >
-                  {isAmazonSyncing ? (
-                    <>
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      <span className="hidden xs:inline">Sync Amazon...</span>
-                    </>
-                  ) : (
-                    <>
-                      <ShoppingBag className="w-3.5 h-3.5" />
-                      <span>Amazon</span>
+                      <span>Copilote</span>
                     </>
                   )}
                 </button>
@@ -1684,6 +1773,277 @@ function RelevePageContent() {
                   title="Aperçu PDF"
                 />
               )
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Copilote Modal */}
+      <Dialog open={isCopilotModalOpen} onOpenChange={(open) => {
+        setIsCopilotModalOpen(open);
+        if (!open && (copilotStatus.status === 'success' || copilotStatus.status === 'error')) {
+          resetCopilot();
+        }
+      }}>
+        <DialogContent className="max-w-xl w-[95vw] max-h-[90vh] flex flex-col p-0 overflow-hidden bg-white/95 backdrop-blur-xl border-[#1E2A33]/10 rounded-2xl shadow-2xl">
+          <DialogHeader className="p-4 sm:p-6 border-b border-[#1E2A33]/5 flex-shrink-0">
+            <DialogTitle className="text-xl font-bold text-[#1E2A33] flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-[#AE7D5C]" />
+              <span>Copilote FeelProd</span>
+            </DialogTitle>
+          </DialogHeader>
+
+          <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
+            {(copilotStatus.status === 'idle' || !copilotStatus.status) && (
+              <>
+                <p className="text-xs sm:text-sm text-[#1E2A33]/70 font-semibold mb-2">
+                  Sélectionnez les étapes à exécuter dans le processus de comptabilité :
+                </p>
+                <div className="space-y-3">
+                  {/* Step 1: Emails */}
+                  <label className="flex items-start gap-3 p-3 rounded-xl border border-[#1E2A33]/5 bg-white/50 hover:bg-white hover:border-[#AE7D5C]/30 transition-all cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={copilotStages.emails}
+                      onChange={(e) => setCopilotStages(prev => ({ ...prev, emails: e.target.checked }))}
+                      className="mt-1 w-4 h-4 rounded text-[#AE7D5C] focus:ring-[#AE7D5C] accent-[#AE7D5C]"
+                    />
+                    <div className="flex-1">
+                      <div className="text-xs sm:text-sm font-bold text-[#1E2A33]">Recherche dans les e-mails</div>
+                      <div className="text-[10px] sm:text-xs text-[#1E2A33]/60">Scanne Gmail et iCloud à la recherche de factures et reçus (exclut les notifications simples).</div>
+                    </div>
+                  </label>
+
+                  {/* Step 2: Amazon */}
+                  <label className="flex items-start gap-3 p-3 rounded-xl border border-[#1E2A33]/5 bg-white/50 hover:bg-white hover:border-[#AE7D5C]/30 transition-all cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={copilotStages.amazon}
+                      onChange={(e) => setCopilotStages(prev => ({ ...prev, amazon: e.target.checked }))}
+                      className="mt-1 w-4 h-4 rounded text-[#AE7D5C] focus:ring-[#AE7D5C] accent-[#AE7D5C]"
+                    />
+                    <div className="flex-1">
+                      <div className="text-xs sm:text-sm font-bold text-[#1E2A33]">Factures Amazon</div>
+                      <div className="text-[10px] sm:text-xs text-[#1E2A33]/60">Récupère et rapproche les factures Amazon depuis le dossier de transition.</div>
+                    </div>
+                  </label>
+
+                  {/* Step 3: SumUp */}
+                  <label className="flex items-start gap-3 p-3 rounded-xl border border-[#1E2A33]/5 bg-white/50 hover:bg-white hover:border-[#AE7D5C]/30 transition-all cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={copilotStages.sumup}
+                      onChange={(e) => setCopilotStages(prev => ({ ...prev, sumup: e.target.checked }))}
+                      className="mt-1 w-4 h-4 rounded text-[#AE7D5C] focus:ring-[#AE7D5C] accent-[#AE7D5C]"
+                    />
+                    <div className="flex-1">
+                      <div className="text-xs sm:text-sm font-bold text-[#1E2A33]">Revenus SumUp</div>
+                      <div className="text-[10px] sm:text-xs text-[#1E2A33]/60">Traite les relevés SumUp, extrait le détail des patients et rapproche les virements nets.</div>
+                    </div>
+                  </label>
+
+                  {/* Step 4: Imported Invoices */}
+                  <label className="flex items-start gap-3 p-3 rounded-xl border border-[#1E2A33]/5 bg-white/50 hover:bg-white hover:border-[#AE7D5C]/30 transition-all cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={copilotStages.imported_folders}
+                      onChange={(e) => setCopilotStages(prev => ({ ...prev, imported_folders: e.target.checked }))}
+                      className="mt-1 w-4 h-4 rounded text-[#AE7D5C] focus:ring-[#AE7D5C] accent-[#AE7D5C]"
+                    />
+                    <div className="flex-1">
+                      <div className="text-xs sm:text-sm font-bold text-[#1E2A33]">Justificatifs Importés (Base de données)</div>
+                      <div className="text-[10px] sm:text-xs text-[#1E2A33]/60">Rapproche les transactions avec les reçus déjà enregistrés localement en statut en attente.</div>
+                    </div>
+                  </label>
+
+                  {/* Step 5: Simple Reconcile */}
+                  <label className="flex items-start gap-3 p-3 rounded-xl border border-[#1E2A33]/5 bg-white/50 hover:bg-white hover:border-[#AE7D5C]/30 transition-all cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={copilotStages.simple}
+                      onChange={(e) => setCopilotStages(prev => ({ ...prev, simple: e.target.checked }))}
+                      className="mt-1 w-4 h-4 rounded text-[#AE7D5C] focus:ring-[#AE7D5C] accent-[#AE7D5C]"
+                    />
+                    <div className="flex-1">
+                      <div className="text-xs sm:text-sm font-bold text-[#1E2A33] flex items-center justify-between">
+                        <span>Rapprochement Simple (Dossier local)</span>
+                        {localFilesCount !== null && (
+                          <span className="text-[10px] bg-[#AE7D5C]/10 text-[#AE7D5C] px-2 py-0.5 rounded-full font-bold">
+                            {localFilesCount} fichiers
+                          </span>
+                        )}
+                      </div>
+                      <div className="text-[10px] sm:text-xs text-[#1E2A33]/60">Rapproche les transactions avec les fichiers PDF/HTML déjà classés localement dans 4-Compta.</div>
+                    </div>
+                  </label>
+                </div>
+
+                <div className="pt-2">
+                  <label className="block text-xs font-bold text-[#1E2A33]/70 mb-1">Période cible à analyser :</label>
+                  <select
+                    value={copilotPeriod}
+                    onChange={(e) => setCopilotPeriod(e.target.value)}
+                    className="w-full p-2.5 text-xs rounded-xl border border-[#1E2A33]/10 bg-white/70 focus:outline-none focus:border-[#AE7D5C]/50 text-[#1E2A33] font-medium"
+                  >
+                    <option value="all">Tout analyser (depuis le 01/01/2025)</option>
+                    <option value="7days">Derniers 7 jours</option>
+                    <option value="30days">Derniers 30 jours (Recommandé pour routine)</option>
+                    <option value="90days">Derniers 90 jours</option>
+                  </select>
+                </div>
+
+                <div className="pt-4 border-t border-[#1E2A33]/5 flex justify-end gap-2">
+                  <button
+                    onClick={() => setIsCopilotModalOpen(false)}
+                    className="px-4 py-2 text-xs font-bold rounded-xl text-[#1E2A33]/70 hover:bg-[#1E2A33]/5 transition-all cursor-pointer"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    onClick={startCopilot}
+                    className="px-5 py-2 text-xs font-bold rounded-xl bg-[#1E2A33] text-white hover:bg-[#1E2A33]/90 transition-all shadow-md shadow-[#1E2A33]/15 flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    <span>Lancer le Copilote</span>
+                  </button>
+                </div>
+              </>
+            )}
+
+            {(copilotStatus.status === 'running' || (copilotStatus.running && copilotStatus.status !== 'success' && copilotStatus.status !== 'error')) && (
+              <div className="space-y-4">
+                {/* Active running state */}
+                <div className="bg-[#AE7D5C]/5 border border-[#AE7D5C]/10 rounded-xl p-4 flex items-center gap-4">
+                  <Loader2 className="w-8 h-8 text-[#AE7D5C] animate-spin shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-bold text-[#1E2A33] uppercase tracking-wider">
+                      Étape en cours : {copilotStatus.currentStage?.toUpperCase() || 'Initialisation...'}
+                    </div>
+                    <div className="text-xs text-[#1E2A33]/60 mt-0.5 truncate">
+                      {copilotStatus.logs[copilotStatus.logs.length - 1] || 'Traitement en cours...'}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Progress bar */}
+                {copilotStatus.progress && (
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between text-xs font-bold text-[#1E2A33]">
+                      <span>Décompte progressif</span>
+                      <span>
+                        {copilotStatus.progress.current} / {copilotStatus.progress.total}
+                      </span>
+                    </div>
+                    <div className="w-full bg-[#1E2A33]/5 h-2.5 rounded-full overflow-hidden">
+                      <div
+                        className="bg-[#AE7D5C] h-full transition-all duration-300 rounded-full"
+                        style={{ width: `${(copilotStatus.progress.current / copilotStatus.progress.total) * 100}%` }}
+                      />
+                    </div>
+                    <div className="text-right text-[10px] font-bold text-[#AE7D5C] uppercase tracking-wider">
+                      {copilotStatus.progress.total - copilotStatus.progress.current} justificatifs restants en attente
+                    </div>
+                  </div>
+                )}
+
+                {/* Terminal logs */}
+                <div className="space-y-1.5">
+                  <div className="text-xs font-bold text-[#1E2A33]">Logs en temps réel</div>
+                  <div className="bg-[#1E2A33] text-emerald-400 font-mono text-[10px] leading-relaxed p-3.5 rounded-xl h-56 overflow-y-auto shadow-inner flex flex-col gap-1 border border-[#1E2A33]/90">
+                    {copilotStatus.logs.map((log: string, idx: number) => (
+                      <div key={idx} className="whitespace-pre-wrap select-all">
+                        {log}
+                      </div>
+                    ))}
+                    <div ref={logEndRef} />
+                  </div>
+                </div>
+
+                <div className="pt-2 flex justify-end">
+                  <button
+                    onClick={() => setIsCopilotModalOpen(false)}
+                    className="px-5 py-2 text-xs font-bold rounded-xl border border-[#1E2A33]/10 text-[#1E2A33] hover:bg-[#1E2A33]/5 transition-all cursor-pointer"
+                  >
+                    Fermer la vue
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {copilotStatus.status === 'success' && (
+              <div className="space-y-4 text-center py-4">
+                <CheckCircle className="w-16 h-16 text-emerald-500 mx-auto animate-bounce" />
+                <div>
+                  <h3 className="text-lg font-bold text-[#1E2A33]">Copilote Exécuté avec Succès !</h3>
+                  <p className="text-xs text-[#1E2A33]/60 mt-1">Toutes les étapes sélectionnées ont été traitées.</p>
+                </div>
+
+                {/* Terminal logs */}
+                <div className="space-y-1.5 text-left">
+                  <div className="text-xs font-bold text-[#1E2A33]">Rapport d'exécution</div>
+                  <div className="bg-[#1E2A33] text-emerald-400 font-mono text-[10px] leading-relaxed p-3.5 rounded-xl h-44 overflow-y-auto shadow-inner flex flex-col gap-1 border border-[#1E2A33]/90">
+                    {copilotStatus.logs.map((log: string, idx: number) => (
+                      <div key={idx} className="whitespace-pre-wrap select-all">
+                        {log}
+                      </div>
+                    ))}
+                    <div ref={logEndRef} />
+                  </div>
+                </div>
+
+                <div className="pt-2 flex justify-center">
+                  <button
+                    onClick={() => {
+                      resetCopilot();
+                      setIsCopilotModalOpen(false);
+                    }}
+                    className="px-8 py-2.5 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white transition-all shadow-md shadow-emerald-600/10 cursor-pointer"
+                  >
+                    Terminer & Fermer
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {copilotStatus.status === 'error' && (
+              <div className="space-y-4 text-center py-4">
+                <AlertCircle className="w-16 h-16 text-rose-500 mx-auto animate-pulse" />
+                <div>
+                  <h3 className="text-lg font-bold text-[#1E2A33]">Erreur du Copilote</h3>
+                  <p className="text-xs text-[#1E2A33]/60 mt-1">Le traitement s'est interrompu prématurément.</p>
+                </div>
+
+                {/* Terminal logs */}
+                <div className="space-y-1.5 text-left">
+                  <div className="text-xs font-bold text-[#1E2A33]">Logs d'erreur</div>
+                  <div className="bg-[#1E2A33] text-rose-400 font-mono text-[10px] leading-relaxed p-3.5 rounded-xl h-44 overflow-y-auto shadow-inner flex flex-col gap-1 border border-[#1E2A33]/90">
+                    {copilotStatus.logs.map((log: string, idx: number) => (
+                      <div key={idx} className="whitespace-pre-wrap select-all">
+                        {log}
+                      </div>
+                    ))}
+                    <div ref={logEndRef} />
+                  </div>
+                </div>
+
+                <div className="pt-2 flex justify-center gap-2">
+                  <button
+                    onClick={resetCopilot}
+                    className="px-6 py-2.5 text-xs font-bold rounded-xl border border-[#1E2A33]/10 text-[#1E2A33] hover:bg-[#1E2A33]/5 transition-all cursor-pointer"
+                  >
+                    Retour aux étapes
+                  </button>
+                  <button
+                    onClick={() => {
+                      resetCopilot();
+                      setIsCopilotModalOpen(false);
+                    }}
+                    className="px-6 py-2.5 text-xs font-bold rounded-xl bg-rose-600 hover:bg-rose-500 text-white transition-all shadow-md shadow-rose-600/10 cursor-pointer"
+                  >
+                    Fermer
+                  </button>
+                </div>
+              </div>
             )}
           </div>
         </DialogContent>

@@ -50,16 +50,17 @@ async function run() {
     // 3. Fetch all Pennylane transactions since Jan 1st 2025
     let cursor = null;
     const allTxs: any[] = [];
+    const startDateVal = process.env.COPILOT_START_DATE || "2025-01-01";
     const filterObj = [
       {
         field: "date",
         operator: "gteq",
-        value: "2025-01-01"
+        value: startDateVal
       }
     ];
     const filterStr = encodeURIComponent(JSON.stringify(filterObj));
 
-    console.log("📥 Fetching all transactions from Pennylane since 2025-01-01...");
+    console.log(`📥 Fetching all transactions from Pennylane since ${startDateVal}...`);
     for (let page = 1; page <= 25; page++) {
       const url: string = `${BASE_URL}/transactions?filter=${filterStr}&limit=100` + (cursor ? `&cursor=${cursor}` : '');
       const res = await fetch(url, {

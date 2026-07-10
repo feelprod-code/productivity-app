@@ -214,7 +214,12 @@ async function main() {
     
     console.log(`🚀 Démarrage de l'importateur Amazon (Mode: ${isDryRun ? 'DRY-RUN / Simulation' : 'RÉEL / Écriture'})`);
     
-    const years = ['2025', '2026'];
+    const years = [];
+    const startEnv = process.env.COPILOT_START_DATE;
+    if (!startEnv || startEnv.startsWith("2025")) {
+        years.push('2025');
+    }
+    years.push('2026');
     const localInvoices: LocalInvoice[] = [];
     
     // --- 1. SCANNER LES DOSSIERS LOCAUX ---
@@ -236,6 +241,10 @@ async function main() {
             
             if (!match) {
                 console.log(`⚠️ Fichier non standard ignoré : ${file}`);
+                continue;
+            }
+            
+            if (startEnv && match[1] < startEnv) {
                 continue;
             }
             
@@ -285,9 +294,10 @@ async function main() {
     console.log("\n📥 Récupération des transactions Amazon de 2025 et 2026 depuis Pennylane...");
     const allPennylaneTxs: any[] = [];
     
-    // Filtre sur 2025-01-01 à 2026-12-31
+    const startDateVal = process.env.COPILOT_START_DATE || "2025-01-01";
+    // Filtre sur le début de période à 2026-12-31
     const filterObj = [
-        { field: "date", operator: "gteq", value: "2025-01-01" },
+        { field: "date", operator: "gteq", value: startDateVal },
         { field: "date", operator: "lteq", value: "2026-12-31" }
     ];
     const filterStr = encodeURIComponent(JSON.stringify(filterObj));

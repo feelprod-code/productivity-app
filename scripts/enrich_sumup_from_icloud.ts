@@ -75,11 +75,12 @@ async function main() {
     
     let txCursor: string | null = null;
     const allTxs: any[] = [];
+    const startDateVal = process.env.COPILOT_START_DATE || "2026-01-01";
     const filterObj = [
         {
             field: "date",
             operator: "gteq",
-            value: "2026-01-01"
+            value: startDateVal
         }
     ];
     const filterStr = encodeURIComponent(JSON.stringify(filterObj));
@@ -138,9 +139,21 @@ async function main() {
         console.log(`📂 Lecture de la boîte : ${box}...`);
         await connection.openBox(box);
 
-        // Recherche des e-mails SumUp de relevé quotidien depuis le 01 Mai 2026
+        let sinceDate = '01-May-2026';
+        if (process.env.COPILOT_START_DATE) {
+            const d = new Date(process.env.COPILOT_START_DATE);
+            if (!isNaN(d.getTime())) {
+                const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                const day = String(d.getDate()).padStart(2, '0');
+                const month = months[d.getMonth()];
+                const year = d.getFullYear();
+                sinceDate = `${day}-${month}-${year}`;
+            }
+        }
+
+        // Recherche des e-mails SumUp de relevé quotidien depuis sinceDate
         const searchCriteria = [
-            ['SINCE', '01-May-2026'],
+            ['SINCE', sinceDate],
             ['SUBJECT', 'Relevé quotidien de vos paiements']
         ];
         

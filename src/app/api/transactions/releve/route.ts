@@ -34,7 +34,7 @@ function guessCategory(label: string, isPro: boolean, productDescription: string
     return "LOGICIELS_IA";
   }
   
-  if (labelLower.includes("restaurant") || labelLower.includes("bistro") || labelLower.includes("cafe") || labelLower.includes("brasserie") || labelLower.includes("paris halles") || labelLower.includes("sebastopol") || labelLower.includes("traiteur") || labelLower.includes("snack") || labelLower.includes("mcdonald") || labelLower.includes("bk ") || labelLower.includes("starbucks") || descLower.includes("repas") || descLower.includes("restaurant")) {
+  if (labelLower.includes("restaurant") || labelLower.includes("bistro") || labelLower.includes("cafe") || labelLower.includes("brasserie") || labelLower.includes("paris halles") || labelLower.includes("sebastopol") || labelLower.includes("traiteur") || labelLower.includes("snack") || labelLower.includes("mcdonald") || labelLower.includes("bk ") || labelLower.includes("starbucks") || labelLower.includes("harmonie du gout") || labelLower.includes("harmonie du goût") || descLower.includes("repas") || descLower.includes("restaurant")) {
     return "RESTAURANT";
   }
   
@@ -516,6 +516,51 @@ export async function GET() {
               providerMatch = txWords.some((word: string) => cleanInv.includes(word) || word.includes(cleanInv));
             } else {
               providerMatch = cleanInv.includes(cleanTx) || cleanTx.includes(cleanInv);
+            }
+
+            // Custom alias matching for GCL / Rafenne / Comptabilité / Autonome
+            const isTxGcl = labelLower.includes('gcl') || 
+                            labelLower.includes('rafenne') || 
+                            labelLower.includes('bourg la reine') || 
+                            labelLower.includes('autonome');
+            const isInvGcl = cleanInv.includes('gcl') || cleanInv.includes('rafenne');
+            if (isTxGcl && isInvGcl) {
+              providerMatch = true;
+            }
+
+            // Custom alias matching for McDonald's / Paris Halles / Sébastopol
+            const isTxHalles = labelLower.includes('magd') || 
+                               labelLower.includes('sebastopol') || 
+                               labelLower.includes('mcdo') || 
+                               labelLower.includes('mcdonald');
+            const isInvHalles = cleanInv.includes('halles') || 
+                                cleanInv.includes('paris') || 
+                                cleanInv.includes('mcdonald');
+            if (isTxHalles && isInvHalles) {
+              providerMatch = true;
+            }
+
+            // Custom alias matching for Sofinco / CA Consumer Finance / Fnac
+            const isTxSofinco = labelLower.includes('sofinco') || 
+                                labelLower.includes('ca consumer finance') || 
+                                labelLower.includes('fnac');
+            const isInvSofinco = cleanInv.includes('sofinco');
+            if (isTxSofinco && isInvSofinco) {
+              providerMatch = true;
+            }
+
+            // Custom alias matching for Harmonie
+            const isTxHarmonie = labelLower.includes('harmonie');
+            const isInvHarmonie = cleanInv.includes('harmonie');
+            if (isTxHarmonie && isInvHarmonie) {
+              providerMatch = true;
+            }
+
+            // Custom alias matching for Navigo / Ile de France Mobilités
+            const isTxNavigo = labelLower.includes('navigo') || labelLower.includes('ile de france') || labelLower.includes('mobilites') || labelLower.includes('idf');
+            const isInvNavigo = cleanInv.includes('navigo') || cleanInv.includes('iledefrance');
+            if (isTxNavigo && isInvNavigo) {
+              providerMatch = true;
             }
 
             return providerMatch;
