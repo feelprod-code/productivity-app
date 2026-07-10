@@ -566,7 +566,18 @@ export async function POST(request: Request) {
         const invProv = (inv.provider || '').toLowerCase();
         
         const amtDiff = Math.abs(invAmount - absAmount);
-        const isAmtMatch = amtDiff <= 1.50 || amtDiff / invAmount <= 0.05;
+        
+        const usdOrTaxSuppliers = ['vercel', 'supabase', 'openai', 'elevenlabs', 'openrouter', 'cloudflare', 'zapier', 'canva', 'github', 'amazon', 'suno'];
+        const isUsdOrTax = usdOrTaxSuppliers.some(s => invProv.includes(s) || invProv.replace(/\s+/g, '').includes(s));
+        
+        const ratio = absAmount / invAmount;
+        const invRatio = invAmount / absAmount;
+        const isUsdOrTaxAmtMatch = isUsdOrTax && (
+          (ratio >= 0.80 && ratio <= 1.20) ||
+          (invRatio >= 0.80 && invRatio <= 1.20)
+        );
+
+        const isAmtMatch = amtDiff <= 1.50 || amtDiff / invAmount <= 0.05 || isUsdOrTaxAmtMatch;
         const dateDiffDays = Math.abs(txTime - invTime) / (24 * 60 * 60 * 1000);
         const isDateMatch = dateDiffDays <= 45;
         
@@ -626,7 +637,10 @@ export async function POST(request: Request) {
         
         // Standard name/keyword matching
         const invFileUrl = (inv.fileUrl || '').toLowerCase();
-        const hasKeyword = keywords.some(kw => 
+        const isTxEleven = txLabel.includes('elevenlabs') || txLabel.includes('eleven labs');
+        const isInvEleven = invProv.includes('elevenlabs') || invProv.includes('eleven labs');
+        
+        const hasKeyword = (isTxEleven && isInvEleven) || keywords.some(kw => 
           invProv.includes(kw) || 
           invFileUrl.includes(kw)
         );

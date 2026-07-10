@@ -328,6 +328,19 @@ export async function GET() {
       const label = tx.label || '';
       const labelLower = label.toLowerCase();
 
+      const noJustificatifKeywords = [
+        'genspark', 'telelion', 'decadaire', 'agio', 'commission', 'zen pro', 'formule zen',
+        'convention professionnel', 'access', 'cb facture/retrait dt differe', 'releve cb',
+        'dyn dac', 'vironvay', 'sapn', 'aprr', 'sanef', 'cofiroute', 'autoroute'
+      ];
+      const isIndigo = labelLower.includes('indigo');
+      const isSmallIndigo = isIndigo && absAmount < 10.00;
+      const isAmazonPrime = labelLower.includes('amazon prime');
+      const noJustificatif = !isOutflow || 
+                             noJustificatifKeywords.some(k => labelLower.includes(k)) || 
+                             isSmallIndigo ||
+                             isAmazonPrime;
+
       // Determine Payment Method / Category
       let category = "other";
       if (labelLower.includes('virement') || labelLower.includes('vir sepa') || labelLower.includes('vir rec')) {
@@ -461,15 +474,18 @@ export async function GET() {
             }
 
             const isAmazon = cleanInv.includes('amazon') || cleanInv.includes('sportano') || cleanInv.includes('regatta') || cleanInv.includes('erima');
+            const usdOrTaxSuppliers = ['vercel', 'supabase', 'openai', 'elevenlabs', 'openrouter', 'cloudflare', 'zapier', 'canva', 'github', 'suno'];
+            const isUsdOrTax = usdOrTaxSuppliers.some(s => cleanInv.includes(s) || cleanInv.replace(/\s+/g, '').includes(s));
+
             let amountMatch = Math.abs(invAmount - absAmount) < 0.01 || isAmazonMarketplaceMatch;
             
-            if (!amountMatch && isAmazon) {
+            if (!amountMatch && (isAmazon || isUsdOrTax)) {
               const ratio = absAmount / invAmount;
-              if (ratio >= 0.80 && ratio <= 1.15) {
+              if (ratio >= 0.80 && ratio <= 1.20) {
                 amountMatch = true;
               } else {
                 const invRatio = invAmount / absAmount;
-                if (invRatio >= 0.80 && invRatio <= 1.15) {
+                if (invRatio >= 0.80 && invRatio <= 1.20) {
                   amountMatch = true;
                 }
               }
@@ -563,12 +579,30 @@ export async function GET() {
               providerMatch = true;
             }
 
+            // Custom alias matching for Eleven Labs
+            const isTxEleven = labelLower.includes('elevenlabs') || labelLower.includes('eleven labs');
+            const isInvEleven = cleanInv.includes('elevenlabs') || cleanInv.includes('eleven labs');
+            if (isTxEleven && isInvEleven) {
+              providerMatch = true;
+            }
+
             return providerMatch;
           }) || null;
         }
 
         if (matchedInvoice) {
           usedInvoiceIds.add(matchedInvoice.id);
+        } else {
+          const isPennylaneMatched = parseFloat(tx.outstanding_balance || '0') === 0;
+          if (isPennylaneMatched && !noJustificatif) {
+            matchedInvoice = {
+              id: `pennylane_${tx.id}`,
+              date: tx.date,
+              provider: `${label} (Rapproché sur Pennylane)`,
+              fileUrl: "",
+              amount: absAmount
+            };
+          }
         }
       } else {
         // Inflow matching (CPAM, SumUp)
@@ -691,25 +725,19 @@ export async function GET() {
         }
       }
 
-      const noJustificatifKeywords = [
-        'genspark', 'telelion', 'decadaire', 'agio', 'commission', 'zen pro', 'formule zen',
-        'convention professionnel', 'access', 'cb facture/retrait dt differe', 'releve cb',
-        'dyn dac', 'vironvay', 'sapn', 'aprr', 'sanef', 'cofiroute', 'autoroute'
-      ];
-      const isIndigo = labelLower.includes('indigo');
-      const isSmallIndigo = isIndigo && absAmount < 10.00;
-      const isAmazonPrime = labelLower.includes('amazon prime');
-      const noJustificatif = !isOutflow || 
-                             noJustificatifKeywords.some(k => labelLower.includes(k)) || 
-                             isSmallIndigo ||
-                             isAmazonPrime;
+
 
       const proCategory = overriddenCategory || guessCategory(label, isPro, productDescription, amount);
+
+      let displayLabel = label;
+      if (isPaypal && realMerchantName) {
+        displayLabel = `PAYPAL * ${realMerchantName}`;
+      }
 
       const txResult = {
         id: tx.id,
         date: tx.date,
-        label,
+        label: displayLabel,
         amount,
         absAmount,
         isOutflow,

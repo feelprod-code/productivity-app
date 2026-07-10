@@ -77,6 +77,7 @@ interface MonthGroup {
   matchedCount: number;
   totalOutflowCount: number;
   matchingRate: number;
+  unmatchedCount: number;
 }
 
 const formatAmount = (num: number) => {
@@ -412,6 +413,26 @@ function RelevePageContent() {
     if (invoices.length === 0) return null;
     return invoices.filter((inv: any) => inv.status === "PENDING").length;
   }, [invoices]);
+
+  const totalUnmatchedTransactions = useMemo(() => {
+    return transactions.filter(tx => {
+      // 1. Filter by Pro vs Perso Account Tab
+      if (activeTab === "pro" && !tx.isProAccount) return false;
+      if (activeTab === "perso" && tx.isProAccount) return false;
+
+      // 2. Only professional transactions on the pro tab
+      if (activeTab === "pro" && !tx.isPro) return false;
+
+      // 3. Filter by Selected Year
+      if (selectedYear !== "all") {
+        const txYear = tx.date.substring(0, 4);
+        if (txYear !== selectedYear) return false;
+      }
+
+      // 4. Only unmatched outflows that require an invoice
+      return tx.isOutflow && !tx.noJustificatif && !tx.matchedInvoice;
+    }).length;
+  }, [transactions, activeTab, selectedYear]);
 
   const handleReconcileAuto = useCallback(async (tx: Transaction, silent = false) => {
     setReconcilingTxId(String(tx.id));
@@ -862,7 +883,8 @@ function RelevePageContent() {
           net: 0,
           matchedCount: 0,
           totalOutflowCount: 0,
-          matchingRate: 100
+          matchingRate: 100,
+          unmatchedCount: 0
         };
       }
       
@@ -890,6 +912,7 @@ function RelevePageContent() {
       const g = groups[mKey];
       g.net = g.inflows - g.outflows;
       g.matchingRate = g.totalOutflowCount > 0 ? Math.round((g.matchedCount / g.totalOutflowCount) * 100) : 100;
+      g.unmatchedCount = g.totalOutflowCount - g.matchedCount;
       // Sort transactions of this month
       g.transactions.sort((a, b) => {
         const timeA = new Date(a.date).getTime();
@@ -1027,6 +1050,11 @@ function RelevePageContent() {
                     <>
                       <Sparkles className="w-3.5 h-3.5" />
                       <span>Copilote</span>
+                      {totalUnmatchedTransactions > 0 && (
+                        <span className="ml-1.5 px-1.5 py-0.2 bg-rose-500 text-white text-[9px] font-bold rounded-full">
+                          {totalUnmatchedTransactions}
+                        </span>
+                      )}
                     </>
                   )}
                 </button>
@@ -1271,9 +1299,15 @@ function RelevePageContent() {
                     </div>
                     
                     <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs font-bold text-[#1E2A33]/70">
-                      <span className="text-[#AE7D5C] bg-[#AE7D5C]/10 px-2 py-0.5 rounded-lg text-[11px]">
-                        Rapproché : {group.matchingRate}%
-                      </span>
+                      {group.unmatchedCount > 0 ? (
+                        <span className="text-rose-600 bg-rose-50 px-2 py-0.5 rounded-lg text-[11px] font-bold">
+                          {group.unmatchedCount} à rapprocher
+                        </span>
+                      ) : (
+                        <span className="text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-lg text-[11px] font-bold">
+                          Toutes rapprochées
+                        </span>
+                      )}
                     </div>
                   </button>
 

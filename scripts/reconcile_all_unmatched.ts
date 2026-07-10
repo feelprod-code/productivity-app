@@ -7,7 +7,7 @@ async function main() {
     console.log("🚀 Start batch auto-reconciliation for unmatched 2025/2026 transactions...");
 
     try {
-        const res = await fetch('http://localhost:3000/api/transactions/releve', {
+        const res = await fetch('http://127.0.0.1:3000/api/transactions/releve', {
             headers: { 'Accept': 'application/json' }
         });
 
@@ -48,7 +48,7 @@ async function main() {
             console.log(`\n🔄 [${i+1}/${unmatched.length}] Reconciling: ${tx.label} | ${tx.amount} EUR | Date: ${tx.date}...`);
 
             try {
-                const recRes = await fetch('http://localhost:3000/api/transactions/reconcile-auto', {
+                const recRes = await fetch('http://127.0.0.1:3000/api/transactions/reconcile-auto', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({

@@ -736,9 +736,53 @@ export default function ImportPage() {
                 : "border-transparent text-[#1E2A33]/40 hover:text-[#1E2A33]/70"
             }`}
           >
-            Importés
+            Historique
           </button>
         </div>
+
+        {/* Filtres de l'Historique épinglés (Sticky) */}
+        {activeView === "history" && (
+          <div className="max-w-7xl mx-auto mt-4 px-1 flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-3 border-t border-[#1E2A33]/5">
+            <div>
+              <span className="text-[10px] font-bold text-[#AE7D5C] uppercase tracking-widest block">
+                Factures à traiter
+              </span>
+              <h2 className="text-xs font-bold text-[#1E2A33] mt-0.5">
+                {showMatched ? (
+                  <>
+                    {totalInvsCount} justificatif{totalInvsCount > 1 ? 's' : ''} au total ({unmatchedInvsCount} en attente, {matchedInvsCount} rapproché{matchedInvsCount > 1 ? 's' : ''})
+                  </>
+                ) : (
+                  <>
+                    {unmatchedInvsCount} justificatif{unmatchedInvsCount > 1 ? 's' : ''} en attente
+                  </>
+                )}
+              </h2>
+            </div>
+            
+            <div className="flex flex-row items-center gap-3 w-full sm:max-w-md">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-[#1E2A33]/40" />
+                <input
+                  type="text"
+                  placeholder="Rechercher..."
+                  value={historySearchQuery}
+                  onChange={(e) => setHistorySearchQuery(e.target.value)}
+                  className="w-full h-9 pl-9 pr-4 rounded-xl border border-[#1E2A33]/12 text-xs text-[#1E2A33] bg-[#1E2A33]/5 sm:bg-white outline-none focus:border-[#AE7D5C] focus:bg-white transition-all font-medium placeholder-[#1E2A33]/40"
+                />
+              </div>
+              <label className="flex items-center gap-1.5 cursor-pointer select-none shrink-0">
+                <input
+                  type="checkbox"
+                  checked={showMatched}
+                  onChange={(e) => setShowMatched(e.target.checked)}
+                  className="rounded text-[#AE7D5C] border-[#1E2A33]/20 focus:ring-[#AE7D5C] w-3.5 h-3.5 cursor-pointer"
+                />
+                <span className="text-[10px] font-semibold text-[#1E2A33]/50">Afficher rapprochées</span>
+              </label>
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="max-w-7xl mx-auto px-4 md:px-8">
@@ -1089,48 +1133,6 @@ export default function ImportPage() {
       </div>
       ) : (
         <div className="bg-white border border-[#1E2A33]/10 rounded-3xl p-5 shadow-sm space-y-5">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#1E2A33]/5">
-            {/* Titre et indicateur de justificatifs restants */}
-            <div>
-              <span className="text-[10px] font-bold text-[#AE7D5C] uppercase tracking-widest block">
-                Factures à traiter
-              </span>
-              <h2 className="text-xs font-bold text-[#1E2A33] mt-0.5">
-                {showMatched ? (
-                  <>
-                    {totalInvsCount} justificatif{totalInvsCount > 1 ? 's' : ''} au total ({unmatchedInvsCount} en attente, {matchedInvsCount} rapproché{matchedInvsCount > 1 ? 's' : ''})
-                  </>
-                ) : (
-                  <>
-                    {unmatchedInvsCount} justificatif{unmatchedInvsCount > 1 ? 's' : ''} en attente
-                  </>
-                )}
-              </h2>
-            </div>
-            
-            {/* Barre de recherche compacte et toggle */}
-            <div className="flex flex-col items-end gap-1.5 w-full sm:max-w-xs">
-              <div className="relative w-full">
-                <Search className="absolute left-3 top-2.5 h-3.5 w-3.5 text-[#1E2A33]/40" />
-                <input
-                  type="text"
-                  placeholder="Rechercher..."
-                  value={historySearchQuery}
-                  onChange={(e) => setHistorySearchQuery(e.target.value)}
-                  className="w-full h-9 pl-9 pr-4 rounded-xl border border-[#1E2A33]/12 text-xs text-[#1E2A33] bg-[#1E2A33]/5 sm:bg-white outline-none focus:border-[#AE7D5C] focus:bg-white transition-all font-medium placeholder-[#1E2A33]/40"
-                />
-              </div>
-              <label className="flex items-center gap-1.5 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={showMatched}
-                  onChange={(e) => setShowMatched(e.target.checked)}
-                  className="rounded text-[#AE7D5C] border-[#1E2A33]/20 focus:ring-[#AE7D5C] w-3.5 h-3.5 cursor-pointer"
-                />
-                <span className="text-[10px] font-semibold text-[#1E2A33]/50">Afficher pièces rapprochées</span>
-              </label>
-            </div>
-          </div>
 
           {loadingInvoices ? (
             <div className="flex flex-col items-center justify-center py-12 gap-3 text-slate-500 text-xs">
