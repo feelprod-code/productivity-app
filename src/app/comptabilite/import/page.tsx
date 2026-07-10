@@ -108,12 +108,108 @@ export default function ImportPage() {
       .finally(() => setLoadingInvoices(false));
   }, []);
 
-  const openScanner = () => {
+  const detectReceiptContours = (imgUrl: string): Promise<{ x: number; y: number; width: number; height: number }> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.src = imgUrl;
+      img.onload = () => {
+        try {
+          const canvas = document.createElement("canvas");
+          const size = 100;
+          canvas.width = size;
+          canvas.height = size;
+          const ctx = canvas.getContext("2d");
+          if (!ctx) {
+            resolve({ x: 5, y: 5, width: 90, height: 90 });
+            return;
+          }
+          
+          ctx.drawImage(img, 0, 0, size, size);
+          const imgData = ctx.getImageData(0, 0, size, size);
+          const data = imgData.data;
+          
+          // Step 1: Calculate average brightness
+          let totalBrightness = 0;
+          for (let i = 0; i < data.length; i += 4) {
+            const r = data[i];
+            const g = data[i+1];
+            const b = data[i+2];
+            totalBrightness += (0.299 * r + 0.587 * g + 0.114 * b);
+          }
+          const avgBrightness = totalBrightness / (size * size);
+          
+          // Step 2: Determine dynamic threshold (average + offset)
+          const threshold = Math.max(150, Math.min(220, avgBrightness + 35));
+          
+          // Step 3: Find bounding box of bright pixels
+          let minX = size, minY = size, maxX = 0, maxY = 0;
+          let count = 0;
+          
+          for (let y = 0; y < size; y++) {
+            for (let x = 0; x < size; x++) {
+              const idx = (y * size + x) * 4;
+              const r = data[idx];
+              const g = data[idx+1];
+              const b = data[idx+2];
+              const brightness = 0.299 * r + 0.587 * g + 0.114 * b;
+              
+              if (brightness > threshold) {
+                if (x < minX) minX = x;
+                if (x > maxX) maxX = x;
+                if (y < minY) minY = y;
+                if (y > maxY) maxY = y;
+                count++;
+              }
+            }
+          }
+          
+          // Step 4: Validate detected region
+          const fillRatio = count / (size * size);
+          if (count > 200 && fillRatio < 0.95 && maxX > minX && maxY > minY) {
+            // Convert to percentages and add a small 2.5% padding
+            const pad = 2.5;
+            const xPercent = Math.max(0, minX - pad);
+            const yPercent = Math.max(0, minY - pad);
+            const wPercent = Math.min(100 - xPercent, (maxX - minX) + pad * 2);
+            const hPercent = Math.min(100 - yPercent, (maxY - minY) + pad * 2);
+            
+            resolve({
+              x: xPercent,
+              y: yPercent,
+              width: wPercent,
+              height: hPercent
+            });
+          } else {
+            resolve({ x: 5, y: 5, width: 90, height: 90 });
+          }
+        } catch (err) {
+          console.error("Error detecting contours:", err);
+          resolve({ x: 5, y: 5, width: 90, height: 90 });
+        }
+      };
+      img.onerror = () => {
+        resolve({ x: 5, y: 5, width: 90, height: 90 });
+      };
+    });
+  };
+
+  const openScanner = async () => {
+    if (!activeFile) return;
+
+    // Set defaults first
     setScannerCropBox({ x: 5, y: 5, width: 90, height: 90 });
     setScannerRotation(0);
     setScannerContrast(1.5);
     setScannerFilterEnabled(true);
     setIsScannerOpen(true);
+
+    // Auto-detect contours asynchronously
+    try {
+      const detectedBox = await detectReceiptContours(activeFile.previewUrl);
+      setScannerCropBox(detectedBox);
+    } catch (e) {
+      console.error("Failed auto-contour detection:", e);
+    }
   };
 
   const startScannerDrag = (e: React.MouseEvent | React.TouchEvent, type: string) => {
@@ -1236,9 +1332,36 @@ export default function ImportPage() {
                     alt="Image à recadrer"
                     className="max-w-full max-h-[40vh] object-contain pointer-events-none"
                   />
+                  {/* Premium Scanner Dimmed Mask Overlay */}
+                  <svg className="absolute inset-0 w-full h-full pointer-events-none z-10">
+                    <defs>
+                      <mask id="scanner-mask">
+                        {/* Whole area white (visible) */}
+                        <rect x="0" y="0" width="100%" height="100%" fill="white" />
+                        {/* Crop area black (masked out / transparent) */}
+                        <rect 
+                          x={`${scannerCropBox.x}%`} 
+                          y={`${scannerCropBox.y}%`} 
+                          width={`${scannerCropBox.width}%`} 
+                          height={`${scannerCropBox.height}%`} 
+                          fill="black" 
+                        />
+                      </mask>
+                    </defs>
+                    {/* Dimmed backdrop covering everything except the crop box */}
+                    <rect 
+                      x="0" 
+                      y="0" 
+                      width="100%" 
+                      height="100%" 
+                      fill="rgba(15, 23, 42, 0.65)" 
+                      mask="url(#scanner-mask)" 
+                    />
+                  </svg>
+
                   {/* Interactive Crop overlay */}
                   <div 
-                    className="absolute border-2 border-[#AE7D5C] bg-[#AE7D5C]/15 cursor-move"
+                    className="absolute z-20 cursor-move border border-[#10B981] shadow-[0_0_15px_rgba(16,185,129,0.4)]"
                     style={{
                       left: `${scannerCropBox.x}%`,
                       top: `${scannerCropBox.y}%`,
@@ -1248,34 +1371,51 @@ export default function ImportPage() {
                     onMouseDown={(e) => startScannerDrag(e, "box")}
                     onTouchStart={(e) => startScannerDrag(e, "box")}
                   >
-                    {/* Corner drag handles */}
+                    {/* Animated scanning laser line effect */}
+                    <div className="absolute inset-x-0 top-0 h-0.5 bg-[#10B981] opacity-75 shadow-[0_0_10px_#10B981] animate-[pulse_2s_infinite]" />
+
+                    {/* Corner brackets for scanner look */}
+                    {/* Top Left */}
+                    <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-[#10B981]" />
+                    {/* Top Right */}
+                    <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-[#10B981]" />
+                    {/* Bottom Left */}
+                    <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-[#10B981]" />
+                    {/* Bottom Right */}
+                    <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-[#10B981]" />
+
+                    {/* Draggable handle points */}
                     <div 
-                      className="absolute w-7 h-7 -top-3.5 -left-3.5 bg-white border-2 border-[#AE7D5C] rounded-full cursor-nwse-resize flex items-center justify-center shadow-md active:scale-110 transition-transform touch-none"
+                      className="absolute w-7 h-7 -top-3.5 -left-3.5 bg-white border-2 border-[#10B981] rounded-full cursor-nwse-resize flex items-center justify-center shadow-lg active:scale-115 transition-transform touch-none z-30"
                       onMouseDown={(e) => { e.stopPropagation(); startScannerDrag(e, "tl"); }}
                       onTouchStart={(e) => { e.stopPropagation(); startScannerDrag(e, "tl"); }}
                     >
-                      <div className="w-2 h-2 bg-[#AE7D5C] rounded-full" />
+                      <div className="w-2.5 h-2.5 bg-[#10B981] rounded-full animate-ping absolute opacity-75" />
+                      <div className="w-2 h-2 bg-[#10B981] rounded-full relative" />
                     </div>
                     <div 
-                      className="absolute w-7 h-7 -top-3.5 -right-3.5 bg-white border-2 border-[#AE7D5C] rounded-full cursor-nesw-resize flex items-center justify-center shadow-md active:scale-110 transition-transform touch-none"
+                      className="absolute w-7 h-7 -top-3.5 -right-3.5 bg-white border-2 border-[#10B981] rounded-full cursor-nesw-resize flex items-center justify-center shadow-lg active:scale-115 transition-transform touch-none z-30"
                       onMouseDown={(e) => { e.stopPropagation(); startScannerDrag(e, "tr"); }}
                       onTouchStart={(e) => { e.stopPropagation(); startScannerDrag(e, "tr"); }}
                     >
-                      <div className="w-2 h-2 bg-[#AE7D5C] rounded-full" />
+                      <div className="w-2.5 h-2.5 bg-[#10B981] rounded-full animate-ping absolute opacity-75" />
+                      <div className="w-2 h-2 bg-[#10B981] rounded-full relative" />
                     </div>
                     <div 
-                      className="absolute w-7 h-7 -bottom-3.5 -left-3.5 bg-white border-2 border-[#AE7D5C] rounded-full cursor-nesw-resize flex items-center justify-center shadow-md active:scale-110 transition-transform touch-none"
+                      className="absolute w-7 h-7 -bottom-3.5 -left-3.5 bg-white border-2 border-[#10B981] rounded-full cursor-nesw-resize flex items-center justify-center shadow-lg active:scale-115 transition-transform touch-none z-30"
                       onMouseDown={(e) => { e.stopPropagation(); startScannerDrag(e, "bl"); }}
                       onTouchStart={(e) => { e.stopPropagation(); startScannerDrag(e, "bl"); }}
                     >
-                      <div className="w-2 h-2 bg-[#AE7D5C] rounded-full" />
+                      <div className="w-2.5 h-2.5 bg-[#10B981] rounded-full animate-ping absolute opacity-75" />
+                      <div className="w-2 h-2 bg-[#10B981] rounded-full relative" />
                     </div>
                     <div 
-                      className="absolute w-7 h-7 -bottom-3.5 -right-3.5 bg-white border-2 border-[#AE7D5C] rounded-full cursor-nwse-resize flex items-center justify-center shadow-md active:scale-110 transition-transform touch-none"
+                      className="absolute w-7 h-7 -bottom-3.5 -right-3.5 bg-white border-2 border-[#10B981] rounded-full cursor-nwse-resize flex items-center justify-center shadow-lg active:scale-115 transition-transform touch-none z-30"
                       onMouseDown={(e) => { e.stopPropagation(); startScannerDrag(e, "br"); }}
                       onTouchStart={(e) => { e.stopPropagation(); startScannerDrag(e, "br"); }}
                     >
-                      <div className="w-2 h-2 bg-[#AE7D5C] rounded-full" />
+                      <div className="w-2.5 h-2.5 bg-[#10B981] rounded-full animate-ping absolute opacity-75" />
+                      <div className="w-2 h-2 bg-[#10B981] rounded-full relative" />
                     </div>
                   </div>
                 </div>
