@@ -14,9 +14,14 @@ import {
   Sparkles,
   FileCheck,
   Eye,
-  Search
+  Search,
+  RotateCw,
+  Sliders,
+  Crop,
+  Check
 } from "lucide-react";
 import Link from "next/link";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 
 interface ExtractedData {
   supplier_name: string;
@@ -61,6 +66,22 @@ export default function ImportPage() {
   const [activeView, setActiveView] = useState<"upload" | "history">("upload");
   const [importedInvoices, setImportedInvoices] = useState<any[]>([]);
   const [loadingInvoices, setLoadingInvoices] = useState(false);
+
+  // Scanner States & Refs
+  const [isScannerOpen, setIsScannerOpen] = useState(false);
+  const [scannerCropBox, setScannerCropBox] = useState({ x: 5, y: 5, width: 90, height: 90 });
+  const [scannerRotation, setScannerRotation] = useState(0); // 0, 90, 180, 270
+  const [scannerContrast, setScannerContrast] = useState(1.5);
+  const [scannerFilterEnabled, setScannerFilterEnabled] = useState(true);
+  const [isScannerProcessing, setIsScannerProcessing] = useState(false);
+
+  const scannerContainerRef = useRef<HTMLDivElement>(null);
+  const scannerDragInfo = useRef<{
+    type: string | null;
+    startX: number;
+    startY: number;
+    startBox: { x: number; y: number; width: number; height: number };
+  }>({ type: null, startX: 0, startY: 0, startBox: { x: 0, y: 0, width: 0, height: 0 } });
   const [historySearchQuery, setHistorySearchQuery] = useState("");
   const [showMatched, setShowMatched] = useState(false);
 
@@ -86,6 +107,215 @@ export default function ImportPage() {
       .catch(err => console.error("Error loading invoices history:", err))
       .finally(() => setLoadingInvoices(false));
   }, []);
+
+  const openScanner = () => {
+    setScannerCropBox({ x: 5, y: 5, width: 90, height: 90 });
+    setScannerRotation(0);
+    setScannerContrast(1.5);
+    setScannerFilterEnabled(true);
+    setIsScannerOpen(true);
+  };
+
+  const startScannerDrag = (e: React.MouseEvent | React.TouchEvent, type: string) => {
+    e.preventDefault();
+    const clientX = "touches" in e ? e.touches[0].clientX : e.clientX;
+    const clientY = "touches" in e ? e.touches[0].clientY : e.clientY;
+    
+    scannerDragInfo.current = {
+      type,
+      startX: clientX,
+      startY: clientY,
+      startBox: { ...scannerCropBox }
+    };
+
+    const handleMove = (moveEvent: MouseEvent | TouchEvent) => {
+      if (!scannerDragInfo.current.type || !scannerContainerRef.current) return;
+      
+      const currentX = "touches" in moveEvent ? moveEvent.touches[0].clientX : moveEvent.clientX;
+      const currentY = "touches" in moveEvent ? moveEvent.touches[0].clientY : moveEvent.clientY;
+      
+      const rect = scannerContainerRef.current.getBoundingClientRect();
+      const deltaPercentX = ((currentX - scannerDragInfo.current.startX) / rect.width) * 100;
+      const deltaPercentY = ((currentY - scannerDragInfo.current.startY) / rect.height) * 100;
+      
+      const { startBox } = scannerDragInfo.current;
+      
+      setScannerCropBox(prev => {
+        let newBox = { ...prev };
+        
+        if (scannerDragInfo.current.type === "box") {
+          newBox.x = Math.max(0, Math.min(100 - startBox.width, startBox.x + deltaPercentX));
+          newBox.y = Math.max(0, Math.min(100 - startBox.height, startBox.y + deltaPercentY));
+        } else if (scannerDragInfo.current.type === "tl") {
+          const newX = Math.max(0, Math.min(startBox.x + startBox.width - 5, startBox.x + deltaPercentX));
+          const newY = Math.max(0, Math.min(startBox.y + startBox.height - 5, startBox.y + deltaPercentY));
+          newBox.width = startBox.width + (startBox.x - newX);
+          newBox.height = startBox.height + (startBox.y - newY);
+          newBox.x = newX;
+          newBox.y = newY;
+        } else if (scannerDragInfo.current.type === "tr") {
+          const newWidth = Math.max(5, Math.min(100 - startBox.x, startBox.width + deltaPercentX));
+          const newY = Math.max(0, Math.min(startBox.y + startBox.height - 5, startBox.y + deltaPercentY));
+          newBox.height = startBox.height + (startBox.y - newY);
+          newBox.width = newWidth;
+          newBox.y = newY;
+        } else if (scannerDragInfo.current.type === "bl") {
+          const newX = Math.max(0, Math.min(startBox.x + startBox.width - 5, startBox.x + deltaPercentX));
+          const newHeight = Math.max(5, Math.min(100 - startBox.y, startBox.height + deltaPercentY));
+          newBox.width = startBox.width + (startBox.x - newX);
+          newBox.height = newHeight;
+          newBox.x = newX;
+        } else if (scannerDragInfo.current.type === "br") {
+          newBox.width = Math.max(5, Math.min(100 - startBox.x, startBox.width + deltaPercentX));
+          newBox.height = Math.max(5, Math.min(100 - startBox.y, startBox.height + deltaPercentY));
+        }
+        
+        return newBox;
+      });
+    };
+
+    const handleEnd = () => {
+      scannerDragInfo.current.type = null;
+      window.removeEventListener("mousemove", handleMove);
+      window.removeEventListener("mouseup", handleEnd);
+      window.removeEventListener("touchmove", handleMove);
+      window.removeEventListener("touchend", handleEnd);
+    };
+
+    window.addEventListener("mousemove", handleMove);
+    window.addEventListener("mouseup", handleEnd);
+    window.addEventListener("touchmove", handleMove, { passive: false });
+    window.addEventListener("touchend", handleEnd);
+  };
+
+  const applyScannerProcessing = async (activeFile: UploadedFile) => {
+    if (isScannerProcessing) return;
+    setIsScannerProcessing(true);
+
+    try {
+      const img = new Image();
+      img.src = activeFile.previewUrl;
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = reject;
+      });
+
+      const canvas = document.createElement("canvas");
+      
+      // Calculate pixel crop coordinates
+      const cropX = (scannerCropBox.x * img.naturalWidth) / 100;
+      const cropY = (scannerCropBox.y * img.naturalHeight) / 100;
+      const cropW = (scannerCropBox.width * img.naturalWidth) / 100;
+      const cropH = (scannerCropBox.height * img.naturalHeight) / 100;
+
+      // Handle canvas size based on rotation
+      const isRotated90 = scannerRotation === 90 || scannerRotation === 270;
+      const canvasW = isRotated90 ? cropH : cropW;
+      const canvasH = isRotated90 ? cropW : cropH;
+
+      canvas.width = canvasW;
+      canvas.height = canvasH;
+
+      const ctx = canvas.getContext("2d");
+      if (!ctx) throw new Error("Could not get canvas context");
+
+      // Apply rotation transformation
+      ctx.translate(canvasW / 2, canvasH / 2);
+      ctx.rotate((scannerRotation * Math.PI) / 180);
+
+      // Draw the cropped section onto the canvas
+      if (isRotated90) {
+        ctx.drawImage(img, cropX, cropY, cropW, cropH, -canvasH / 2, -canvasW / 2, canvasH, canvasW);
+      } else {
+        ctx.drawImage(img, cropX, cropY, cropW, cropH, -canvasW / 2, -canvasH / 2, canvasW, canvasH);
+      }
+
+      // Reset transformations
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+
+      // Apply high-contrast grayscale filter
+      if (scannerFilterEnabled) {
+        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imgData.data;
+        
+        // Calculate contrast factor
+        const factor = (259 * (scannerContrast * 100 + 255)) / (255 * (259 - scannerContrast * 100));
+
+        for (let i = 0; i < data.length; i += 4) {
+          const r = data[i];
+          const g = data[i + 1];
+          const b = data[i + 2];
+          
+          // Grayscale (BT.601 formula)
+          let gray = 0.299 * r + 0.587 * g + 0.114 * b;
+          
+          // Apply contrast
+          gray = factor * (gray - 128) + 128;
+          
+          // Boost whites and blacks
+          if (gray > 190) {
+            gray = 255;
+          } else if (gray < 80) {
+            gray = 0;
+          } else {
+            // Smooth scaling
+            gray = Math.max(0, Math.min(255, gray));
+          }
+
+          data[i] = gray;
+          data[i + 1] = gray;
+          data[i + 2] = gray;
+        }
+
+        ctx.putImageData(imgData, 0, 0);
+      }
+
+      // Convert to blob and update file state
+      canvas.toBlob((blob) => {
+        if (!blob) {
+          showToast("Erreur lors de la génération du scan", "error");
+          setIsScannerProcessing(false);
+          return;
+        }
+
+        const newFile = new File([blob], activeFile.file.name.replace(/\.[^/.]+$/, "") + "_scan.jpg", { type: "image/jpeg" });
+        
+        // Revoke previous URL to prevent memory leaks
+        URL.revokeObjectURL(activeFile.previewUrl);
+        const newPreviewUrl = URL.createObjectURL(newFile);
+
+        // Update the files array
+        setFiles(prev => prev.map(f => f.id === activeFile.id ? {
+          ...f,
+          file: newFile,
+          previewUrl: newPreviewUrl,
+          status: "idle",
+          extractedData: undefined,
+          errorMsg: undefined
+        } : f));
+
+        // Close scanner
+        setIsScannerOpen(false);
+        setIsScannerProcessing(false);
+        showToast("Scan appliqué ! Analyse OCR relancée...", "success");
+
+        // Re-trigger analysis
+        setTimeout(() => {
+          analyzeFile({
+            id: activeFile.id,
+            file: newFile,
+            previewUrl: newPreviewUrl,
+            status: "idle"
+          });
+        }, 100);
+      }, "image/jpeg", 0.95);
+
+    } catch (error: any) {
+      console.error("Scanner Error:", error);
+      showToast("Erreur lors du traitement : " + error.message, "error");
+      setIsScannerProcessing(false);
+    }
+  };
 
   const deleteInvoice = async (id: string) => {
     if (!confirm("Voulez-vous supprimer définitivement ce justificatif de la base de données ?")) return;
@@ -543,15 +773,26 @@ export default function ImportPage() {
               
               {/* Document Title header */}
               <div className="flex items-center justify-between pb-3 border-b border-[#1E2A33]/5">
-                <h3 className="text-sm font-bold text-[#1E2A33] flex items-center gap-1.5">
+                <h3 className="text-sm font-bold text-[#1E2A33] flex items-center gap-1.5 truncate max-w-[60%]">
                   <FileText className="w-4 h-4 text-[#AE7D5C]" />
                   Révision : {activeFile.file.name}
                 </h3>
-                {activeFile.status === "success" && (
-                  <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200">
-                    Déjà envoyé Pennylane
-                  </span>
-                )}
+                <div className="flex items-center gap-2">
+                  {activeFile.file.type.startsWith("image/") && activeFile.status !== "success" && activeFile.status !== "uploading" && (
+                    <button
+                      onClick={openScanner}
+                      className="px-3 py-1 text-xs font-bold rounded-lg border border-[#AE7D5C]/35 text-[#AE7D5C] hover:bg-[#AE7D5C]/5 transition-all flex items-center gap-1 cursor-pointer"
+                    >
+                      <Crop className="w-3.5 h-3.5" />
+                      <span>Scanner / Recadrer</span>
+                    </button>
+                  )}
+                  {activeFile.status === "success" && (
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold text-emerald-800 bg-emerald-50 border border-emerald-200">
+                      Déjà envoyé Pennylane
+                    </span>
+                  )}
+                </div>
               </div>
 
               {/* PDF/Image Preview Panel (Especially premium for Desktop/Laptop view!) */}
@@ -967,6 +1208,156 @@ export default function ImportPage() {
             </div>
           )}
         </div>
+      )}
+
+      {/* Document Scanner Modal */}
+      {isScannerOpen && activeFile && (
+        <Dialog open={isScannerOpen} onOpenChange={(open) => !open && setIsScannerOpen(false)}>
+          <DialogContent className="max-w-2xl w-[95vw] max-h-[95vh] flex flex-col p-0 overflow-hidden bg-white/95 backdrop-blur-xl border-[#1E2A33]/10 rounded-2xl shadow-2xl">
+            <DialogHeader className="p-4 sm:p-5 border-b border-[#1E2A33]/5 flex-shrink-0 flex flex-row items-center justify-between">
+              <DialogTitle className="text-base font-bold text-[#1E2A33] flex items-center gap-2">
+                <Crop className="w-4 h-4 text-[#AE7D5C]" />
+                <span>Scanner & Recadrer le document</span>
+              </DialogTitle>
+            </DialogHeader>
+
+            <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 flex flex-col items-center justify-center min-h-0">
+              {/* Interactive Cropper Area */}
+              <div 
+                ref={scannerContainerRef}
+                className="relative w-full max-h-[45vh] bg-slate-900 rounded-2xl overflow-hidden flex items-center justify-center select-none"
+              >
+                <div 
+                  className="relative transition-transform duration-200" 
+                  style={{ transform: `rotate(${scannerRotation}deg)` }}
+                >
+                  <img
+                    src={activeFile.previewUrl}
+                    alt="Image à recadrer"
+                    className="max-w-full max-h-[40vh] object-contain pointer-events-none"
+                  />
+                  {/* Interactive Crop overlay */}
+                  <div 
+                    className="absolute border-2 border-[#AE7D5C] bg-[#AE7D5C]/15 cursor-move"
+                    style={{
+                      left: `${scannerCropBox.x}%`,
+                      top: `${scannerCropBox.y}%`,
+                      width: `${scannerCropBox.width}%`,
+                      height: `${scannerCropBox.height}%`
+                    }}
+                    onMouseDown={(e) => startScannerDrag(e, "box")}
+                    onTouchStart={(e) => startScannerDrag(e, "box")}
+                  >
+                    {/* Corner drag handles */}
+                    <div 
+                      className="absolute w-7 h-7 -top-3.5 -left-3.5 bg-white border-2 border-[#AE7D5C] rounded-full cursor-nwse-resize flex items-center justify-center shadow-md active:scale-110 transition-transform touch-none"
+                      onMouseDown={(e) => { e.stopPropagation(); startScannerDrag(e, "tl"); }}
+                      onTouchStart={(e) => { e.stopPropagation(); startScannerDrag(e, "tl"); }}
+                    >
+                      <div className="w-2 h-2 bg-[#AE7D5C] rounded-full" />
+                    </div>
+                    <div 
+                      className="absolute w-7 h-7 -top-3.5 -right-3.5 bg-white border-2 border-[#AE7D5C] rounded-full cursor-nesw-resize flex items-center justify-center shadow-md active:scale-110 transition-transform touch-none"
+                      onMouseDown={(e) => { e.stopPropagation(); startScannerDrag(e, "tr"); }}
+                      onTouchStart={(e) => { e.stopPropagation(); startScannerDrag(e, "tr"); }}
+                    >
+                      <div className="w-2 h-2 bg-[#AE7D5C] rounded-full" />
+                    </div>
+                    <div 
+                      className="absolute w-7 h-7 -bottom-3.5 -left-3.5 bg-white border-2 border-[#AE7D5C] rounded-full cursor-nesw-resize flex items-center justify-center shadow-md active:scale-110 transition-transform touch-none"
+                      onMouseDown={(e) => { e.stopPropagation(); startScannerDrag(e, "bl"); }}
+                      onTouchStart={(e) => { e.stopPropagation(); startScannerDrag(e, "bl"); }}
+                    >
+                      <div className="w-2 h-2 bg-[#AE7D5C] rounded-full" />
+                    </div>
+                    <div 
+                      className="absolute w-7 h-7 -bottom-3.5 -right-3.5 bg-white border-2 border-[#AE7D5C] rounded-full cursor-nwse-resize flex items-center justify-center shadow-md active:scale-110 transition-transform touch-none"
+                      onMouseDown={(e) => { e.stopPropagation(); startScannerDrag(e, "br"); }}
+                      onTouchStart={(e) => { e.stopPropagation(); startScannerDrag(e, "br"); }}
+                    >
+                      <div className="w-2 h-2 bg-[#AE7D5C] rounded-full" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Adjustments Controls */}
+              <div className="w-full space-y-4 bg-slate-50 p-4 rounded-2xl border border-slate-100">
+                <div className="flex flex-wrap gap-4 items-center justify-between">
+                  {/* Rotation button */}
+                  <button
+                    onClick={() => setScannerRotation(r => (r + 90) % 360)}
+                    className="flex items-center gap-2 px-4 py-2 bg-white hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-xl text-xs font-semibold shadow-sm transition-all cursor-pointer"
+                  >
+                    <RotateCw className="w-4 h-4 text-[#AE7D5C]" />
+                    <span>Pivoter 90°</span>
+                  </button>
+
+                  {/* Filter Toggle */}
+                  <label className="flex items-center gap-2.5 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={scannerFilterEnabled}
+                      onChange={(e) => setScannerFilterEnabled(e.target.checked)}
+                      className="w-4 h-4 rounded text-[#AE7D5C] border-slate-300 focus:ring-[#AE7D5C]/50 cursor-pointer"
+                    />
+                    <span className="text-xs font-semibold text-slate-700">Filtre Scanner (N&B Contraste)</span>
+                  </label>
+                </div>
+
+                {/* Contrast Threshold Slider */}
+                {scannerFilterEnabled && (
+                  <div className="space-y-1.5">
+                    <div className="flex items-center justify-between text-[11px] font-semibold text-slate-500">
+                      <span className="flex items-center gap-1">
+                        <Sliders className="w-3.5 h-3.5 text-[#AE7D5C]" />
+                        Seuil de contraste
+                      </span>
+                      <span>{Math.round(scannerContrast * 100)}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="1.0"
+                      max="2.5"
+                      step="0.1"
+                      value={scannerContrast}
+                      onChange={(e) => setScannerContrast(parseFloat(e.target.value))}
+                      className="w-full accent-[#AE7D5C] h-1 bg-slate-200 rounded-lg appearance-none cursor-pointer"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Modal Actions Footer */}
+            <div className="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-3 flex-shrink-0">
+              <button
+                onClick={() => setIsScannerOpen(false)}
+                className="px-5 py-2.5 bg-white border border-slate-200 hover:bg-slate-100 text-slate-700 rounded-xl text-xs font-bold transition-all cursor-pointer"
+                disabled={isScannerProcessing}
+              >
+                Annuler
+              </button>
+              <button
+                onClick={() => applyScannerProcessing(activeFile)}
+                className="px-5 py-2.5 bg-[#AE7D5C] hover:bg-[#966747] text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-md disabled:opacity-50"
+                disabled={isScannerProcessing}
+              >
+                {isScannerProcessing ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Traitement...</span>
+                  </>
+                ) : (
+                  <>
+                    <Check className="w-4 h-4" />
+                    <span>Appliquer le Scan</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </DialogContent>
+        </Dialog>
       )}
 
       {/* Toast Notifications Overlay */}
