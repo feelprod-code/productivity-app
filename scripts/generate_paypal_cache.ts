@@ -38,13 +38,39 @@ const ICLOUD_CONFIG = {
 const CACHE_PATH = path.join(__dirname, '../src/app/api/transactions/releve/paypal_cache.json');
 
 function cleanMerchantName(subject: string, text: string): string | null {
-    // 1. Try to extract from subject line
-    // French: "Vous avez envoyé un paiement de X EUR à Marchand"
-    // English: "You sent a payment of X USD to Marchand"
-    const subjectMatch = subject.match(/(?:à|to|pour|payment to|paiement à)\s+([^,.(]+)/i);
-    if (subjectMatch && subjectMatch[1]) {
-        const candidate = subjectMatch[1].trim();
-        if (candidate.toLowerCase() !== 'paypal' && candidate.length > 2) {
+    let candidate: string | null = null;
+
+    // Post-process cleaning function
+    const sanitize = (name: string): string => {
+        return name
+            .replace(/^(?:votre paiement (?:à|de|pour)|your payment (?:to|for)|votre règlement (?:à|de|pour)|votre virement (?:à|de|pour))\s+/i, '')
+            .replace(/^(?:le transfert (?:de|à|pour)|transfer (?:to|from))\s+/i, '')
+            .trim();
+    };
+
+    // 1. Try subject with specific patterns first
+    const specificMatch = subject.match(/(?:paiement à|payment to|payment for|paiement pour|facture de)\s+([^,.(]+)/i);
+    if (specificMatch && specificMatch[1]) {
+        candidate = specificMatch[1].trim();
+    } else {
+        // Fallback to more generic patterns
+        const genericMatch = subject.match(/(?:à|to|pour|for)\s+([^,.(]+)/i);
+        if (genericMatch && genericMatch[1]) {
+            candidate = genericMatch[1].trim();
+        }
+    }
+
+    if (candidate) {
+        candidate = sanitize(candidate);
+        const lower = candidate.toLowerCase();
+        if (
+            lower !== 'paypal' && 
+            candidate.length > 2 && 
+            !lower.includes('traite votre commande') &&
+            !lower.includes('votre commande') &&
+            !lower.includes('facture') &&
+            !lower.includes('paiement')
+        ) {
             return candidate;
         }
     }
@@ -52,8 +78,16 @@ function cleanMerchantName(subject: string, text: string): string | null {
     // 2. Try to extract from email body text
     const bodyMatch = text.match(/(?:marchand|merchant|compte du marchand|paiement envoyé à)\s*:\s*([^<\r\n]+)/i);
     if (bodyMatch && bodyMatch[1]) {
-        const candidate = bodyMatch[1].trim();
-        if (candidate.toLowerCase() !== 'paypal' && candidate.length > 2) {
+        candidate = sanitize(bodyMatch[1].trim());
+        const lower = candidate.toLowerCase();
+        if (
+            lower !== 'paypal' && 
+            candidate.length > 2 &&
+            !lower.includes('traite votre commande') &&
+            !lower.includes('votre commande') &&
+            !lower.includes('facture') &&
+            !lower.includes('paiement')
+        ) {
             return candidate;
         }
     }
@@ -83,16 +117,22 @@ async function scanAccount(config: any, accountName: string, cache: Record<strin
             ['HEADER', 'FROM', 'paypal']
         ];
         
-        const fetchOptions = { bodies: ['HEADER', 'TEXT', ''], struct: true };
-        const messages = await connection.search(searchCriteria, fetchOptions);
+        const fetchOptions = { bodies: ['HEADER'], struct: true };
+        const searchResults = await connection.search(searchCriteria, fetchOptions);
         
-        console.log(`📊 Found ${messages.length} potential PayPal emails in ${accountName}.`);
+        console.log(`📊 Found ${searchResults.length} potential PayPal emails in ${accountName}.`);
 
         let newMatches = 0;
 
-        for (const msg of messages) {
+        for (const msg of searchResults) {
             try {
-                const allPart = msg.parts.find((p: any) => p.which === '');
+                // Fetch the full message individually by UID to avoid throttling/timeout on iCloud
+                const uid = msg.attributes.uid;
+                const fullMsgResults = await connection.search([['UID', uid]], { bodies: [''], struct: true });
+                if (!fullMsgResults || fullMsgResults.length === 0) continue;
+                
+                const fullMsg = fullMsgResults[0];
+                const allPart = fullMsg.parts.find((p: any) => p.which === '');
                 if (!allPart) continue;
 
                 const parsed = await simpleParser(allPart.body);

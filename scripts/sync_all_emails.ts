@@ -475,11 +475,11 @@ async function processEmailAccount(name: string, config: any, sinceDate: string)
                                         currency: "EUR",
                                         date: date,
                                         fileUrl: fileUrl,
-                                        status: "COMPLETED",
+                                        status: "PENDING",
                                         type: "PRO"
                                     }
                                 });
-                                console.log(`         ✅ Facture enregistrée en base de données.`);
+                                console.log(`         ✅ Facture enregistrée en base de données avec statut PENDING.`);
                             }
                         }
                     }

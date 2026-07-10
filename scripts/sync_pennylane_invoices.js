@@ -24,8 +24,8 @@ async function main() {
   let cursor = '';
   const pennylaneInvoices = [];
   
-  // Fetch up to 10 pages of invoices
-  for (let page = 1; page <= 10; page++) {
+  // Fetch up to 50 pages of invoices to cover full history
+  for (let page = 1; page <= 50; page++) {
     const fetchUrl = `${BASE_URL}/supplier_invoices?limit=100` + (cursor ? `&cursor=${cursor}` : '');
     const res = await fetch(fetchUrl, {
       headers: {
@@ -68,20 +68,32 @@ async function main() {
         return true;
       }
       
-      // Fallback: match by amount and date (+/- 3 days)
+      // Fallback: match by amount and date (dynamic offset)
       const plAmount = parseFloat(pl.amount || '0');
       const amtDiff = Math.abs(plAmount - (localInv.amount || 0));
       if (amtDiff < 0.05) {
         const localDate = new Date(localInv.date);
         const plDate = new Date(pl.date);
         const timeDiff = Math.abs(localDate.getTime() - plDate.getTime());
-        const threeDaysMs = 3 * 24 * 60 * 60 * 1000;
-        if (timeDiff <= threeDaysMs) {
-          // Verify provider overlap
-          const plLabel = (pl.label || '').toLowerCase();
-          const plProvider = (pl.supplier?.name || '').toLowerCase();
-          const localProv = localInv.provider.toLowerCase();
-          if (plLabel.includes(localProv) || localProv.includes(plLabel) || plProvider.includes(localProv)) {
+        
+        const localProv = localInv.provider.toLowerCase();
+        const isAmazon = localProv.includes('amazon');
+        const maxDaysMs = isAmazon ? 90 * 24 * 60 * 60 * 1000 : 35 * 24 * 60 * 60 * 1000;
+        
+        if (timeDiff <= maxDaysMs) {
+          // Verify provider overlap by normalising spaces and non-alphanumeric chars
+          const cleanLocal = localProv.replace(/[^a-z0-9]/g, '');
+          const cleanPlLabel = (pl.label || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+          const cleanPlProvider = (pl.supplier?.name || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+          
+          if (
+            cleanLocal.length > 2 && (
+              cleanPlLabel.includes(cleanLocal) || 
+              cleanLocal.includes(cleanPlLabel) || 
+              cleanPlProvider.includes(cleanLocal) ||
+              cleanLocal.includes(cleanPlProvider)
+            )
+          ) {
             return true;
           }
         }
