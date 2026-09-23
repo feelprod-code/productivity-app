@@ -157,7 +157,7 @@ async function autoEnrichCpam(allTxs: any[], allInvs: any[], detailsMap: Record<
 
         if (matchedTx) {
           const txId = String(matchedTx.id);
-          const descriptionValue = `CPAM_JSON:${JSON.stringify(patientsList)}`;
+          const descriptionValue = `CPAM_MATCH:${inv.id}|${JSON.stringify(patientsList)}`;
 
           // Enregistrer en base
           await prisma.$executeRawUnsafe(
@@ -331,15 +331,20 @@ export async function GET() {
       const noJustificatifKeywords = [
         'genspark', 'telelion', 'decadaire', 'agio', 'commission', 'zen pro', 'formule zen',
         'convention professionnel', 'access', 'cb facture/retrait dt differe', 'releve cb',
-        'dyn dac', 'vironvay', 'sapn', 'aprr', 'sanef', 'cofiroute', 'autoroute'
+        'dyn dac', 'vironvay', 'sapn', 'aprr', 'sanef', 'cofiroute', 'autoroute',
+        'mutuelle', 'macsf', 'mgen', 'assurance'
       ];
       const isIndigo = labelLower.includes('indigo');
       const isSmallIndigo = isIndigo && absAmount < 10.00;
       const isAmazonPrime = labelLower.includes('amazon prime');
+      
+      const isHarmonieMutuelle = labelLower.includes('harmonie') && !labelLower.includes('harmonie du gout') && !labelLower.includes('harmonie du goût');
+      
       const noJustificatif = !isOutflow || 
                              noJustificatifKeywords.some(k => labelLower.includes(k)) || 
                              isSmallIndigo ||
-                             isAmazonPrime;
+                             isAmazonPrime ||
+                             isHarmonieMutuelle;
 
       // Determine Payment Method / Category
       let category = "other";
@@ -513,7 +518,7 @@ export async function GET() {
             if (cleanInv.includes('caisse') && !labelLower.includes('caisse') && !labelLower.includes('retraite') && !labelLower.includes('carpimko')) return false;
 
             const cleanTx = (realMerchantName || labelLower)
-              .replace(/(virement|prlv|sepa|carte|cb|facture|achat|payments|digital|sarl|gmbh|inc|sas|eu)/gi, '')
+              .replace(/(virement|prelvt|prelevement|prlv|sepa|recu|confrere|d\/o|carte|cb|facture|achat|payments|digital|sarl|gmbh|inc|sas|eu|ics|rum|sdr)/gi, '')
               .toLowerCase()
               .trim();
             const txWords = cleanTx.split(/[^a-z0-9]/).filter((w: string) => {
@@ -532,6 +537,20 @@ export async function GET() {
               providerMatch = txWords.some((word: string) => cleanInv.includes(word) || word.includes(cleanInv));
             } else {
               providerMatch = cleanInv.includes(cleanTx) || cleanTx.includes(cleanInv);
+            }
+
+            // Custom alias matching for Free Telecom / Freebox / Free Mobile
+            const isTxFree = labelLower.includes('free') || labelLower.includes('freebox') || labelLower.includes('free mobile');
+            const isInvFree = cleanInv.includes('free') || cleanInv.includes('freebox');
+            if (isTxFree && isInvFree) {
+              providerMatch = true;
+            }
+
+            // Custom alias matching for Bouygues Telecom
+            const isTxBouygues = labelLower.includes('bouygues') || labelLower.includes('btelec') || labelLower.includes('btl');
+            const isInvBouygues = cleanInv.includes('bouygues') || cleanInv.includes('btelec');
+            if (isTxBouygues && isInvBouygues) {
+              providerMatch = true;
             }
 
             // Custom alias matching for GCL / Rafenne / Comptabilité / Autonome
@@ -566,7 +585,7 @@ export async function GET() {
             }
 
             // Custom alias matching for Harmonie
-            const isTxHarmonie = labelLower.includes('harmonie');
+            const isTxHarmonie = labelLower.includes('harmonie') && !labelLower.includes('harmonie du gout') && !labelLower.includes('harmonie du goût');
             const isInvHarmonie = cleanInv.includes('harmonie');
             if (isTxHarmonie && isInvHarmonie) {
               providerMatch = true;
@@ -584,6 +603,11 @@ export async function GET() {
             const isInvEleven = cleanInv.includes('elevenlabs') || cleanInv.includes('eleven labs');
             if (isTxEleven && isInvEleven) {
               providerMatch = true;
+            }
+
+            // Force exclusion: do not match Harmonie mutuelle to Harmonie du Gout restaurant
+            if (labelLower.includes('harmonie du gout') && cleanInv === 'harmonie') {
+              providerMatch = false;
             }
 
             return providerMatch;
@@ -702,7 +726,7 @@ export async function GET() {
           isPro = false;
         } else if (labelLower.includes('cpam') || labelLower.includes('c.p.a.m.') || labelLower.includes('sumup') || labelLower.includes('sum up') || labelLower.includes('amazon') || labelLower.includes('amzn')) {
           isPro = true;
-        } else if (productDescription && (productDescription.startsWith("CPAM_JSON:") || productDescription.startsWith("SUMUP_JSON:"))) {
+        } else if (productDescription && (productDescription.startsWith("CPAM_MATCH:") || productDescription.startsWith("CPAM_JSON:"))) {
           isPro = true;
         } else {
           const personalKeywords = [

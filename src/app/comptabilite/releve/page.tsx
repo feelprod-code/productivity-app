@@ -337,7 +337,7 @@ function RelevePageContent() {
   // Filters
   const [filterFlow, setFilterFlow] = useState<"all" | "inflow" | "outflow">("all");
   const [filterCategory, setFilterCategory] = useState<string>("all");
-  const [filterMatched, setFilterMatched] = useState<"all" | "matched" | "unmatched">("unmatched");
+  const [filterMatched, setFilterMatched] = useState<"all" | "matched" | "unmatched">("all");
   const [searchQuery, setSearchQuery] = useState<string>("");
   const [sortOrder, setSortOrder] = useState<"asc" | "desc">("desc");
 
@@ -677,6 +677,27 @@ function RelevePageContent() {
       logEndRef.current.scrollIntoView({ behavior: "smooth" });
     }
   }, [copilotStatus.logs]);
+
+  const handleForceDownload = async (e: React.MouseEvent, url: string, filename: string) => {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      // Pour éviter les problèmes CORS, on va essayer de fetch le fichier et le télécharger
+      const response = await fetch(url);
+      const blob = await response.blob();
+      const objectUrl = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = objectUrl;
+      link.download = filename || 'facture.pdf';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(objectUrl);
+    } catch (err) {
+      console.error("Erreur téléchargement, fallback vers l'ouverture classique:", err);
+      window.open(url, '_blank');
+    }
+  };
 
   const triggerManualUpload = (e: React.MouseEvent, tx: Transaction) => {
     e.stopPropagation();
@@ -1430,7 +1451,11 @@ function RelevePageContent() {
                                              <span className="text-xs font-semibold text-[#1E2A33] block truncate max-w-[130px] xs:max-w-[180px] sm:max-w-[260px]" title={tx.matchedInvoice.filename}>
                                                {tx.matchedInvoice.filename}
                                              </span>
-                                             <span className="text-[9px] text-[#1E2A33]/40 block">Identifié sur Pennylane</span>
+                                             {String(tx.matchedInvoice.id).startsWith('pennylane_') ? (
+                                               <span className="text-[9px] text-[#1E2A33]/40 block">Identifié sur Pennylane</span>
+                                             ) : (
+                                               <span className="text-[9px] text-[#1E2A33]/40 block">Identifié localement</span>
+                                             )}
                                            </div>
                                          </div>
                                          <Button
@@ -1448,24 +1473,22 @@ function RelevePageContent() {
                                          <Button
                                            variant="outline"
                                            size="sm"
-                                           className="text-xs bg-white text-[#1E2A33] hover:bg-[#FDFBEF] rounded-xl flex-1 h-9 cursor-pointer min-w-0"
+                                           className="text-xs bg-white text-[#1E2A33] hover:bg-[#FDFBEF] rounded-xl flex-1 h-9 cursor-pointer min-w-0 disabled:opacity-50 disabled:cursor-not-allowed"
                                            onClick={() => setPreviewUrl(tx.matchedInvoice?.publicFileUrl || null)}
+                                           disabled={!tx.matchedInvoice?.publicFileUrl}
                                          >
                                            <FileText className="w-4 h-4 mr-2 shrink-0" />
                                            <span className="truncate">Voir la facture</span>
                                          </Button>
                                          
-                                         {tx.matchedInvoice.publicFileUrl && (
-                                           <a
-                                             href={tx.matchedInvoice.publicFileUrl}
-                                             download
-                                             target="_blank"
-                                             rel="noopener noreferrer"
-                                             className="h-9 px-3 border border-[#1E2A33]/10 text-[#1E2A33]/60 hover:text-[#1E2A33] bg-white rounded-xl flex items-center justify-center shrink-0"
-                                             title="Télécharger directement"
+                                         {tx.matchedInvoice?.publicFileUrl && (
+                                           <button
+                                             onClick={(e) => handleForceDownload(e, tx.matchedInvoice!.publicFileUrl!, tx.matchedInvoice!.filename)}
+                                             className="h-9 px-3 border border-[#1E2A33]/10 text-[#1E2A33]/60 hover:text-[#1E2A33] bg-white rounded-xl flex items-center justify-center shrink-0 cursor-pointer"
+                                             title="Télécharger directement sur l'ordinateur"
                                            >
                                              <Download className="w-4 h-4" />
-                                           </a>
+                                           </button>
                                          )}
                                        </div>
                                      </div>
