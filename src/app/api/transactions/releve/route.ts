@@ -621,6 +621,27 @@ export async function GET() {
           }) || null;
         }
 
+        // Special contracts and recurring schedules (Échéanciers, Prêts, Prévoyance, Lixxbail)
+        if (!matchedInvoice) {
+          if (labelLower.includes('urssaf')) {
+            matchedInvoice = allInvs.find((inv: any) => inv.id === 'urssaf-echeancier-2026') || null;
+          } else if (labelLower.includes('carpimko')) {
+            matchedInvoice = allInvs.find((inv: any) => inv.id === 'carpimko-appel-2026') || null;
+          } else if (labelLower.includes('18942536') || (labelLower.includes('pret') && Math.abs(absAmount - 680.04) < 1.0)) {
+            matchedInvoice = allInvs.find((inv: any) => inv.id === 'lcl-pret-18942536') || null;
+          } else if (labelLower.includes('adoha') || labelLower.includes('gpm')) {
+            matchedInvoice = allInvs.find((inv: any) => inv.id === 'adoha-gpm-prevoyance-2026') || null;
+          } else if (labelLower.includes('lixxbail') || labelLower.includes('310925bs0')) {
+            if (Math.abs(absAmount - 7089.00) < 1.0) {
+              matchedInvoice = allInvs.find((inv: any) => inv.id === 'lixxbail-cession-macbook') || null;
+            } else if (Math.abs(absAmount - 568.83) < 1.0) {
+              matchedInvoice = allInvs.find((inv: any) => inv.id === 'lcl-leasing-premier-loyer') || null;
+            } else {
+              matchedInvoice = allInvs.find((inv: any) => inv.id === 'lcl-leasing-premier-loyer' || inv.id === 'lixxbail-cession-macbook') || null;
+            }
+          }
+        }
+
         if (matchedInvoice) {
           usedInvoiceIds.add(matchedInvoice.id);
         } else {
@@ -636,21 +657,28 @@ export async function GET() {
           }
         }
       } else {
-        // Inflow matching (CPAM, SumUp)
+        // Inflow matching (CPAM, SumUp, URSSAF, Lixxbail)
         const isTxCpam = labelLower.includes('cpam') || labelLower.includes('c.p.a.m.') || labelLower.includes('assurance maladie') || labelLower.includes('ameli');
         const isTxSumup = labelLower.includes('sumup') || labelLower.includes('sum up');
         if (isTxCpam) {
-          matchedInvoice = allInvs.find((inv: any) => {
-            const provLower = (inv.provider || '').toLowerCase();
-             const isInvCpam = provLower.includes('cpam') || 
-                               provLower.includes('assurance maladie') || 
-                               provLower.includes('caisse d\'assurance') || 
-                               provLower.includes('ameli');
-             if (!isInvCpam) return false;
-            
-            const invTime = new Date(inv.date).getTime();
-            return Math.abs(txTime - invTime) <= thirtyFiveDaysMs;
-          }) || null;
+          const txDesc = detailsMap[String(tx.id)] || '';
+          if (txDesc.startsWith('CPAM_MATCH:')) {
+            const docId = txDesc.substring(11, txDesc.indexOf('|'));
+            matchedInvoice = allInvs.find((inv: any) => inv.id === docId) || null;
+          }
+          if (!matchedInvoice) {
+            matchedInvoice = allInvs.find((inv: any) => {
+              const provLower = (inv.provider || '').toLowerCase();
+              const isInvCpam = provLower.includes('cpam') || 
+                                provLower.includes('assurance maladie') || 
+                                provLower.includes('caisse d\'assurance') || 
+                                provLower.includes('ameli');
+              if (!isInvCpam) return false;
+              
+              const invTime = new Date(inv.date).getTime();
+              return Math.abs(txTime - invTime) <= 45 * 24 * 60 * 60 * 1000;
+            }) || null;
+          }
         } else if (isTxSumup) {
           matchedInvoice = allInvs.find((inv: any) => {
             const provLower = (inv.provider || '').toLowerCase();
@@ -665,6 +693,10 @@ export async function GET() {
             const invAmount = inv.amount || 0;
             return Math.abs(invAmount - txAmount) < 0.05;
           }) || null;
+        } else if (labelLower.includes('urssaf')) {
+          matchedInvoice = allInvs.find((inv: any) => inv.id === 'urssaf-echeancier-2026') || null;
+        } else if (labelLower.includes('lixxbail') || labelLower.includes('310925bs0')) {
+          matchedInvoice = allInvs.find((inv: any) => inv.id === 'lixxbail-cession-macbook') || null;
         }
       }
 
