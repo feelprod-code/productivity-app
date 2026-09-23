@@ -331,8 +331,10 @@ export async function GET() {
       const noJustificatifKeywords = [
         'genspark', 'telelion', 'decadaire', 'agio', 'commission', 'zen pro', 'formule zen',
         'convention professionnel', 'access', 'cb facture/retrait dt differe', 'releve cb',
-        'dyn dac', 'vironvay', 'sapn', 'aprr', 'sanef', 'cofiroute', 'autoroute',
-        'mutuelle', 'macsf', 'mgen', 'assurance'
+        'dyn dac', 'vironvay', 'sapn', 'aprr', 'sanef', 'cofiroute', 'autoroute', 'bipandgo',
+        'mutuelle', 'macsf', 'mgen', 'assurance', 'roole', 'identicar', 'cotisation annuelle carte', 'cotisation carte',
+        'blocage des fonds', 'blocage sur pce', 'pce blocage', 'frais tenue de compte',
+        'carpimko', 'c.a.r.p.i.m.k.o', 'urssaf', 'adoha', 'direction generale de'
       ];
       const isIndigo = labelLower.includes('indigo');
       const isSmallIndigo = isIndigo && absAmount < 10.00;
@@ -736,7 +738,8 @@ export async function GET() {
             'appart', 'loyer', 'mgen', 'bouygues', 'magd', 'kaori', 'vw bank', 'volkswagen',
             'assurance voiture', 'poissonnerie', 'guillaume ou mm',
             'zalando', 'emma', 'fashion retail', 'apple', 'luiza', 'poste', 'theo', 'compagnie du',
-            'draps'
+            'draps', 'dgfip', 'finances publiq', 'impot', 'virement vir sepa m philippe guillaume',
+            'virement sepa m philippe guillaume', 'embryo app gain'
           ];
 
           const isAlreadyExploitant = tx.categories && tx.categories.some((c: any) => c.account_number && c.account_number.startsWith('108'));

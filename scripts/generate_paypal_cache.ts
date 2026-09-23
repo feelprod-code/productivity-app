@@ -5,7 +5,8 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as dotenv from 'dotenv';
 
-dotenv.config({ path: '/Users/guillaumephilippe/ANTIGRAVITY/compta/.env', override: true });
+dotenv.config({ path: '/Users/philippeguillaume/ANTIGRAVITY/compta/.env', override: true });
+dotenv.config({ path: '/Users/philippeguillaume/ANTIGRAVITY/.env', override: true });
 dotenv.config({ path: '.env.local', override: true });
 dotenv.config({ path: '.env', override: true });
 
@@ -14,7 +15,7 @@ const prisma = new PrismaClient();
 const GMAIL_CONFIG = {
     imap: {
         user: process.env.GMAIL_EMAIL || 'guillaumephilippe1968@gmail.com',
-        password: process.env.GMAIL_APP_PASSWORD || 'ridi mpgu rfbl deqp',
+        password: process.env.GMAIL_APP_PASSWORD || 'fpmc gosz zwxq lcwl',
         host: 'imap.gmail.com',
         port: 993,
         tls: true,
