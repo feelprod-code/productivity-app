@@ -54,6 +54,10 @@ function guessCategory(label: string, isPro: boolean, productDescription: string
     return "COTISATIONS";
   }
   
+  if (labelLower.includes("damoiseaux") || labelLower.includes("osteo md") || labelLower.includes("retrocession") || descLower.includes("damoiseaux") || descLower.includes("embryo")) {
+    return "HONORAIRES";
+  }
+
   return "FOURNITURES";
 }
 
@@ -727,7 +731,7 @@ export async function GET() {
         const isAmzDigital = labelLower.includes('amz digital') || labelLower.includes('amazon digital') || labelLower.includes('amz*digital');
         if (isAmzDigital) {
           isPro = false;
-        } else if (labelLower.includes('cpam') || labelLower.includes('c.p.a.m.') || labelLower.includes('sumup') || labelLower.includes('sum up') || labelLower.includes('amazon') || labelLower.includes('amzn')) {
+        } else if (labelLower.includes('cpam') || labelLower.includes('c.p.a.m.') || labelLower.includes('sumup') || labelLower.includes('sum up') || labelLower.includes('amazon') || labelLower.includes('amzn') || labelLower.includes('embryo') || labelLower.includes('damoiseaux') || labelLower.includes('osteo md')) {
           isPro = true;
         } else if (productDescription && (productDescription.startsWith("CPAM_MATCH:") || productDescription.startsWith("CPAM_JSON:"))) {
           isPro = true;
@@ -740,7 +744,7 @@ export async function GET() {
             'assurance voiture', 'poissonnerie', 'guillaume ou mm',
             'zalando', 'emma', 'fashion retail', 'apple', 'luiza', 'poste', 'theo', 'compagnie du',
             'draps', 'dgfip', 'finances publiq', 'impot', 'virement vir sepa m philippe guillaume',
-            'virement sepa m philippe guillaume', 'embryo app gain'
+            'virement sepa m philippe guillaume'
           ];
 
           const isAlreadyExploitant = tx.categories && tx.categories.some((c: any) => c.account_number && c.account_number.startsWith('108'));
