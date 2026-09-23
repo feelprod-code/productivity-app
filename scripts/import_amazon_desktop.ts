@@ -230,17 +230,37 @@ async function main() {
             continue;
         }
         
-        const files = fs.readdirSync(dirPath).filter(f => f.toLowerCase().endsWith('.pdf'));
-        console.log(`📂 Dossier ${year} : ${files.length} factures PDF trouvées.`);
+        function getPdfFiles(dir: string): string[] {
+            let res: string[] = [];
+            if (!fs.existsSync(dir)) return res;
+            const entries = fs.readdirSync(dir, { withFileTypes: true });
+            for (const entry of entries) {
+                const full = path.join(dir, entry.name);
+                if (entry.isDirectory()) {
+                    res.push(...getPdfFiles(full));
+                } else if (entry.isFile() && entry.name.toLowerCase().endsWith('.pdf')) {
+                    res.push(full);
+                }
+            }
+            return res;
+        }
+
+        const filePaths = getPdfFiles(dirPath);
+        console.log(`📂 Dossier ${year} : ${filePaths.length} factures PDF trouvées.`);
         
-        for (const file of files) {
-            // Parser le nom de fichier : AAAA-MM-JJ - Description - Montant€.pdf
-            // Exemple : 2025-01-05 - Beyblade X, Starter Pack... - 14,99€.pdf
-            const regex = /^(\d{4}-\d{2}-\d{2})\s+-\s+(.+?)\s+-\s+([\d\s]+[.,]\d{2})€\.pdf$/;
+        for (const filePath of filePaths) {
+            const file = path.basename(filePath);
+            // Parser le nom de fichier : AAAA-MM-JJ - Description - Montant(€|EUR).pdf
+            const regex = /^(\d{4}-\d{2}-\d{2})\s+-\s+(.+?)\s+-\s+([\d\s]+[.,]\d{2})(?:€|EUR)\.pdf$/i;
             const match = file.match(regex);
             
             if (!match) {
-                console.log(`⚠️ Fichier non standard ignoré : ${file}`);
+                continue;
+            }
+
+            const fileLower = file.toLowerCase();
+            const descLower = match[2].trim().toLowerCase();
+            if (!fileLower.includes('amazon') && !fileLower.includes('amzn') && !descLower.includes('amazon') && !descLower.includes('amzn')) {
                 continue;
             }
             
@@ -253,7 +273,6 @@ async function main() {
             const amountStr = match[3].replace(/\s/g, '').replace(',', '.');
             const amount = parseFloat(amountStr);
             const date = new Date(`${dateStr}T12:00:00Z`);
-            const filePath = path.join(dirPath, file);
 
             // Vérification du contenu du PDF de la facture Amazon
             try {

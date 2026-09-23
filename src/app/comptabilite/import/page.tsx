@@ -788,11 +788,11 @@ export default function ImportPage() {
       <div className="max-w-7xl mx-auto px-4 md:px-8">
 
       {activeView === "upload" ? (
-        /* Grid container for Split layout on desktop */
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        /* Vertical layout on desktop (Requested single column) */
+        <div className="flex flex-col gap-8 max-w-4xl mx-auto items-stretch">
         
-        {/* LEFT COLUMN: Upload Zone + File Selector list (Span 5 on Desktop) */}
-        <div className="lg:col-span-5 space-y-6">
+        {/* Upload Zone + File Selector list */}
+        <div className="space-y-6 w-full">
           
           <input 
             type="file" 
@@ -906,8 +906,8 @@ export default function ImportPage() {
           </div>
         </div>
 
-        {/* RIGHT COLUMN: Interactive Document Preview + Form Review (Span 7 on Desktop) */}
-        <div className="lg:col-span-7">
+        {/* Document Preview + Form Review */}
+        <div className="w-full">
           {activeFile ? (
             <div className="bg-white border border-[#1E2A33]/10 rounded-3xl p-6 shadow-sm space-y-6">
               
@@ -1118,17 +1118,7 @@ export default function ImportPage() {
               )}
 
             </div>
-          ) : (
-            <div className="hidden lg:flex flex-col items-center justify-center gap-3 h-[450px] bg-white/80 backdrop-blur-md border border-[#1E2A33]/10 rounded-3xl p-12 text-center shadow-sm">
-              <Upload className="w-12 h-12 text-[#AE7D5C]/40" />
-              <h3 className="text-base font-bold text-[#1E2A33]">
-                Sélectionnez un document
-              </h3>
-              <p className="text-xs text-[#1E2A33]/50 max-w-sm">
-                Déposez des fichiers sur l'ordinateur à gauche ou prenez une photo depuis votre iPhone, puis sélectionnez le document pour afficher sa prévisualisation interactive et ses métadonnées extraites.
-              </p>
-            </div>
-          )}
+          ) : null}
         </div>
       </div>
       ) : (

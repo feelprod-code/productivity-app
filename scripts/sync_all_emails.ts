@@ -6,6 +6,7 @@ import pdfParse from 'pdf-parse';
 import * as dotenv from 'dotenv';
 import * as path from 'path';
 import * as fs from 'fs';
+import * as os from 'os';
 import { createClient } from '@supabase/supabase-js';
 
 dotenv.config({ path: path.join(process.cwd(), '.env') });
@@ -17,7 +18,7 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY || ''
 );
 
-const desktopFolder = "/Users/guillaumephilippe/Desktop/Factures Bureau";
+const desktopFolder = path.join(os.homedir(), "Desktop", "Factures Bureau");
 if (!fs.existsSync(desktopFolder)) {
     fs.mkdirSync(desktopFolder, { recursive: true });
 }
@@ -102,10 +103,39 @@ async function getAiExtraction(text: string, subject: string, sender: string) {
     }
 }
 
+async function convertHtmlToPdf(htmlBuffer: Buffer): Promise<Buffer | null> {
+    const tempHtmlPath = `/tmp/temp_${Date.now()}_${Math.random().toString(36).substring(7)}.html`;
+    const tempPdfPath = `/tmp/temp_${Date.now()}_${Math.random().toString(36).substring(7)}.pdf`;
+    try {
+        fs.writeFileSync(tempHtmlPath, htmlBuffer);
+        const chromePath = '"/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"';
+        const { exec } = require('child_process');
+        const { promisify } = require('util');
+        const execPromise = promisify(exec);
+        await execPromise(`${chromePath} --headless --disable-gpu --print-to-pdf=${tempPdfPath} ${tempHtmlPath}`);
+        if (fs.existsSync(tempPdfPath)) {
+            return fs.readFileSync(tempPdfPath);
+        }
+    } catch (err: any) {
+        console.error("❌ HTML-to-PDF conversion error:", err.message);
+    } finally {
+        if (fs.existsSync(tempHtmlPath)) fs.unlinkSync(tempHtmlPath);
+        if (fs.existsSync(tempPdfPath)) fs.unlinkSync(tempPdfPath);
+    }
+    return null;
+}
+
 function isInvoiceNotificationOnly(text: string, subject: string): boolean {
     const textLower = text.toLowerCase();
     const subjectLower = subject.toLowerCase();
     
+    // Si l'e-mail mentionne un montant précis (ex: Free, Bouygues, etc.), ce n'est pas une simple notification vide
+    const hasExplicitAmount = /(?:montant de|montant est de|total|son montant)\s*[:d’'\s]*([0-9.,]+)\s*€/i.test(text) ||
+                              /(?:commande|commandé|expédié)/i.test(subjectLower);
+    if (hasExplicitAmount) {
+        return false;
+    }
+
     const notificationPhrases = [
         "facture est disponible",
         "facture est prete",
@@ -117,10 +147,7 @@ function isInvoiceNotificationOnly(text: string, subject: string): boolean {
         "disponible dans votre espace",
         "disponible sur votre espace",
         "rendez-vous dans votre espace",
-        "votre nouvelle facture",
-        "votre facture mobile",
-        "votre facture bouygues",
-        "votre facture freebox"
+        "votre nouvelle facture"
     ];
     
     const isNotification = notificationPhrases.some(phrase => textLower.includes(phrase) || subjectLower.includes(phrase));
@@ -442,14 +469,26 @@ async function processEmailAccount(name: string, config: any, sinceDate: string)
                     const aiData = await getAiExtraction(textToParse, mail.subject || '', mail.from?.text || '');
                     if (aiData && aiData.amount > 0) {
                         const cleanProvider = cleanProviderName(aiData.provider);
-                        const rawFilename = `${dateStr} - ${cleanProvider} - ${aiData.amount.toFixed(2)}€.${fileExt}`;
+                        let finalBuffer = fileBuffer;
+                        let finalExt = fileExt;
+                        let finalContentType = contentType;
+                        if (fileExt === 'html') {
+                            const pdfBuf = await convertHtmlToPdf(fileBuffer);
+                            if (pdfBuf) {
+                                finalBuffer = pdfBuf;
+                                finalExt = 'pdf';
+                                finalContentType = 'application/pdf';
+                            }
+                        }
+
+                        const rawFilename = `${dateStr} - ${cleanProvider} - ${aiData.amount.toFixed(2)}€.${finalExt}`;
                         
-                        fs.writeFileSync(path.join(desktopFolder, rawFilename), fileBuffer);
+                        fs.writeFileSync(path.join(desktopFolder, rawFilename), finalBuffer);
                         console.log(`      💾 [FACTURE] Enregistré sur le Bureau : ${rawFilename}`);
 
                         // DB & Storage sync
                         const cleanKey = cleanStorageKey(rawFilename);
-                        const { error: uploadError } = await supabase.storage.from('invoices').upload(cleanKey, fileBuffer, { contentType, upsert: true });
+                        const { error: uploadError } = await supabase.storage.from('invoices').upload(cleanKey, finalBuffer, { contentType: finalContentType, upsert: true });
 
                         if (!uploadError) {
                             const { data: urlData } = supabase.storage.from('invoices').getPublicUrl(cleanKey);

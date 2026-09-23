@@ -36,22 +36,34 @@ export async function GET(request: Request) {
             else if (ext === '.gif') contentType = 'image/gif';
         } else {
             // Remote fetch for Supabase or Pennylane URL
-            const response = await fetch(url);
+            // Ensure URL is properly encoded before fetching
+            let fetchUrl = url;
+            try {
+                fetchUrl = new URL(url).toString();
+            } catch (e) {
+                // If it fails, proceed with original
+            }
+            
+            const response = await fetch(fetchUrl);
             if (!response.ok) {
                 return new NextResponse(`Failed to fetch file: ${response.status} ${response.statusText}`, { status: response.status });
             }
             
-            // Get content-type dynamically from response headers
+            // Fallback by extension in URL
+            const cleanUrl = url.split('?')[0];
+            const ext = path.extname(cleanUrl).toLowerCase();
+            
             const remoteContentType = response.headers.get('content-type');
-            if (remoteContentType) {
+            if (ext === '.html') {
+                contentType = 'text/html';
+            } else if (ext === '.jpg' || ext === '.jpeg') {
+                contentType = 'image/jpeg';
+            } else if (ext === '.png') {
+                contentType = 'image/png';
+            } else if (ext === '.gif') {
+                contentType = 'image/gif';
+            } else if (remoteContentType && remoteContentType !== 'application/octet-stream') {
                 contentType = remoteContentType;
-            } else {
-                // Fallback by extension in URL
-                const cleanUrl = url.split('?')[0];
-                const ext = path.extname(cleanUrl).toLowerCase();
-                if (ext === '.html') contentType = 'text/html';
-                else if (ext === '.jpg' || ext === '.jpeg') contentType = 'image/jpeg';
-                else if (ext === '.png') contentType = 'image/png';
             }
             
             arrayBuffer = await response.arrayBuffer();

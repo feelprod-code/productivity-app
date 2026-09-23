@@ -11,6 +11,26 @@
       "sameSite": "Lax"
     },
     {
+      "name": "session",
+      "value": "9Abow5UZoqSbpyBhm-Z-Fg.BsKcocej63OzOna-ozLZNnTfiNDFxLqH7OPe42shHUHF5qmKF7FQaCjKxSwmYquQkbzeBex1KjuEfy_aP1mJMfQ2dSMDBDD4H1Qsqd1g15bLNLCgNy57ZKj5rvc25RSEaztpghuUAnHky07z2_S2Q4lIt6OZCQZWjLmtzB4RVd0Dj50nG2kp93uAfvO_RTWJLGlHlSxNt4RiDkdsP9gQZKoUUO73uoNcqz84sTEyKmSYsbFAHTgVZlg_JFC1GuSBwDeIeMTXt3hd5d9rKe9SiJN72AI2jwm7IrsbKPodhLA-L86VAOFrTa54VaWkNDYKM5V-2vAfJ55rl9vL6MV5rzfuOrXfCyUyXOZ096oZnw67nkrJf8tCTIbUEzM6mcBAP9UrMdKj4v11gykMXOS3Fw1db9p7CpigPz0HypHu71rFD3kBdQKyMHrbPvFhkELWKx93Xr6wxhbDV5l_bTIY3OyZQEd-1XyScLC_YPNEeVY9eAYnf2U4aq7ZB_XlJy2NhURyUWt6cGZIV-CfKj7y01iCDGCs_qWYgx2wD6BSwbwlXFLpWV0RHwN3USSyxIiGamj0FLzPVPO8y0WXeH9CRH1j3ImYTyddEBOzyozdoRAqphxFgCyx0JCuAf8sTgWRmmRmExUZiOeIRcMzLV3bAwxoAnvR706v2dAMD41tFOc5cHZSmLLBwE0TbFBPV7YUPBPjZP8ZabzAtErCf6-KMUdwbS1dRTv6X7sxgQuxXGCElvOWFz4aZ7zdhx7kxmBNZwF-QKdyGleobUneKV4ODoqVlhqjN1u6wmVI-nNQ-XfM1Kpqscr2t01WNYSatruEcxnkLhYzBCQr0sWFZhjq0CcEo00o_nepBdGe1BjFmEuO1sZUm0nJ8ngAkW2nM9Za1K_AuYKLv4CnQH21YP9KZYHxcv380bPyX9zRKKm_jE_A8blJF2-RDSCNUh3W6xmqnnE6KIbVUN7X1Mcjdd9_3OjuHmWlvreqZbbzx5zG7HYDq5DZp7SnMsvYmN2y1zBlENZrMqEmwqMxWDFrPl28uw.1788555055327.86400000.8dCzWef1ljY3rhhVJtOnEOA-hfgibU29VcgPcgUJJYE",
+      "domain": "admin.gandi.net",
+      "path": "/domain",
+      "expires": -1,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "websession",
+      "value": "ivWg0_qTF0gUnJVeEoCMaw.JBHaNT_m68PMJOvggTnX34imNtnGpgUhGiV5NpM3syxXJrx77aUQLyBAKh05uPDltKBH2eQNXEkhnekfXd_p_A0esRJX-fdyHiInJUEW0RVODx5rXkf46CSear2evYHUlqdFt4PGCRqRjDfl7kus5nn473VzRElIzSnj1pgiC5M.1788555055457.86400000.FIDdU0hsk0vUpamb7_eXzEf4jhgQtdYlqKukPSvrii0",
+      "domain": "admin.gandi.net",
+      "path": "/domain",
+      "expires": 1788641456.430745,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
       "name": "atuserid",
       "value": "%7B%22name%22%3A%22atuserid%22%2C%22val%22%3A%22dd9b1078-5f0b-432a-b8b4-8e51b96a2740%22%2C%22options%22%3A%7B%22end%22%3A%222027-08-05T20%3A02%3A04.071Z%22%2C%22path%22%3A%22%2F%22%7D%7D",
       "domain": ".gandi.net",
@@ -25,40 +45,10 @@
       "value": "502OHr7M_7Ejcw9GF-m2dDW1cBot9MBt7rhVQzo-4t01zWWdFZmMEIRC3BxWhPdUJrSaKH8rWDIa5zqwZ6ZpUd1kLi6kCVdGPqbHBZUESwRYrQwWO262uKvD",
       "domain": ".id.gandi.net",
       "path": "/",
-      "expires": 1817755328.283923,
+      "expires": 1823115038.017007,
       "httpOnly": false,
       "secure": true,
       "sameSite": "Strict"
-    },
-    {
-      "name": "locale",
-      "value": "en",
-      "domain": ".id.gandi.net",
-      "path": "/",
-      "expires": 1814731328.284031,
-      "httpOnly": true,
-      "secure": true,
-      "sameSite": "Lax"
-    },
-    {
-      "name": "atauthority",
-      "value": "%7B%22name%22%3A%22atauthority%22%2C%22val%22%3A%7B%22authority_name%22%3A%22cnil%22%2C%22visitor_mode%22%3A%22exempt%22%7D%2C%22options%22%3A%7B%22end%22%3A%222027-08-05T20%3A02%3A08.392Z%22%2C%22path%22%3A%22%2F%22%7D%7D",
-      "domain": ".gandi.net",
-      "path": "/",
-      "expires": 1817496128,
-      "httpOnly": false,
-      "secure": true,
-      "sameSite": "Lax"
-    },
-    {
-      "name": "session",
-      "value": "7SiTY1qdb0t9tx-mc9NzelK4fC-9qBHWuaMagPHpJjBBZRnNdc8MpEoecn87Id3wRMQQpgPbiLtJEL0KvhgJGlsxNzgzMTk1MzQ4LCAxNzgzMTk1MzIzLjE4OTgzNjMsIHsiX2NzcmZ0XyI6ICI2ODNjMzM2ODU0Zjk0ZDVhMTYwMmNmNTM4MTE1ODFmZDI0OWZjMzA0IiwgIm1mYV9wcm9jZXNzX3NsdWciOiAibEpVX29Tak1mT3JlZ2xrbGF2RTE0Q0VYMU94Vzk2ODlLNWNUeTNZNzd5TjcwT3UwYmV3dWcwNVIiLCAic2Vzc2lvbi5jcmVhdGVkX2F0IjogIjIwMjYtMDctMDRUMjA6MDI6MDguMjk2NjgyKzAwOjAwIiwgInVzZXIudXNlcm5hbWUiOiAiRkVFTFBST0QiLCAidXNlci51dWlkIjogIjIzYThmMjM4LTdjZTQtMTFlNy05YmZlLTAwMTYzZTYxZWYzMSIsICJ1c2VyLmxhbmciOiAiZnIiLCAidXNlci5hdXRobl90b2tlbiI6ICIzYzU3MGFmMDc3ZTMxMWYxOWNlMTAwMTYzZThhMDFhNyIsICJ1c2VyLnRydXN0ZWRfZGV2aWNlIjogZmFsc2UsICJ1c2VyLnNhbWxfdXNlciI6IGZhbHNlLCAidXNlci5mZWF0dXJlX2ZsYWdzIjogeyJtZmFfZW1haWwiOiB0cnVlfX1d",
-      "domain": "id.gandi.net",
-      "path": "/",
-      "expires": 1798747348.723446,
-      "httpOnly": true,
-      "secure": true,
-      "sameSite": "None"
     },
     {
       "name": "_pcid",
@@ -89,6 +79,36 @@
       "httpOnly": false,
       "secure": true,
       "sameSite": "Lax"
+    },
+    {
+      "name": "locale",
+      "value": "fr",
+      "domain": ".id.gandi.net",
+      "path": "/",
+      "expires": 1820091038.017198,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "atauthority",
+      "value": "%7B%22name%22%3A%22atauthority%22%2C%22val%22%3A%7B%22authority_name%22%3A%22cnil%22%2C%22visitor_mode%22%3A%22exempt%22%7D%2C%22options%22%3A%7B%22end%22%3A%222027-10-06T20%3A50%3A38.092Z%22%2C%22path%22%3A%22%2F%22%7D%7D",
+      "domain": ".gandi.net",
+      "path": "/",
+      "expires": 1822855838,
+      "httpOnly": false,
+      "secure": true,
+      "sameSite": "Lax"
+    },
+    {
+      "name": "session",
+      "value": "CyMY0TrdHuO8dEdc2USAEHf03vuLCSNvfHMyJUBKivJJCIz5o6YCD5iZBNHBd_HRB2u1xX6VyipHsl8zqk70KlsxNzg4NTU1MDU0LCAxNzgzMTk1MzIzLjE4OTgzNjMsIHsiX2NzcmZ0XyI6ICI2OGQyMmFlYWI4NzFjZmQ0MGMzYzg4MzM3MjZjMDRjODBhYzE2MzQxIiwgIm1mYV9wcm9jZXNzX3NsdWciOiAiSXRnZlF3UFFLX0ptaXQ0djVEeEhzOVZicHZ1S2VWTE0tbmdwZnREcG9HM0xxOGlJdDY3LVlnVy0iLCAic2Vzc2lvbi5jcmVhdGVkX2F0IjogIjIwMjYtMDktMDRUMjA6NTA6MzguMDAzODg4KzAwOjAwIiwgInVzZXIudXNlcm5hbWUiOiAiRkVFTFBST0QiLCAidXNlci51dWlkIjogIjIzYThmMjM4LTdjZTQtMTFlNy05YmZlLTAwMTYzZTYxZWYzMSIsICJ1c2VyLmxhbmciOiAiZnIiLCAidXNlci5hdXRobl90b2tlbiI6ICI0ODRiOWU0NGE4YTIxMWYxOTA3NDAwMTYzZTEyZGZlYiIsICJ1c2VyLnRydXN0ZWRfZGV2aWNlIjogZmFsc2UsICJ1c2VyLnNhbWxfdXNlciI6IGZhbHNlLCAidXNlci5mZWF0dXJlX2ZsYWdzIjogeyJtZmFfZW1haWwiOiB0cnVlfX1d",
+      "domain": "id.gandi.net",
+      "path": "/",
+      "expires": 1804107054.287614,
+      "httpOnly": true,
+      "secure": true,
+      "sameSite": "None"
     }
   ],
   "origins": [

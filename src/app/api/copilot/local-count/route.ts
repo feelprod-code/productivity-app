@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
 
+import os from 'os';
+
 export const dynamic = 'force-dynamic';
 
 function getPdfCount(dir: string): number {
@@ -25,7 +27,7 @@ function getPdfCount(dir: string): number {
 }
 
 export async function GET() {
-  const baseDir = '/Users/guillaumephilippe/Documents/1-PAPIERS/1-PAPIERS PHIL/4-Compta';
+  const baseDir = path.join(os.homedir(), 'Documents', '1-PAPIERS', '1-PAPIERS PHIL', '4-Compta');
   const count2025 = getPdfCount(path.join(baseDir, 'Factures 2025'));
   const count2026 = getPdfCount(path.join(baseDir, 'Factures 2026'));
   const total = count2025 + count2026;
