@@ -334,7 +334,8 @@ export async function GET() {
         'dyn dac', 'vironvay', 'sapn', 'aprr', 'sanef', 'cofiroute', 'autoroute', 'bipandgo',
         'mutuelle', 'macsf', 'mgen', 'assurance', 'roole', 'identicar', 'cotisation annuelle carte', 'cotisation carte',
         'blocage des fonds', 'blocage sur pce', 'pce blocage', 'frais tenue de compte',
-        'carpimko', 'c.a.r.p.i.m.k.o', 'urssaf', 'adoha', 'direction generale de'
+        'carpimko', 'c.a.r.p.i.m.k.o', 'urssaf', 'adoha', 'direction generale de',
+        'rafenne', 'lixxbail', 'ca consumer finance', 'sofinco'
       ];
       const isIndigo = labelLower.includes('indigo');
       const isSmallIndigo = isIndigo && absAmount < 10.00;
