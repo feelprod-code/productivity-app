@@ -48,6 +48,16 @@ next-env.d.ts
 /downloads/
 *.log
 /public/invoices
+*.png
+check_*.js
+_shot_*.mjs
+inspect_*.js
+debug_*.js
+extract_*.js
+fetch_txs_pennylane.js
+list_accounts.js
+test_actual_matching.js
+pending_invoices_debug.json
 
 # Playwright and Chrome temp profiles
 **/amazon_profile/
