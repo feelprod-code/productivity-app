@@ -62,6 +62,7 @@ export default function ImportPage() {
   const [isDragging, setIsDragging] = useState(false);
   const [toasts, setToasts] = useState<{ id: string; message: string; type: "success" | "info" | "error" }[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
 
   const [activeView, setActiveView] = useState<"upload" | "history">("upload");
   const [importedInvoices, setImportedInvoices] = useState<any[]>([]);
@@ -788,12 +789,13 @@ export default function ImportPage() {
       <div className="max-w-7xl mx-auto px-4 md:px-8">
 
       {activeView === "upload" ? (
-        /* Grid container for Split layout on desktop */
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+        /* Vertical layout on desktop (Requested single column) */
+        <div className="flex flex-col gap-8 max-w-4xl mx-auto items-stretch">
         
-        {/* LEFT COLUMN: Upload Zone + File Selector list (Span 5 on Desktop) */}
-        <div className="lg:col-span-5 space-y-6">
+        {/* Upload Zone + File Selector list */}
+        <div className="space-y-6 w-full">
           
+          {/* Input fichier général (ordinateur & sélection multiple) */}
           <input 
             type="file" 
             ref={fileInputRef} 
@@ -803,38 +805,71 @@ export default function ImportPage() {
             className="hidden" 
           />
 
-          <div 
-            onClick={() => fileInputRef.current?.click()}
-            onDragOver={(e) => {
-              e.preventDefault();
-              setIsDragging(true);
-            }}
-            onDragLeave={() => setIsDragging(false)}
-            onDrop={(e) => {
-              e.preventDefault();
-              setIsDragging(false);
-              if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-                addFilesToList(Array.from(e.dataTransfer.files));
-              }
-            }}
-            className={`relative border-2 border-dashed rounded-3xl p-8 text-center cursor-pointer transition-all shadow-sm select-none ${
-              isDragging 
-                ? "border-[#AE7D5C] bg-[#FDFBEF] scale-[1.01] ring-4 ring-[#AE7D5C]/10" 
-                : "bg-white border-[#AE7D5C]/40 hover:bg-[#FDFBEF] hover:border-[#AE7D5C]/80 active:scale-[0.98]"
-            }`}
-          >
-            <div className="flex flex-col items-center gap-4 pointer-events-none">
-              <div className="w-16 h-16 bg-[#AE7D5C]/10 rounded-full flex items-center justify-center text-[#AE7D5C]">
-                <Camera className="w-8 h-8" />
+          {/* Input caméra direct (spécial iOS / iPhone - ouvre l'appareil photo instantanément) */}
+          <input 
+            type="file" 
+            ref={cameraInputRef} 
+            onChange={handleFileChange} 
+            accept="image/*" 
+            capture="environment" 
+            className="hidden" 
+          />
+
+          <div className="space-y-3">
+            <div 
+              onClick={() => fileInputRef.current?.click()}
+              onDragOver={(e) => {
+                e.preventDefault();
+                setIsDragging(true);
+              }}
+              onDragLeave={() => setIsDragging(false)}
+              onDrop={(e) => {
+                e.preventDefault();
+                setIsDragging(false);
+                if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+                  addFilesToList(Array.from(e.dataTransfer.files));
+                }
+              }}
+              className={`relative border-2 border-dashed rounded-3xl p-6 sm:p-8 text-center cursor-pointer transition-all shadow-sm select-none ${
+                isDragging 
+                  ? "border-[#AE7D5C] bg-[#FDFBEF] scale-[1.01] ring-4 ring-[#AE7D5C]/10" 
+                  : "bg-white border-[#AE7D5C]/40 hover:bg-[#FDFBEF] hover:border-[#AE7D5C]/80 active:scale-[0.99]"
+              }`}
+            >
+              <div className="flex flex-col items-center gap-3 pointer-events-none">
+                <div className="w-14 h-14 bg-[#AE7D5C]/10 rounded-full flex items-center justify-center text-[#AE7D5C]">
+                  <Camera className="w-7 h-7" />
+                </div>
+                <div>
+                  <h3 className="text-sm sm:text-base font-roboto font-bold text-[#1E2A33]">
+                    Scanner une addition ou déposer une facture
+                  </h3>
+                  <p className="text-xs text-[#1E2A33]/50 mt-1 leading-relaxed max-w-md mx-auto">
+                    Idéal pour vos déjeuners et repas en déplacement : l'IA extrait le restaurant, la date et le montant TTC en un clin d'œil.
+                  </p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-base font-roboto font-bold text-[#1E2A33]">
-                  Glisser un fichier ou photographier
-                </h3>
-                <p className="text-xs text-[#1E2A33]/50 mt-1.5 leading-relaxed">
-                  Supporte PDF, JPG, PNG. Ouvrez la caméra sur iPhone ou déposez vos PDF sur ordinateur.
-                </p>
-              </div>
+            </div>
+
+            {/* Boutons d'action rapide (notamment pour mobile / iPhone) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+              <button
+                type="button"
+                onClick={() => cameraInputRef.current?.click()}
+                className="w-full h-12 bg-[#AE7D5C] hover:bg-[#966849] active:scale-[0.98] text-white font-bold text-xs rounded-2xl flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
+              >
+                <Camera className="w-4 h-4" />
+                <span>📸 Prendre une photo (Caméra direct)</span>
+              </button>
+              
+              <button
+                type="button"
+                onClick={() => fileInputRef.current?.click()}
+                className="w-full h-12 bg-white hover:bg-slate-50 border border-[#1E2A33]/15 active:scale-[0.98] text-[#1E2A33] font-bold text-xs rounded-2xl flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer"
+              >
+                <FileText className="w-4 h-4 text-[#AE7D5C]" />
+                <span>📁 Choisir dans la photothèque ou fichiers</span>
+              </button>
             </div>
           </div>
 
@@ -906,8 +941,8 @@ export default function ImportPage() {
           </div>
         </div>
 
-        {/* RIGHT COLUMN: Interactive Document Preview + Form Review (Span 7 on Desktop) */}
-        <div className="lg:col-span-7">
+        {/* Document Preview + Form Review */}
+        <div className="w-full">
           {activeFile ? (
             <div className="bg-white border border-[#1E2A33]/10 rounded-3xl p-6 shadow-sm space-y-6">
               
@@ -1118,17 +1153,7 @@ export default function ImportPage() {
               )}
 
             </div>
-          ) : (
-            <div className="hidden lg:flex flex-col items-center justify-center gap-3 h-[450px] bg-white/80 backdrop-blur-md border border-[#1E2A33]/10 rounded-3xl p-12 text-center shadow-sm">
-              <Upload className="w-12 h-12 text-[#AE7D5C]/40" />
-              <h3 className="text-base font-bold text-[#1E2A33]">
-                Sélectionnez un document
-              </h3>
-              <p className="text-xs text-[#1E2A33]/50 max-w-sm">
-                Déposez des fichiers sur l'ordinateur à gauche ou prenez une photo depuis votre iPhone, puis sélectionnez le document pour afficher sa prévisualisation interactive et ses métadonnées extraites.
-              </p>
-            </div>
-          )}
+          ) : null}
         </div>
       </div>
       ) : (

@@ -43,7 +43,7 @@ function runScript(stageName: string, scriptPath: string, startDate?: string): P
     
     if (stageName === 'simple') {
       // Calculate total files for simple reconciliation
-      const baseDir = '/Users/guillaumephilippe/Documents/1-PAPIERS/1-PAPIERS PHIL/4-Compta';
+      const baseDir = path.join(os.homedir(), 'Documents', '1-PAPIERS', '1-PAPIERS PHIL', '4-Compta');
       total = getPdfCount(path.join(baseDir, 'Factures 2025')) + getPdfCount(path.join(baseDir, 'Factures 2026'));
       console.log(`[Copilot] Scan simple: Found ${total} PDF files`);
     }

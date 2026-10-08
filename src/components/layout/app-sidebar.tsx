@@ -14,6 +14,11 @@ import {
 // Menu items.
 const items = [
     {
+        title: "Facturation Bi-Activité",
+        url: "/facturation",
+        icon: ReceiptEuro,
+    },
+    {
         title: "Relevé & Rapprochement",
         url: "/comptabilite/releve",
         icon: Sparkles,

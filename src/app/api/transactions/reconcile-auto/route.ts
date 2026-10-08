@@ -33,7 +33,7 @@ interface EmailMatch {
   filename: string;
 }
 
-function extractKeywords(label: string): string[] {
+export function extractKeywords(label: string): string[] {
   const cleaned = label
     .toLowerCase()
     .normalize("NFD")
@@ -49,7 +49,7 @@ function extractKeywords(label: string): string[] {
     "sasu", "eurl", "cie", "company", "co", "corp", "corporation", "group", "groupe",
     "services", "service", "solutions", "solution", "international", "intl", "systems",
     "system", "france", "europe", "global", "digital", "cblm", "paris", "guillaume", "philippe",
-    "com", "net", "org", "www"
+    "com", "net", "org", "www", "lcl"
   ]);
   
   const words = cleaned.split(/\s+/).filter(w => {
@@ -150,7 +150,7 @@ function formatImapDate(date: Date): string {
 }
 
 // Search a specific IMAP email account
-async function searchEmailAccount(
+export async function searchEmailAccount(
   accountConfig: any,
   keywords: string[],
   absAmount: number,
@@ -178,23 +178,45 @@ async function searchEmailAccount(
       .sort((a, b) => b.length - a.length)
       .slice(0, 2);
 
-    // Search subject for each keyword to find matching emails
-    for (const keyword of searchKeywords) {
-      const searchCriteria = [
-        ['HEADER', 'SUBJECT', keyword],
-        ['SINCE', formattedSince],
-        ['BEFORE', formattedBefore]
-      ];
+    // Build targeted search queries
+    const isAmazonTx = keywords.some(k => k.includes('amazon') || k.includes('amzn'));
+    const isFreeTx = keywords.some(k => k.includes('free'));
+    const isBouyguesTx = keywords.some(k => k.includes('bouygues') || k.includes('btelec') || k.includes('btl'));
+
+    let searchQueries: any[][] = [];
+    if (isAmazonTx) {
+      searchQueries.push([['HEADER', 'FROM', 'amazon'], ['SINCE', formattedSince], ['BEFORE', formattedBefore]]);
+      searchQueries.push([['HEADER', 'SUBJECT', 'amazon'], ['SINCE', formattedSince], ['BEFORE', formattedBefore]]);
+    } else if (isFreeTx) {
+      searchQueries.push([['HEADER', 'FROM', 'free'], ['SINCE', formattedSince], ['BEFORE', formattedBefore]]);
+      searchQueries.push([['HEADER', 'SUBJECT', 'free'], ['SINCE', formattedSince], ['BEFORE', formattedBefore]]);
+    } else if (isBouyguesTx) {
+      searchQueries.push([['HEADER', 'FROM', 'bouygues'], ['SINCE', formattedSince], ['BEFORE', formattedBefore]]);
+      searchQueries.push([['HEADER', 'SUBJECT', 'bouygues'], ['SINCE', formattedSince], ['BEFORE', formattedBefore]]);
+    } else {
+      for (const keyword of searchKeywords) {
+        searchQueries.push([['HEADER', 'SUBJECT', keyword], ['SINCE', formattedSince], ['BEFORE', formattedBefore]]);
+      }
+    }
+
+    const freeMobileCandidates: { date: Date; amount: number; phone: string; html: string }[] = [];
+    const seenMessageIds = new Set<string>();
+
+    // Search for each query
+    for (const searchCriteria of searchQueries) {
       const fetchOptions = { bodies: ['HEADER', 'TEXT', ''], struct: true };
       const messages = await connection.search(searchCriteria, fetchOptions);
 
-      console.log(`✉️ Found ${messages.length} messages matching subject "${keyword}" on ${accountConfig.user}`);
+      console.log(`✉️ Found ${messages.length} messages on ${accountConfig.user} with criteria`, searchCriteria[0]);
 
       for (const msg of messages) {
         const allPart = msg.parts.find((p: any) => p.which === '');
         if (!allPart) continue;
 
         const parsed = await simpleParser(allPart.body);
+        const msgId = parsed.messageId || `${parsed.date?.toISOString()}_${parsed.subject}`;
+        if (seenMessageIds.has(msgId)) continue;
+        seenMessageIds.add(msgId);
         
         // Verify email date: +/- 35 days window around the transaction date
         const msgDate = new Date(parsed.date || '');
@@ -202,10 +224,11 @@ async function searchEmailAccount(
         const thirtyFiveDaysMs = 35 * 24 * 60 * 60 * 1000;
         if (timeDiff > thirtyFiveDaysMs) continue;
 
-        // If it's a PayPal transaction and this email is a PayPal confirmation email:
-        const isPayPalTx = keywords.includes('paypal');
         const fromText = (parsed.from?.text || '').toLowerCase();
         const subjectLower = (parsed.subject || '').toLowerCase();
+
+        // If it's a PayPal transaction and this email is a PayPal confirmation email:
+        const isPayPalTx = keywords.includes('paypal');
         const isPayPalEmail = fromText.includes('paypal') || subjectLower.includes('paypal');
 
         if (isPayPalTx && isPayPalEmail) {
@@ -240,6 +263,106 @@ async function searchEmailAccount(
             const cleanMerchantFilename = merchant.replace(/[^a-zA-Z0-9\- ]/g, '_');
             const filename = `${cleanDateStr} - ${cleanMerchantFilename} - ${amountStr}EUR.html`;
             const buffer = Buffer.from(html || text || '', 'utf-8');
+
+            return {
+              buffer,
+              filename
+            };
+          }
+        }
+
+        // Check Amazon order confirmation email
+        const isAmazonEmail = fromText.includes('amazon') || subjectLower.includes('amazon') || subjectLower.includes('commandé') || subjectLower.includes('expédié');
+
+        if (isAmazonTx && isAmazonEmail) {
+          const text = (parsed.text || '').toLowerCase();
+          const rawText = parsed.text || '';
+          const html = parsed.html || '';
+
+          const hasAmount = text.includes(amountStr) || text.includes(amountStrComma) ||
+                            html.includes(amountStr) || html.includes(amountStrComma);
+
+          if (hasAmount) {
+            const itemMatch = rawText.match(/\*\s*([^\n]+)/);
+            const orderMatch = rawText.match(/(?:commande|order)\s*(?:n°|#)?\s*([0-9]{3}-[0-9]{7}-[0-9]{7})/i);
+            const itemName = itemMatch ? itemMatch[1].trim() : 'COMMANDE_AMAZON';
+            const cleanItem = itemName.substring(0, 45).replace(/[^a-zA-Z0-9À-ÿ\s\-]/g, '').trim().replace(/\s+/g, '_');
+            const merchant = `AMAZON - ${cleanItem}`;
+            console.log(`🎯 Match found in Amazon order email! Merchant: ${merchant}, Amount: ${amountStr}`);
+
+            const cleanDateStr = txDate.toISOString().split('T')[0];
+            const filename = `${cleanDateStr} - ${cleanItem} - ${amountStr}EUR.html`;
+            const buffer = Buffer.from(html || rawText, 'utf-8');
+
+            return {
+              buffer,
+              filename
+            };
+          }
+        }
+
+        // Check Free Telecom / Freebox / Free Mobile email
+        const isFreeEmail = fromText.includes('free') || subjectLower.includes('free');
+
+        if (isFreeTx && isFreeEmail) {
+          const text = (parsed.text || '').toLowerCase();
+          const rawText = parsed.text || '';
+          const html = parsed.html || '';
+
+          const hasAmount = text.includes(amountStr) || text.includes(amountStrComma) ||
+                            html.includes(amountStr) || html.includes(amountStrComma);
+
+          if (hasAmount) {
+            const isFreebox = subjectLower.includes('freebox') || text.includes('freebox');
+            const cleanProvider = isFreebox ? 'FREE_FACTURE_FREEBOX' : 'FREE_MOBILE';
+            console.log(`🎯 Match found in Free email! Provider: ${cleanProvider}, Amount: ${amountStr}`);
+
+            const cleanDateStr = txDate.toISOString().split('T')[0];
+            const filename = `${cleanDateStr} - ${cleanProvider} - ${amountStr}EUR.html`;
+            const buffer = Buffer.from(html || rawText, 'utf-8');
+
+            return {
+              buffer,
+              filename
+            };
+          }
+
+          // Collect Free Mobile sub-lines (e.g. 19.99€, 9.99€, 32.47€) if within +/- 7 days
+          if (subjectLower.includes('mobile') || text.includes('mobile')) {
+            const normalizedText = rawText.replace(/[\u2018\u2019]/g, "'");
+            const amountMatch = normalizedText.match(/montant\s+(?:de|est\s+de)\s*([0-9.,]+)\s*€/i);
+            const phoneMatch = normalizedText.match(/0[67][0-9]{8}/);
+            if (amountMatch) {
+              const parsedSubAmount = parseFloat(amountMatch[1].replace(',', '.'));
+              const phone = phoneMatch ? phoneMatch[0] : 'Free Mobile';
+              if (parsedSubAmount > 0 && Math.abs(msgDate.getTime() - txDate.getTime()) <= 7 * 24 * 60 * 60 * 1000) {
+                freeMobileCandidates.push({
+                  date: msgDate,
+                  amount: parsedSubAmount,
+                  phone,
+                  html: html || rawText
+                });
+              }
+            }
+          }
+        }
+
+        // Check Bouygues Telecom email
+        const isBouyguesEmail = fromText.includes('bouygues') || subjectLower.includes('bouygues');
+
+        if (isBouyguesTx && isBouyguesEmail) {
+          const text = (parsed.text || '').toLowerCase();
+          const rawText = parsed.text || '';
+          const html = parsed.html || '';
+
+          const hasAmount = text.includes(amountStr) || text.includes(amountStrComma) ||
+                            html.includes(amountStr) || html.includes(amountStrComma);
+
+          if (hasAmount) {
+            console.log(`🎯 Match found in Bouygues email! Amount: ${amountStr}`);
+            const cleanDateStr = txDate.toISOString().split('T')[0];
+            const filename = `${cleanDateStr} - BOUYGUES_TELECOM - ${amountStr}EUR.html`;
+            const buffer = Buffer.from(html || rawText, 'utf-8');
 
             return {
               buffer,
@@ -366,6 +489,20 @@ async function searchEmailAccount(
         }
       }
     }
+
+    if (freeMobileCandidates.length > 0) {
+      const totalCandidates = freeMobileCandidates.reduce((acc, c) => acc + c.amount, 0);
+      if (Math.abs(totalCandidates - absAmount) < 0.05) {
+        console.log(`🎯 Free Mobile sub-lines sum match! Total: ${totalCandidates.toFixed(2)} €, Tx Amount: ${amountStr}`);
+        const combinedHtml = `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Facture Free Mobile</title><style>body{font-family:-apple-system,BlinkMacSystemFont,sans-serif;padding:30px;color:#1e293b;line-height:1.5;max-width:800px;margin:0 auto;}.header{border-bottom:2px solid #e2e8f0;padding-bottom:15px;margin-bottom:25px;display:flex;justify-content:space-between;align-items:center;}.title{font-size:24px;font-weight:bold;color:#0f172a;}.badge{background:#e0f2fe;color:#0369a1;padding:6px 12px;border-radius:20px;font-size:13px;font-weight:600;}.total-card{background:#f8fafc;border:1px solid #cbd5e1;border-radius:12px;padding:20px;margin-bottom:25px;}.total-val{font-size:28px;font-weight:bold;color:#059669;}.line-card{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:15px;margin-bottom:15px;}</style></head><body><div class="header"><div><div class="title">FREE MOBILE — Facture Groupée</div><div>Date de prélèvement : ${txDate.toISOString().split('T')[0]}</div></div><div class="badge">Prélèvement SEPA</div></div><div class="total-card"><div>Montant total prélevé</div><div class="total-val">${absAmount.toFixed(2)} €</div></div><h3>Détail des lignes prélevées :</h3>${freeMobileCandidates.map(c => `<div class="line-card"><strong>${c.phone}</strong> — Montant : <strong>${c.amount.toFixed(2)} €</strong> (Date notif : ${c.date.toISOString().split('T')[0]})</div>`).join('')}</body></html>`;
+        const cleanDateStr = txDate.toISOString().split('T')[0];
+        const filename = `${cleanDateStr} - FREE_MOBILE - ${amountStr}EUR.html`;
+        return {
+          buffer: Buffer.from(combinedHtml, 'utf-8'),
+          filename
+        };
+      }
+    }
   } catch (err: any) {
     console.error(`❌ IMAP Error for ${accountConfig.user}:`, err.message);
   } finally {
@@ -475,18 +612,21 @@ export async function POST(request: Request) {
       }
 
       const txTime = txDate.getTime();
-      const thirtyFiveDaysMs = 35 * 24 * 60 * 60 * 1000;
+      const fifteenDaysMs = 15 * 24 * 60 * 60 * 1000;
 
-      // Filter by amount, date, and keywords
+      // Filter by amount, date, keywords, and ensure invoice is not already reconciled
       const matchingPennylaneInvoice = pennylaneInvoices.find((inv: any) => {
+        // Skip already reconciled invoices
+        if (inv.reconciled === true) return false;
+
         // 1. Amount match (+/- 0.05 EUR for rounding)
         const invAmount = parseFloat(inv.amount || '0');
         if (Math.abs(invAmount - absAmount) > 0.05) return false;
 
-        // 2. Date match (+/- 35 days)
+        // 2. Date match (+/- 15 days as per user rule)
         if (inv.date) {
           const invTime = new Date(inv.date).getTime();
-          if (Math.abs(invTime - txTime) > thirtyFiveDaysMs) return false;
+          if (Math.abs(invTime - txTime) > fifteenDaysMs) return false;
         }
 
         // 3. Keyword match (provider or label or filename)
@@ -674,11 +814,50 @@ export async function POST(request: Request) {
       console.error("❌ Erreur lors de la recherche locale Prisma :", localDbErr.message);
     }
 
+    // --- PHASE 2: SEARCH EMAILS (GMAIL FIRST, THEN ICLOUD) IF LOCAL NOT FOUND ---
+    if (!matchedFile || !matchedFileBuffer) {
+      console.log("🔍 Justificatif local non trouvé. Recherche dans les e-mails (Gmail & iCloud)...");
+      
+      const gmailConfig = {
+        user: process.env.GMAIL_EMAIL || 'guillaumephilippe1968@gmail.com',
+        password: process.env.GMAIL_APP_PASSWORD || 'fpmc gosz zwxq lcwl',
+        host: 'imap.gmail.com',
+        port: 993,
+        tls: true,
+        authTimeout: 20000,
+        tlsOptions: { rejectUnauthorized: false }
+      };
+
+      const icloudConfig = {
+        user: process.env.ICLOUD_EMAIL || 'guillaumephilippe@me.com',
+        password: process.env.ICLOUD_APP_PASSWORD || 'vcny-lusr-hugo-djpa',
+        host: 'imap.mail.me.com',
+        port: 993,
+        tls: true,
+        authTimeout: 20000,
+        tlsOptions: { rejectUnauthorized: false }
+      };
+
+      // Search Gmail first (especially for Amazon & current primary inbox)
+      let emailMatch = await searchEmailAccount(gmailConfig, keywords, absAmount, txDate);
+
+      // Search iCloud next if Gmail returned nothing (especially for Free & Bouygues)
+      if (!emailMatch) {
+        emailMatch = await searchEmailAccount(icloudConfig, keywords, absAmount, txDate);
+      }
+
+      if (emailMatch) {
+        matchedFile = emailMatch.filename;
+        matchedFileBuffer = emailMatch.buffer;
+        console.log(`🎯 Justificatif e-mail trouvé ! Fichier : ${emailMatch.filename}`);
+      }
+    }
+
     // --- PHASE 3: UPLOAD & MATCH ON PENNYLANE ---
     if (!matchedFile || !matchedFileBuffer) {
       return NextResponse.json({ 
         success: false, 
-        error: `Aucun justificatif correspondant à "${keywords.join(' ')}" de ${amountStr} € n'a été trouvé dans la base locale.` 
+        error: `Aucun justificatif correspondant à "${keywords.join(' ')}" de ${amountStr} € n'a été trouvé (base locale, e-mails Gmail ou iCloud).` 
       }, { status: 404 });
     }
 
@@ -746,7 +925,7 @@ export async function POST(request: Request) {
         normalizedMonthFolder = '12 - De\u0301cembre';
       }
 
-      const comptaBaseDir = '/Users/guillaumephilippe/Documents/1-PAPIERS/1-PAPIERS PHIL/4-Compta';
+      const comptaBaseDir = path.join(os.homedir(), 'Documents', '1-PAPIERS', '1-PAPIERS PHIL', '4-Compta');
       const targetDir = path.join(comptaBaseDir, `Factures ${year}`, normalizedMonthFolder);
       await fs.promises.mkdir(targetDir, { recursive: true });
       

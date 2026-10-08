@@ -1,6 +1,6 @@
 "use client";
 
-import { CreditCard, ReceiptEuro, Upload, ExternalLink, Building2, User2, ArrowDownLeft, ArrowUpRight } from "lucide-react";
+import { CreditCard, ReceiptEuro, Upload, ExternalLink, Building2, User2, ArrowDownLeft, ArrowUpRight, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { usePathname, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -107,9 +107,16 @@ export function MobileBottomNav() {
     // Menu par défaut pour les autres pages
     const defaultItems = [
         { 
+            title: "Facturation", 
+            url: "/facturation", 
+            icon: ReceiptEuro,
+            isActive: pathname.startsWith("/facturation"),
+            external: false
+        },
+        { 
             title: "Compta", 
             url: "/comptabilite/releve", 
-            icon: ReceiptEuro,
+            icon: Sparkles,
             isActive: pathname === "/comptabilite/releve",
             external: false
         },
